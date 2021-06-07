@@ -68,7 +68,7 @@ export type EnumType<Values extends Record<string, EnumValue<any>>> = {
 export function enumValues<Values extends readonly string[]>(
   values: readonly [...Values]
 ): Record<Values[number], EnumValue<Values[number]>> {
-  return Object.fromEntries(values.map((value) => [value, { value }]));
+  return Object.fromEntries(values.map((value) => [value, { value }])) as any;
 }
 
 /**

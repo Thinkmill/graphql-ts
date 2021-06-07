@@ -56,4 +56,4 @@ jobs:
         run: pnpm i
 
       - name: Linting
-        run: pnpm run eslint
+        run: pnpm run lint
