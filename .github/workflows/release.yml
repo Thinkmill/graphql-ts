@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 14.x
+        uses: actions/setup-node@main
+        with:
+          node-version: 14.x
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-v5-ubuntu-latest-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-v5-ubuntu-latest
+
+      - name: Install pnpm
+        run: npm i -g pnpm@5.13.1
+
+      - name: Install Dependencies
+        run: pnpm i
+
+      - name: "Create Pull Request or Publish to npm"
+        uses: changesets/action@master
+        with:
+          publish: pnpm run release
+          version: pnpm run version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

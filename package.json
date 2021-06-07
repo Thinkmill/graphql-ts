@@ -1,0 +1,47 @@
+{
+  "name": "@graphql-ts/repo",
+  "version": "1.0.0",
+  "private": true,
+  "repository": "https://github.com/Thinkmill/graphql-ts",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/plugin-transform-runtime": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
+    "@babel/preset-react": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@changesets/changelog-github": "^0.4.0",
+    "@changesets/cli": "^2.16.0",
+    "@manypkg/cli": "0.18.0",
+    "@preconstruct/cli": "^2.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.1",
+    "@typescript-eslint/parser": "^4.26.1",
+    "eslint": "^7.28.0",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "postinstall": "preconstruct dev",
+    "release": "preconstruct build && changeset publish",
+    "version": "changeset version && pnpm i --frozen-lockfile=false",
+    "test": "jest",
+    "types": "tsc",
+    "lint": "eslint ."
+  },
+  "preconstruct": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "manypkg": {
+    "defaultBranch": "main"
+  },
+  "tsd": {
+    "compilerOptions": {
+      "strict": true,
+      "jsx": "react",
+      "target": "next",
+      "module": "commonjs",
+      "moduleResolution": "node"
+    }
+  }
+}

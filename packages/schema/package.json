@@ -1,0 +1,29 @@
+{
+  "name": "@graphql-ts/schema",
+  "version": "0.0.0",
+  "main": "dist/graphql-ts-schema.cjs.js",
+  "module": "dist/graphql-ts-schema.esm.js",
+  "files": [
+    "dist",
+    "api-without-context",
+    "api-with-context"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@babel/runtime": "^7.9.2"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "devDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "repository": "https://github.com/Thinkmill/ts-gql/tree/master/packages/schema",
+  "preconstruct": {
+    "entrypoints": [
+      "index.ts",
+      "api-without-context/index.ts",
+      "api-with-context/index.ts"
+    ]
+  }
+}

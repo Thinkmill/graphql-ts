@@ -1,0 +1,4 @@
+{
+  "main": "dist/graphql-ts-schema-api-without-context.cjs.js",
+  "module": "dist/graphql-ts-schema-api-without-context.esm.js"
+}
