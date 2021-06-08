@@ -1,9 +1,9 @@
-import { bindTypesToContext } from "../output";
+import { bindSchemaAPIToContext } from "../output";
 
-const types = bindTypesToContext();
+const __schema = bindSchemaAPIToContext();
 
-export const { field, fields, interfaceField, object, union } = types;
+export const { field, fields, interfaceField, object, union } = __schema;
 
-const interfaceType = types.interface;
+const interfaceType = __schema.interface;
 
 export { interfaceType as interface };
