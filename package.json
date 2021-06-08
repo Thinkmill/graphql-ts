@@ -20,7 +20,7 @@
     "typescript": "^4.3.2"
   },
   "scripts": {
-    "postinstall": "preconstruct dev",
+    "postinstall": "preconstruct dev && manypkg check",
     "release": "preconstruct build && changeset publish",
     "version": "changeset version && pnpm i --frozen-lockfile=false",
     "test": "jest",

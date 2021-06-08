@@ -16,9 +16,9 @@
     "graphql": "^15.0.0"
   },
   "devDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.5.0"
   },
-  "repository": "https://github.com/Thinkmill/ts-gql/tree/master/packages/schema",
+  "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/schema",
   "preconstruct": {
     "entrypoints": [
       "index.ts",

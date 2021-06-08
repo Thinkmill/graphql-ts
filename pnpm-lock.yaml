@@ -35,7 +35,7 @@ importers:
       graphql: 15.5.0
     specifiers:
       '@babel/runtime': ^7.9.2
-      graphql: ^15.0.0
+      graphql: ^15.5.0
   test-project:
     dependencies:
       '@graphql-ts/schema': 'link:../packages/schema'
