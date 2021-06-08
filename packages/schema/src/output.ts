@@ -144,8 +144,6 @@ type FieldFuncResolve<
   Key extends string,
   Context
 > =
-  // i think the solution below is kinda wrong and we actually want this whole thing to be wrapped in UnionToIntersection
-
   // the tuple is here because we _don't_ want this to be distributive
   // if this was distributive then it would optional when it should be required e.g.
   // types.object<{ id: string } | { id: boolean }>()({
@@ -156,11 +154,15 @@ type FieldFuncResolve<
   //     }),
   //   },
   // });
-  // TODO: this check is incomplete, there are some more cases which graphql-js will handle like promises and functions
-  // though tbh, maybe it's fine to be a little more explicit like that
   [RootVal] extends [
     {
-      [K in Key]: InferValueFromOutputType<Type>;
+      [K in Key]:
+        | InferValueFromOutputType<Type>
+        | ((
+            args: InferValueFromArgs<Args>,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>);
     }
   ]
     ? {
@@ -505,7 +507,7 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
   };
 }
 
-export type TypesWithContext<Context> = {
+export type SchemaAPIWithContext<Context> = {
   object: ObjectTypeFunc<Context>;
   union: UnionTypeFunc<Context>;
   field: FieldFunc<Context>;
@@ -514,7 +516,9 @@ export type TypesWithContext<Context> = {
   interface: InterfaceTypeFunc<Context>;
 };
 
-export function bindTypesToContext<Context>(): TypesWithContext<Context> {
+export function bindSchemaAPIToContext<
+  Context
+>(): SchemaAPIWithContext<Context> {
   return {
     object: bindObjectTypeToContext<Context>(),
     union: bindUnionTypeToContext<Context>(),

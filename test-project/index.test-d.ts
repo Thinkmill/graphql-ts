@@ -1,6 +1,6 @@
 import {
-  types,
-  bindTypesToContext,
+  schema,
+  bindSchemaAPIToContext,
   Arg,
   InferValueFromInputType,
   InputObjectType,
@@ -16,28 +16,28 @@ schemaWithContext.arg({
   type: schemaWithContext.Boolean,
 });
 
-const someEnum = types.enum({
+const someEnum = schema.enum({
   name: "SomeEnum",
-  values: types.enumValues(["a", "b"]),
+  values: schema.enumValues(["a", "b"]),
 });
 
-const enumArg = types.arg({
+const enumArg = schema.arg({
   type: someEnum,
 });
 
-const Something = types.inputObject({
+const Something = schema.inputObject({
   name: "Something",
   fields: {
-    nullableString: types.arg({ type: types.String }),
-    nullableStringWithDefaultValue: types.arg({
-      type: types.String,
+    nullableString: schema.arg({ type: schema.String }),
+    nullableStringWithDefaultValue: schema.arg({
+      type: schema.String,
       defaultValue: "something",
     }),
-    nonNullableString: types.arg({
-      type: types.nonNull(types.String),
+    nonNullableString: schema.arg({
+      type: schema.nonNull(schema.String),
     }),
-    nonNullableStringWithDefaultValue: types.arg({
-      type: types.nonNull(types.String),
+    nonNullableStringWithDefaultValue: schema.arg({
+      type: schema.nonNull(schema.String),
       defaultValue: "something",
     }),
     enum: enumArg,
@@ -64,11 +64,11 @@ const Something = types.inputObject({
     recursive: Arg<RecursiveInput, any>;
   }>;
 
-  const Recursive: RecursiveInput = types.inputObject({
+  const Recursive: RecursiveInput = schema.inputObject({
     name: "Recursive",
     fields: () => ({
-      nullableString: types.arg({ type: types.String }),
-      recursive: types.arg({ type: Recursive }),
+      nullableString: schema.arg({ type: schema.String }),
+      recursive: schema.arg({ type: Recursive }),
     }),
   });
 
@@ -86,7 +86,7 @@ const Something = types.inputObject({
 
 {
   const nonRecursiveFields = {
-    nullableString: types.arg({ type: types.String }),
+    nullableString: schema.arg({ type: schema.String }),
   };
 
   type RecursiveInput = InputObjectType<
@@ -95,11 +95,11 @@ const Something = types.inputObject({
     }
   >;
 
-  const Recursive: RecursiveInput = types.inputObject({
+  const Recursive: RecursiveInput = schema.inputObject({
     name: "Recursive",
     fields: () => ({
       ...nonRecursiveFields,
-      recursive: types.arg({ type: Recursive }),
+      recursive: schema.arg({ type: Recursive }),
     }),
   });
 
@@ -118,30 +118,30 @@ const Something = types.inputObject({
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
 export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof types.String>;
-}> = types.inputObject({
+  nullableString: Arg<typeof schema.String>;
+}> = schema.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
-    nullableString: types.arg({ type: types.String }),
-    another: types.arg({ type: types.String }),
+    nullableString: schema.arg({ type: schema.String }),
+    another: schema.arg({ type: schema.String }),
   }),
 });
 
-types.object<{ id: string } | { id: "str" }>()({
+schema.object<{ id: string } | { id: "str" }>()({
   name: "Node",
   fields: {
-    id: types.field({
-      type: types.nonNull(types.ID),
+    id: schema.field({
+      type: schema.nonNull(schema.ID),
     }),
   },
 });
 
-types.object<{ id: string } | { id: boolean }>()({
+schema.object<{ id: string } | { id: boolean }>()({
   name: "Node",
   fields: {
     // @ts-expect-error
-    id: types.field({
-      type: types.nonNull(types.ID),
+    id: schema.field({
+      type: schema.nonNull(schema.ID),
     }),
   },
 });
@@ -149,7 +149,7 @@ types.object<{ id: string } | { id: boolean }>()({
 {
   const types = {
     ...schemaWithContext,
-    ...bindTypesToContext<{ isAdminUIBuildProcess: true }>(),
+    ...bindSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
   };
 
   const SomeOutput = types.object<{ thing: boolean }>()({
@@ -232,22 +232,22 @@ types.object<{ id: string } | { id: boolean }>()({
 // });
 
 {
-  const sharedFields = types.fields<{ something: string }>()({
-    something: types.field({
-      type: types.nonNull(types.String),
+  const sharedFields = schema.fields<{ something: string }>()({
+    something: schema.field({
+      type: schema.nonNull(schema.String),
     }),
   });
 
-  const sharedFieldsWithUnkownRootVal = types.fields()({
-    other: types.field({
-      type: types.nonNull(types.String),
+  const sharedFieldsWithUnkownRootVal = schema.fields()({
+    other: schema.field({
+      type: schema.nonNull(schema.String),
       resolve() {
         return "";
       },
     }),
   });
 
-  types.object<{ something: string; other: string }>()({
+  schema.object<{ something: string; other: string }>()({
     name: "",
     fields: {
       ...sharedFields,
@@ -255,12 +255,12 @@ types.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  types.object<{ other: string }>()({
+  schema.object<{ other: string }>()({
     name: "",
     fields: sharedFieldsWithUnkownRootVal,
   });
 
-  types.object<{ other: string }>()({
+  schema.object<{ other: string }>()({
     name: "",
     // @ts-expect-error
     fields: sharedFields,
@@ -268,17 +268,17 @@ types.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA = bindTypesToContext<{ something: boolean }>();
+  const typesWithContextA = bindSchemaAPIToContext<{ something: boolean }>();
 
   const typesWithContextB =
-    bindTypesToContext<{ something: boolean; other: string }>();
+    bindSchemaAPIToContext<{ something: boolean; other: string }>();
 
   {
     typesWithContextB.object<{ thing: string }>()({
       name: "",
       fields: {
         thing: typesWithContextA.field({
-          type: types.String,
+          type: schema.String,
         }),
       },
     });
@@ -287,7 +287,7 @@ types.object<{ id: string } | { id: boolean }>()({
       fields: {
         // @ts-expect-error
         thing: typesWithContextB.field({
-          type: types.String,
+          type: schema.String,
         }),
       },
     });
@@ -298,7 +298,7 @@ types.object<{ id: string } | { id: boolean }>()({
       name: "Something",
       fields: {
         a: typesWithContextA.field({
-          type: types.String,
+          type: schema.String,
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
             return "";
@@ -335,7 +335,7 @@ types.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: types.list(fromBWithA),
+          type: schema.list(fromBWithA),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -347,7 +347,7 @@ types.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: types.list(types.list(fromBWithA)),
+          type: schema.list(schema.list(fromBWithA)),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -359,7 +359,7 @@ types.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: types.nonNull(fromBWithA),
+          type: schema.nonNull(fromBWithA),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -371,7 +371,7 @@ types.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: types.list(types.nonNull(fromBWithA)),
+          type: schema.list(schema.nonNull(fromBWithA)),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -382,78 +382,78 @@ types.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const nonNullThing = types.nonNull(types.String);
-  types.nonNull(
+  const nonNullThing = schema.nonNull(schema.String);
+  schema.nonNull(
     // @ts-expect-error
     nonNullThing
   );
 }
 
 {
-  const Node = types.interface()({
+  const Node = schema.interface()({
     name: "Node",
     fields: {
-      id: types.interfaceField({ type: types.ID }),
+      id: schema.interfaceField({ type: schema.ID }),
     },
   });
 
-  types.object<{ id: string }>()({
+  schema.object<{ id: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
-    fields: { id: types.field({ type: types.ID }) },
+    fields: { id: schema.field({ type: schema.ID }) },
   });
 
-  types.object<{ thing: string }>()({
+  schema.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {},
   });
 
-  types.object<{ thing: string }>()({
+  schema.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {
-      thing: types.field({ type: types.ID }),
+      thing: schema.field({ type: schema.ID }),
     },
   });
-  types.object<{ id: number }>()({
+  schema.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: types.field({ type: types.Int }),
+      id: schema.field({ type: schema.Int }),
     },
   });
-  types.object<{ id: number }>()({
+  schema.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: types.field({ type: types.ID }),
+      id: schema.field({ type: schema.ID }),
     },
   });
 
   {
-    const NodeAnother = types.interface()({
+    const NodeAnother = schema.interface()({
       name: "Node",
       fields: {
-        id: types.interfaceField({ type: types.Int }),
+        id: schema.interfaceField({ type: schema.Int }),
       },
     });
 
-    types.object<{ id: string }>()({
+    schema.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, NodeAnother],
       fields: {
         // @ts-expect-error
-        id: types.field({ type: types.ID }),
+        id: schema.field({ type: schema.ID }),
       },
     });
   }
 
-  types.interface()({
+  schema.interface()({
     name: "Node",
     interfaces: [Node],
     // @ts-expect-error
@@ -461,34 +461,34 @@ types.object<{ id: string } | { id: boolean }>()({
   });
 
   {
-    const Other = types.interface()({
+    const Other = schema.interface()({
       name: "Node",
-      fields: { something: types.interfaceField({ type: types.Int }) },
+      fields: { something: schema.interfaceField({ type: schema.Int }) },
     });
-    types.object<{ id: string; something: number }>()({
+    schema.object<{ id: string; something: number }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       fields: {
-        id: types.field({ type: types.ID }),
-        something: types.field({ type: types.Int }),
+        id: schema.field({ type: schema.ID }),
+        something: schema.field({ type: schema.Int }),
       },
     });
-    types.object<{ id: string }>()({
+    schema.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       // @ts-expect-error
       fields: {
-        id: types.field({ type: types.ID }),
+        id: schema.field({ type: schema.ID }),
       },
     });
   }
 }
 
-types.object()({
+schema.object()({
   name: "Something",
   fields: {
-    id: types.field({
-      type: types.ID,
+    id: schema.field({
+      type: schema.ID,
       resolve(rootVal, args) {
         // @ts-expect-error
         args.something;
@@ -505,9 +505,9 @@ types.object()({
 
   const SUPPORTED_IMAGE_EXTENSIONS = ["jpg", "png", "webp", "gif"] as const;
 
-  const ImageExtensionEnum = types.enum({
+  const ImageExtensionEnum = schema.enum({
     name: "ImageExtension",
-    values: types.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
+    values: schema.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
   });
 
   type ImageData = {
@@ -518,20 +518,20 @@ types.object()({
     width: number;
     height: number;
   };
-  const imageOutputFields = types.fields<ImageData>()({
-    id: types.field({ type: types.nonNull(types.ID) }),
-    filesize: types.field({ type: types.nonNull(types.Int) }),
-    height: types.field({ type: types.nonNull(types.Int) }),
-    width: types.field({ type: types.nonNull(types.Int) }),
-    extension: types.field({ type: types.nonNull(ImageExtensionEnum) }),
-    ref: types.field({
-      type: types.nonNull(types.String),
+  const imageOutputFields = schema.fields<ImageData>()({
+    id: schema.field({ type: schema.nonNull(schema.ID) }),
+    filesize: schema.field({ type: schema.nonNull(schema.Int) }),
+    height: schema.field({ type: schema.nonNull(schema.Int) }),
+    width: schema.field({ type: schema.nonNull(schema.Int) }),
+    extension: schema.field({ type: schema.nonNull(ImageExtensionEnum) }),
+    ref: schema.field({
+      type: schema.nonNull(schema.String),
       resolve(data) {
         return "";
       },
     }),
-    src: types.field({
-      type: types.nonNull(types.String),
+    src: schema.field({
+      type: schema.nonNull(schema.String),
       args: {},
       resolve(data, {}, context) {
         return "";
@@ -539,36 +539,36 @@ types.object()({
     }),
   });
 
-  const ImageFieldOutput = types.interface()({
+  const ImageFieldOutput = schema.interface()({
     name: "ImageFieldOutput",
     fields: imageOutputFields,
   });
 
-  const LocalImageFieldOutput = types.object<ImageData>()({
+  const LocalImageFieldOutput = schema.object<ImageData>()({
     name: "LocalImageFieldOutput",
     interfaces: [ImageFieldOutput],
     fields: imageOutputFields,
   });
 }
 
-types.fields<{ thing: Promise<string>[] }>()({
-  thing: types.field({
-    type: types.list(types.String),
+schema.fields<{ thing: Promise<string>[] }>()({
+  thing: schema.field({
+    type: schema.list(schema.String),
   }),
 });
 
-types.fields()({
-  thing: types.field({
-    type: types.list(types.String),
+schema.fields()({
+  thing: schema.field({
+    type: schema.list(schema.String),
     resolve() {
       return [Promise.resolve("")];
     },
   }),
 });
 
-types.fields<{ thing: Promise<string> }>()({
-  thing: types.field({
-    type: types.String,
+schema.fields<{ thing: Promise<string> }>()({
+  thing: schema.field({
+    type: schema.String,
   }),
 });
 
@@ -576,60 +576,60 @@ types.fields<{ thing: Promise<string> }>()({
 // since the type annotation can influence the return type and we don't want that here
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
   });
 
-  const _assert: types.Arg<typeof types.String, undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, undefined> = arg;
 }
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     defaultValue: undefined,
   });
 
-  const _assert: types.Arg<typeof types.String, undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, undefined> = arg;
 }
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     defaultValue: "",
   });
 
-  const _assert: types.Arg<typeof types.String, string> = arg;
+  const _assert: schema.Arg<typeof schema.String, string> = arg;
 }
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     defaultValue: null,
   });
 
-  const _assert: types.Arg<typeof types.String, null> = arg;
+  const _assert: schema.Arg<typeof schema.String, null> = arg;
 }
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     defaultValue: null,
   });
 
-  const _assert: types.Arg<typeof types.String, null> = arg;
+  const _assert: schema.Arg<typeof schema.String, null> = arg;
 }
 
 {
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     defaultValue: Math.random() > 0.5 ? "" : null,
   });
 
-  const _assert: types.Arg<typeof types.String, string | null> = arg;
+  const _assert: schema.Arg<typeof schema.String, string | null> = arg;
   // @ts-expect-error
-  const _assert1: types.Arg<typeof types.String, null> = arg;
+  const _assert1: schema.Arg<typeof schema.String, null> = arg;
   // @ts-expect-error
-  const _assert2: types.Arg<typeof types.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, string> = arg;
 }
 
 {
@@ -645,18 +645,18 @@ types.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     ...x,
   });
 
-  const _assert: types.Arg<typeof types.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
   // @ts-expect-error
-  const _assert1: types.Arg<typeof types.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
   // @ts-expect-error
-  const _assert2: types.Arg<typeof types.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, string> = arg;
   const _assert3: (
-    x: types.Arg<typeof types.String, string | undefined>
+    x: schema.Arg<typeof schema.String, string | undefined>
   ) => void = (x: typeof arg) => {};
 }
 
@@ -671,16 +671,16 @@ types.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     ...x,
   });
 
-  const _assert: types.Arg<typeof types.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
   // @ts-expect-error
-  const _assert1: types.Arg<typeof types.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
   // @ts-expect-error
-  const _assert2: types.Arg<typeof types.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, string> = arg;
 }
 
 {
@@ -694,40 +694,80 @@ types.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     ...x,
   });
-  const _assert: types.Arg<typeof types.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
   // @ts-expect-error
-  const _assert1: types.Arg<typeof types.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
   // @ts-expect-error
-  const _assert2: types.Arg<typeof types.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, string> = arg;
 }
 
 {
   const thing: { defaultValue: undefined } | { defaultValue: string } =
     Math.random() > 0.5 ? { defaultValue: undefined } : { defaultValue: "" };
-  const arg = types.arg({
-    type: types.String,
+  const arg = schema.arg({
+    type: schema.String,
     ...thing,
   });
 
-  const _assert: types.Arg<typeof types.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
   // @ts-expect-error
-  const _assert1: types.Arg<typeof types.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
   // @ts-expect-error
-  const _assert2: types.Arg<typeof types.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, string> = arg;
 }
 
-types.arg({
-  type: types.String,
+schema.arg({
+  type: schema.String,
   // @ts-expect-error
   defaultValue: 1,
 });
 
-types.arg({
-  type: types.String,
+schema.arg({
+  type: schema.String,
   // @ts-expect-error
   bad: true,
+});
+
+schema.object<{ thing: (args: { a: string }) => string }>()({
+  name: "Thing",
+  fields: {
+    // @ts-expect-error
+    thing: schema.field({
+      type: schema.String,
+      args: { a: schema.arg({ type: schema.nonNull(schema.Int) }) },
+    }),
+  },
+});
+
+schema.object<{ thing: (args: { a: string }) => string }>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+      args: { a: schema.arg({ type: schema.nonNull(schema.String) }) },
+    }),
+  },
+});
+
+schema.object<{ thing: () => string }>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+      args: { a: schema.arg({ type: schema.nonNull(schema.String) }) },
+    }),
+  },
+});
+
+schema.object<{ thing: () => Promise<string> }>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
 });

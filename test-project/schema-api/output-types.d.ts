@@ -1,6 +1,6 @@
-import { TypesWithContext } from "@graphql-ts/schema";
+import { SchemaAPIWithContext } from "@graphql-ts/schema";
 import { Context } from ".";
 
-declare const __types: TypesWithContext<Context>;
+declare const __schema: SchemaAPIWithContext<Context>;
 
-export = __types;
+export = __schema;

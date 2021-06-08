@@ -1,5 +1,5 @@
-export { bindTypesToContext } from "./output";
-export * as types from "./types";
+export { bindSchemaAPIToContext } from "./output";
+export * as schema from "./schema-api";
 export type {
   InferValueFromOutputType,
   ObjectType,
@@ -8,7 +8,7 @@ export type {
   NullableOutputType,
   OutputType,
   UnionType,
-  TypesWithContext,
+  SchemaAPIWithContext,
   InterfaceField,
   InterfaceType,
 } from "./output";
