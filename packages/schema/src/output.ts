@@ -64,7 +64,13 @@ type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
     : Type extends EnumType<infer Values>
     ? Values[keyof Values]["value"]
     : Type extends OutputListType<infer Value>
-    ? InferValueFromOutputType<Value>[]
+    ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
+      // which means that things like `string` won't be allowed
+      // (which is probably a good thing because returning a string from a resolver that needs
+      // a graphql list of strings is almost definitely not what you want and if it is, use Array.from)
+      // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
+      // (though tbh, i think the chance of that causing problems is quite low)
+      object & Iterable<InferValueFromOutputType<Value>>
     : Type extends ObjectType<infer RootVal, any>
     ? RootVal
     : Type extends UnionType<infer RootVal, any>
@@ -277,8 +283,53 @@ export type ObjectTypeFunc<Context> = <
 >(config: {
   name: string;
   fields: MaybeFunc<Fields>;
+  /**
+   * A description of the object type that is visible when introspected.
+   *
+   * ```ts
+   * type Person = { name: string };
+   *
+   * const Person = types.object<Person>()({
+   *   name: "Person",
+   *   description: "A person does things!",
+   *   fields: {
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   """
+   *   A person does things!
+   *   """
+   *   type Person {
+   *     name: String
+   *   }
+   * `;
+   * ```
+   */
   description?: string;
-  deprecationReason?: string;
+  /**
+   * A number of interfaces that the object type implements. See
+   * `types.interface` for more information.
+   *
+   * ```ts
+   * const Node = types.interface<{ kind: string }>()({
+   *   name: "Node",
+   *   resolveType: (rootVal) => rootVal.kind,
+   *   fields: {
+   *     id: types.interfaceField({ type: types.ID }),
+   *   },
+   * });
+   *
+   * const Person = types.object<{ kind: "Person"; id: string }>()({
+   *   name: "Person",
+   *   interfaces: [Node],
+   *   fields: {
+   *     id: types.field({ type: types.ID }),
+   *   },
+   * });
+   * ```
+   */
   interfaces?: [...Interfaces];
   isTypeOf?: GraphQLIsTypeOfFn<unknown, Context>;
   extensions?: Readonly<GraphQLObjectTypeExtensions<RootVal, Context>>;
@@ -508,11 +559,231 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
 }
 
 export type SchemaAPIWithContext<Context> = {
+  /**
+   * Creates a GraphQL object type. Note this is an **output** type, if you want
+   * an input object, use `types.inputObject`.
+   *
+   * When calling `types.object`, you must provide a type parameter that is the
+   * root value of the object type. The root value what you receive as the first
+   * argument of resolvers on this type and what you must return from resolvers
+   * of fields that return this type.
+   *
+   * ```ts
+   * const Person = types.object<{ name: string }>()({
+   *   name: "Person",
+   *   fields: {
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   type Person {
+   *     name: String
+   *   }
+   * `;
+   * ```
+   *
+   * ## Writing resolvers
+   *
+   * To do anything other than just return a field from the RootVal, you need to
+   * provide a resolver.
+   *
+   * Note: TypeScript will force you to provide a resolve function if the field
+   * in the RootVal and the GraphQL field don't match
+   *
+   * ```ts
+   * const Person = types.object<{ name: string }>()({
+   *   name: "Person",
+   *   fields: {
+   *     name: types.field({ type: types.String }),
+   *     excitedName: types.field({
+   *       type: types.String,
+   *       resolve(rootVal, args, context, info) {
+   *         return `${rootVal.name}!`;
+   *       },
+   *     }),
+   *   },
+   * });
+   * ```
+   *
+   * ## Circularity
+   *
+   * GraphQL types will often contain references to themselves and to make
+   * TypeScript allow that, you need have an explicit type annotation of
+   * `types.ObjectType<RootVal>` along with making `fields` a function that
+   * returns the object.
+   *
+   * ```ts
+   * type PersonRootVal = { name: string; friends: PersonRootVal[] };
+   *
+   * const Person: types.ObjectType<PersonRootVal> = types.object<PersonRootVal>()({
+   *   name: "Person",
+   *   fields: () => ({
+   *     name: types.field({ type: types.String }),
+   *     friends: types.field({ type: types.list(Person) }),
+   *   }),
+   * });
+   * ```
+   */
   object: ObjectTypeFunc<Context>;
   union: UnionTypeFunc<Context>;
   field: FieldFunc<Context>;
+  /**
+   * A helper to easily share fields across object and interface types.
+   *
+   * ```ts
+   * const nodeFields = types.fields<{ id: string }>({
+   *   id: types.field({ type: types.ID }),
+   * });
+   *
+   * const Node = types.field({
+   *   name: "Node",
+   *   fields: nodeFields,
+   * });
+   *
+   * const Person = types.object<{
+   *   __typename: "Person";
+   *   id: string;
+   *   name: string;
+   * }>()({
+   *   name: "Person",
+   *   interfaces: [Node],
+   *   fields: {
+   *     ...nodeFields,
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   * ```
+   *
+   * ## Why use `types.fields` instead of just creating an object?
+   *
+   * The definition of Field in `@ts-gql/schema` has some special things, let's
+   * look at the definition of it:
+   *
+   * ```ts
+   * type Field<
+   *   RootVal,
+   *   Args extends Record<string, Arg<any>>,
+   *   TType extends OutputType<Context>,
+   *   Key extends string,
+   *   Context
+   * > = ...;
+   * ```
+   *
+   * There's two especially notable bits in there which need to be inferred from
+   * elsewhere, the `RootVal` and `Key` type params.
+   *
+   * The `RootVal` is pretty simple and it's quite simple to see why
+   * `types.fields` is useful here. You could explicitly write it with resolvers
+   * on the first arg but you'd have to do that on every field which would get
+   * very repetitive and wouldn't work for fields without resolvers.
+   *
+   * ```ts
+   * const someFields = types.fields<{ name: string }>()({
+   *   name: types.field({ type: types.String }),
+   * });
+   * ```
+   *
+   * The `Key` type param might seem a bit more strange though. What it's saying
+   * is that *the key that a field is at is part of its TypeScript type*.
+   *
+   * This is important to be able to represent the fact that a resolver is
+   * optional if the `RootVal` has a .
+   *
+   * ```ts
+   * const someFields = types.fields<{ name: string }>()({
+   *   someName: types.field({ type: types.String }),
+   * });
+   *
+   * const someFields = types.fields<{ name: string }>()({
+   *   someName: types.field({ type: types.String }),
+   * });
+   * ```
+   */
   fields: FieldsFunc<Context>;
   interfaceField: InterfaceFieldFunc<Context>;
+  /**
+   * Creates a GraphQL interface type that can be used in other GraphQL object
+   * and interface types.
+   *
+   * ```ts
+   * const Entity = types.interface()({
+   *   name: "Entity",
+   *   fields: {
+   *     name: types.interfaceField({ type: types.String }),
+   *   },
+   * });
+   *
+   * type PersonRootVal = { __typename: "Person"; name: string };
+   *
+   * const Person = types.object<PersonRootVal>()({
+   *   name: "Person",
+   *   interfaces: [Entity],
+   *   fields: {
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   *
+   * type OrganisationRootVal = { __typename: "Organisation"; name: string };
+   *
+   * const Organisation = types.object<OrganisationRootVal>()({
+   *   name: "Organisation",
+   *   interfaces: [Entity],
+   *   fields: {
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   * ```
+   *
+   * ## Resolving Types
+   *
+   * When using GraphQL interface and union types, there needs to a way to
+   * determine which concrete object type has been returned from a resolver.
+   * With `graphql-js` and `@ts-gql/schema`, this is done with `isTypeOf` on
+   * object types and `resolveType` on interface and union types. Note
+   * `@ts-gql/schema` **does not aim to strictly type the implementation of
+   * `resolveType` and `isTypeOf`**. If you don't provide `resolveType` or
+   * `isTypeOf`, a `__typename` property on the root value will be used, if that
+   * fails, an error will be thrown at runtime.
+   *
+   * ## Fields vs Interface Fields
+   *
+   * You might have noticed that `types.interfaceField` was used instead of
+   * `types.field` for the fields on the interfaces. This is because
+   * **interfaces aren't defining implementation of fields** which means that
+   * fields on an interface don't need define resolvers.
+   *
+   * ## Sharing field implementations
+   *
+   * Even though interfaces, you may still want to share fields, you can use
+   * `types.fields`. See `types.fields` for more information about why you
+   * should use `types.fields` instead of just defining an object the fields and
+   * spreading that.
+   *
+   * ```ts
+   * const nodeFields = types.fields<{ id: string }>({
+   *   id: types.field({ type: types.ID }),
+   * });
+   *
+   * const Node = types.field({
+   *   name: "Node",
+   *   fields: nodeFields,
+   * });
+   *
+   * const Person = types.object<{
+   *   __typename: "Person";
+   *   id: string;
+   *   name: string;
+   * }>()({
+   *   name: "Person",
+   *   interfaces: [Node],
+   *   fields: {
+   *     ...nodeFields,
+   *     name: types.field({ type: types.String }),
+   *   },
+   * });
+   * ```
+   */
   interface: InterfaceTypeFunc<Context>;
 };
 
