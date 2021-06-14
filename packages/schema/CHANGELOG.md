@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 0.1.2
+
+### Patch Changes
+
+- [`6e4562f`](https://github.com/Thinkmill/graphql-ts/commit/6e4562fbeaf0c3e1b2dfba215bfe08cd957ae8fd) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Updated mentions of `types.` to `schema.` in JSDoc comments
+
 ## 0.1.1
 
 ### Patch Changes
