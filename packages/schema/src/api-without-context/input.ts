@@ -95,7 +95,7 @@ export function arg<
     : { defaultValue: DefaultValue })
 ): Arg<Type, DefaultValue> {
   if (!arg.type) {
-    throw new Error("A type must be passed to types.arg()");
+    throw new Error("A type must be passed to schema.arg()");
   }
   return arg as any;
 }

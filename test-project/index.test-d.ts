@@ -147,19 +147,19 @@ schema.object<{ id: string } | { id: boolean }>()({
 });
 
 {
-  const types = {
+  const schema = {
     ...schemaWithContext,
     ...bindSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
   };
 
-  const SomeOutput = types.object<{ thing: boolean }>()({
+  const SomeOutput = schema.object<{ thing: boolean }>()({
     name: "Something",
     fields: {
-      thing: types.field({ type: types.nonNull(types.Boolean) }),
+      thing: schema.field({ type: schema.nonNull(schema.Boolean) }),
     },
   });
 
-  const nonNullSomeOutput = types.nonNull(SomeOutput);
+  const nonNullSomeOutput = schema.nonNull(SomeOutput);
 
   type OutputTypeWithNull = InferValueFromOutputType<typeof SomeOutput>;
 
@@ -172,7 +172,7 @@ schema.object<{ id: string } | { id: boolean }>()({
 
   expectType<OutputTypeWithoutNull>({ thing: true });
 
-  types.field({
+  schema.field({
     type: SomeOutput,
     resolve() {
       if (Math.random() > 0.5) {
@@ -182,8 +182,8 @@ schema.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  types.field({
-    type: types.nonNull(types.list(nonNullSomeOutput)),
+  schema.field({
+    type: schema.nonNull(schema.list(nonNullSomeOutput)),
     resolve() {
       return [{ thing: false }];
     },
@@ -191,20 +191,20 @@ schema.object<{ id: string } | { id: boolean }>()({
 
   type FieldIdentifier = { listKey: string; fieldPath: string };
 
-  types.fields<{ path: string; listKey: string }>()({
-    thing: types.field({
+  schema.fields<{ path: string; listKey: string }>()({
+    thing: schema.field({
       resolve(rootVal) {
         return { fieldPath: rootVal.path, listKey: rootVal.listKey };
       },
-      type: types.nonNull(
-        types.object<FieldIdentifier>()({
+      type: schema.nonNull(
+        schema.object<FieldIdentifier>()({
           name: "KeystoneAdminUIFieldMetaListView",
           fields: {
-            fieldMode: types.field({
-              type: types.nonNull(
-                types.enum({
+            fieldMode: schema.field({
+              type: schema.nonNull(
+                schema.enum({
                   name: "KeystoneAdminUIFieldMetaListViewFieldMode",
-                  values: types.enumValues(["read", "hidden"]),
+                  values: schema.enumValues(["read", "hidden"]),
                 })
               ),
               async resolve(rootVal, args, context) {
@@ -218,11 +218,11 @@ schema.object<{ id: string } | { id: boolean }>()({
   });
 }
 
-// types.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
+// schema.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
 //   name: "Node",
 //   fields: {
-//     id: types.field({
-//       type: types.nonNull(types.ID),
+//     id: schema.field({
+//       type: schema.nonNull(schema.ID),
 //       // args: {},
 //       resolve({}, {}) {
 //         return true;

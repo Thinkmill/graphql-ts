@@ -152,11 +152,11 @@ type FieldFuncResolve<
 > =
   // the tuple is here because we _don't_ want this to be distributive
   // if this was distributive then it would optional when it should be required e.g.
-  // types.object<{ id: string } | { id: boolean }>()({
+  // schema.object<{ id: string } | { id: boolean }>()({
   //   name: "Node",
   //   fields: {
-  //     id: types.field({
-  //       type: types.nonNull(types.ID),
+  //     id: schema.field({
+  //       type: schema.nonNull(schema.ID),
   //     }),
   //   },
   // });
@@ -214,7 +214,7 @@ export type FieldFunc<Context> = <
 function bindFieldToContext<Context>(): FieldFunc<Context> {
   return function field(field) {
     if (!field.type) {
-      throw new Error("A type must be passed to types.field()");
+      throw new Error("A type must be passed to schema.field()");
     }
     return field as any;
   };
@@ -289,11 +289,11 @@ export type ObjectTypeFunc<Context> = <
    * ```ts
    * type Person = { name: string };
    *
-   * const Person = types.object<Person>()({
+   * const Person = schema.object<Person>()({
    *   name: "Person",
    *   description: "A person does things!",
    *   fields: {
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    * // ==
@@ -310,22 +310,22 @@ export type ObjectTypeFunc<Context> = <
   description?: string;
   /**
    * A number of interfaces that the object type implements. See
-   * `types.interface` for more information.
+   * `schema.interface` for more information.
    *
    * ```ts
-   * const Node = types.interface<{ kind: string }>()({
+   * const Node = schema.interface<{ kind: string }>()({
    *   name: "Node",
    *   resolveType: (rootVal) => rootVal.kind,
    *   fields: {
-   *     id: types.interfaceField({ type: types.ID }),
+   *     id: schema.interfaceField({ type: schema.ID }),
    *   },
    * });
    *
-   * const Person = types.object<{ kind: "Person"; id: string }>()({
+   * const Person = schema.object<{ kind: "Person"; id: string }>()({
    *   name: "Person",
    *   interfaces: [Node],
    *   fields: {
-   *     id: types.field({ type: types.ID }),
+   *     id: schema.field({ type: schema.ID }),
    *   },
    * });
    * ```
@@ -561,18 +561,18 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
 export type SchemaAPIWithContext<Context> = {
   /**
    * Creates a GraphQL object type. Note this is an **output** type, if you want
-   * an input object, use `types.inputObject`.
+   * an input object, use `schema.inputObject`.
    *
-   * When calling `types.object`, you must provide a type parameter that is the
+   * When calling `schema.object`, you must provide a type parameter that is the
    * root value of the object type. The root value what you receive as the first
    * argument of resolvers on this type and what you must return from resolvers
    * of fields that return this type.
    *
    * ```ts
-   * const Person = types.object<{ name: string }>()({
+   * const Person = schema.object<{ name: string }>()({
    *   name: "Person",
    *   fields: {
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    * // ==
@@ -592,12 +592,12 @@ export type SchemaAPIWithContext<Context> = {
    * in the RootVal and the GraphQL field don't match
    *
    * ```ts
-   * const Person = types.object<{ name: string }>()({
+   * const Person = schema.object<{ name: string }>()({
    *   name: "Person",
    *   fields: {
-   *     name: types.field({ type: types.String }),
-   *     excitedName: types.field({
-   *       type: types.String,
+   *     name: schema.field({ type: schema.String }),
+   *     excitedName: schema.field({
+   *       type: schema.String,
    *       resolve(rootVal, args, context, info) {
    *         return `${rootVal.name}!`;
    *       },
@@ -610,17 +610,17 @@ export type SchemaAPIWithContext<Context> = {
    *
    * GraphQL types will often contain references to themselves and to make
    * TypeScript allow that, you need have an explicit type annotation of
-   * `types.ObjectType<RootVal>` along with making `fields` a function that
+   * `schema.ObjectType<RootVal>` along with making `fields` a function that
    * returns the object.
    *
    * ```ts
    * type PersonRootVal = { name: string; friends: PersonRootVal[] };
    *
-   * const Person: types.ObjectType<PersonRootVal> = types.object<PersonRootVal>()({
+   * const Person: schema.ObjectType<PersonRootVal> = schema.object<PersonRootVal>()({
    *   name: "Person",
    *   fields: () => ({
-   *     name: types.field({ type: types.String }),
-   *     friends: types.field({ type: types.list(Person) }),
+   *     name: schema.field({ type: schema.String }),
+   *     friends: schema.field({ type: schema.list(Person) }),
    *   }),
    * });
    * ```
@@ -632,16 +632,16 @@ export type SchemaAPIWithContext<Context> = {
    * A helper to easily share fields across object and interface types.
    *
    * ```ts
-   * const nodeFields = types.fields<{ id: string }>({
-   *   id: types.field({ type: types.ID }),
+   * const nodeFields = schema.fields<{ id: string }>({
+   *   id: schema.field({ type: schema.ID }),
    * });
    *
-   * const Node = types.field({
+   * const Node = schema.field({
    *   name: "Node",
    *   fields: nodeFields,
    * });
    *
-   * const Person = types.object<{
+   * const Person = schema.object<{
    *   __typename: "Person";
    *   id: string;
    *   name: string;
@@ -650,12 +650,12 @@ export type SchemaAPIWithContext<Context> = {
    *   interfaces: [Node],
    *   fields: {
    *     ...nodeFields,
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    * ```
    *
-   * ## Why use `types.fields` instead of just creating an object?
+   * ## Why use `schema.fields` instead of just creating an object?
    *
    * The definition of Field in `@ts-gql/schema` has some special things, let's
    * look at the definition of it:
@@ -674,13 +674,13 @@ export type SchemaAPIWithContext<Context> = {
    * elsewhere, the `RootVal` and `Key` type params.
    *
    * The `RootVal` is pretty simple and it's quite simple to see why
-   * `types.fields` is useful here. You could explicitly write it with resolvers
+   * `schema.fields` is useful here. You could explicitly write it with resolvers
    * on the first arg but you'd have to do that on every field which would get
    * very repetitive and wouldn't work for fields without resolvers.
    *
    * ```ts
-   * const someFields = types.fields<{ name: string }>()({
-   *   name: types.field({ type: types.String }),
+   * const someFields = schema.fields<{ name: string }>()({
+   *   name: schema.field({ type: schema.String }),
    * });
    * ```
    *
@@ -691,12 +691,12 @@ export type SchemaAPIWithContext<Context> = {
    * optional if the `RootVal` has a .
    *
    * ```ts
-   * const someFields = types.fields<{ name: string }>()({
-   *   someName: types.field({ type: types.String }),
+   * const someFields = schema.fields<{ name: string }>()({
+   *   someName: schema.field({ type: schema.String }),
    * });
    *
-   * const someFields = types.fields<{ name: string }>()({
-   *   someName: types.field({ type: types.String }),
+   * const someFields = schema.fields<{ name: string }>()({
+   *   someName: schema.field({ type: schema.String }),
    * });
    * ```
    */
@@ -707,30 +707,30 @@ export type SchemaAPIWithContext<Context> = {
    * and interface types.
    *
    * ```ts
-   * const Entity = types.interface()({
+   * const Entity = schema.interface()({
    *   name: "Entity",
    *   fields: {
-   *     name: types.interfaceField({ type: types.String }),
+   *     name: schema.interfaceField({ type: schema.String }),
    *   },
    * });
    *
    * type PersonRootVal = { __typename: "Person"; name: string };
    *
-   * const Person = types.object<PersonRootVal>()({
+   * const Person = schema.object<PersonRootVal>()({
    *   name: "Person",
    *   interfaces: [Entity],
    *   fields: {
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    *
    * type OrganisationRootVal = { __typename: "Organisation"; name: string };
    *
-   * const Organisation = types.object<OrganisationRootVal>()({
+   * const Organisation = schema.object<OrganisationRootVal>()({
    *   name: "Organisation",
    *   interfaces: [Entity],
    *   fields: {
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    * ```
@@ -748,29 +748,29 @@ export type SchemaAPIWithContext<Context> = {
    *
    * ## Fields vs Interface Fields
    *
-   * You might have noticed that `types.interfaceField` was used instead of
-   * `types.field` for the fields on the interfaces. This is because
+   * You might have noticed that `schema.interfaceField` was used instead of
+   * `schema.field` for the fields on the interfaces. This is because
    * **interfaces aren't defining implementation of fields** which means that
    * fields on an interface don't need define resolvers.
    *
    * ## Sharing field implementations
    *
-   * Even though interfaces, you may still want to share fields, you can use
-   * `types.fields`. See `types.fields` for more information about why you
-   * should use `types.fields` instead of just defining an object the fields and
+   * Even though interfaces don't contain field implementations, you may still want to share field implementations between interface implementations. You can use
+   * `schema.fields` to do that. See `schema.fields` for more information about why you
+   * should use `schema.fields` instead of just defining an object the fields and
    * spreading that.
    *
    * ```ts
-   * const nodeFields = types.fields<{ id: string }>({
-   *   id: types.field({ type: types.ID }),
+   * const nodeFields = schema.fields<{ id: string }>({
+   *   id: schema.field({ type: schema.ID }),
    * });
    *
-   * const Node = types.field({
+   * const Node = schema.field({
    *   name: "Node",
    *   fields: nodeFields,
    * });
    *
-   * const Person = types.object<{
+   * const Person = schema.object<{
    *   __typename: "Person";
    *   id: string;
    *   name: string;
@@ -779,7 +779,7 @@ export type SchemaAPIWithContext<Context> = {
    *   interfaces: [Node],
    *   fields: {
    *     ...nodeFields,
-   *     name: types.field({ type: types.String }),
+   *     name: schema.field({ type: schema.String }),
    *   },
    * });
    * ```

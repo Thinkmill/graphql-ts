@@ -12,7 +12,7 @@ export type ListType<Of extends Type<any>> = {
  * Wraps any `@ts-gql/schema` GraphQL type in a list.
  *
  * ```ts
- * const stringListType = types.list(types.String);
+ * const stringListType = schema.list(schema.String);
  * // ==
  * graphql`[String]`;
  * ```
@@ -27,10 +27,10 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 }
 
 /**
- * Wraps any `@ts-gql/schema` GraphQL type with a non-null type except other
- * non-null types.
+ * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
  *
- * See the documentation for `types.nonNull` for more information.
+ * See the documentation for {@link nonNull `schema.nonNull`} for more information.
+ *
  */
 export type NonNullType<Of extends NullableType<any>> = {
   kind: "non-null";
@@ -40,11 +40,10 @@ export type NonNullType<Of extends NullableType<any>> = {
 };
 
 /**
- * Wraps any `@ts-gql/schema` GraphQL type except other non-null types with a
- * non-null type.
+ * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
  *
  * ```ts
- * const nonNullableString = types.nonNull(types.String);
+ * const nonNullableString = schema.nonNull(schema.String);
  * // ==
  * graphql`String!`;
  * ```
@@ -54,17 +53,17 @@ export type NonNullType<Of extends NullableType<any>> = {
  * you provide a default value.
  *
  * ```ts
- * types.field({
+ * schema.field({
  *   args: {
- *     someNonNullAndRequiredArg: types.arg({
- *       type: types.nonNull(types.String),
+ *     someNonNullAndRequiredArg: schema.arg({
+ *       type: schema.nonNull(schema.String),
  *     }),
- *     someNonNullButOptionalArg: types.arg({
- *       type: types.nonNull(types.String),
+ *     someNonNullButOptionalArg: schema.arg({
+ *       type: schema.nonNull(schema.String),
  *       defaultValue: "some default",
  *     }),
  *   },
- *   type: types.String,
+ *   type: schema.String,
  *   resolve(rootVal, args) {
  *     // both of these will always be a string
  *     args.someNonNullAndRequiredArg;
@@ -98,8 +97,8 @@ export type NonNullType<Of extends NullableType<any>> = {
  * even if it will never be null in the success case, you should make it nullable.
  *
  * ```ts
- * types.field({
- *   type: types.nonNull(types.String),
+ * schema.field({
+ *   type: schema.nonNull(schema.String),
  *   resolve(rootVal, args) {
  *     return "something";
  *   },
@@ -116,7 +115,7 @@ export type NonNullType<Of extends NullableType<any>> = {
  * ```ts
  * // Argument of type 'NonNullType<ScalarType<string>>'
  * // is not assignable to parameter of type 'TypesExcludingNonNull'.
- * types.nonNull(types.nonNull(types.String));
+ * schema.nonNull(schema.nonNull(schema.String));
  * ```
  */
 export function nonNull<Of extends NullableType<any>>(of: Of): NonNullType<Of> {

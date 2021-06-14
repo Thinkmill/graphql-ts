@@ -15,10 +15,10 @@ import {
  *   declare const someScalar: ScalarType<string>;
  *
  *   // for fields on output types
- *   types.field({ type: someScalar });
+ *   schema.field({ type: someScalar });
  *
  *   // for args on output fields or fields on input types
- *   types.arg({ type: someScalar });
+ *   schema.arg({ type: someScalar });
  *
  * @template Type The type of a value of the scalar
  */
@@ -42,7 +42,7 @@ export type ScalarType<Type> = {
  * values to the canonical form yourself before returning from resolvers.
  *
  * @example
- *   const JSON = types.scalar<JSONValue>(GraphQLJSON);
+ *   const JSON = schema.scalar<JSONValue>(GraphQLJSON);
  */
 export function scalar<Type>(scalar: GraphQLScalarType): ScalarType<Type> {
   return {
