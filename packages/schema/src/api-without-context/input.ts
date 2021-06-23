@@ -7,34 +7,48 @@ import {
 import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
 
-type InputListType<Of extends InputType> = {
+type InputListTypeForInference<Of extends InputType> = {
   kind: "list";
   of: Of;
   graphQLType: GraphQLList<any>;
   __context: any;
 };
 
-type InputNonNullType<Of extends NullableInputType> = {
+type InputNonNullTypeForInference<Of extends NullableInputType> = {
   kind: "non-null";
   of: Of;
   graphQLType: GraphQLNonNull<any>;
   __context: any;
 };
 
+type InputListType = {
+  kind: "list";
+  of: InputType;
+  graphQLType: GraphQLList<any>;
+  __context: any;
+};
+
+type InputNonNullType = {
+  kind: "non-null";
+  of: NullableInputType;
+  graphQLType: GraphQLNonNull<NullableInputType["graphQLType"]>;
+  __context: any;
+};
+
 export type NullableInputType =
   | ScalarType<any>
   | InputObjectType<any>
-  | InputListType<any>
+  | InputListType
   | EnumType<any>;
 
-export type InputType = NullableInputType | InputNonNullType<any>;
+export type InputType = NullableInputType | InputNonNullType;
 
 type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
   Type extends ScalarType<infer Value>
     ? Value
     : Type extends EnumType<infer Values>
     ? Values[keyof Values]["value"]
-    : Type extends InputListType<infer Value>
+    : Type extends InputListTypeForInference<infer Value>
     ? InferValueFromInputType<Value>[]
     : Type extends InputObjectType<infer Fields>
     ? {
@@ -55,7 +69,7 @@ export type InferValueFromArg<TArg extends Arg<any, any>> =
       : never);
 
 export type InferValueFromInputType<Type extends InputType> =
-  Type extends InputNonNullType<infer Value>
+  Type extends InputNonNullTypeForInference<infer Value>
     ? InferValueFromInputTypeWithoutAddingNull<Value>
     : InferValueFromInputTypeWithoutAddingNull<Type> | null;
 
@@ -70,6 +84,35 @@ export type InputObjectType<
   graphQLType: GraphQLInputObjectType;
 };
 
+/**
+ * A `@ts-gql/schema` GraphQL argument. These should be created with
+ * {@link arg `schema.arg`}
+ *
+ * Args can can be used as arguments on output fields:
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.String,
+ *   args: {
+ *     something: schema.arg({ type: schema.String }),
+ *   },
+ *   resolve(rootVal, { something }) {
+ *     return something || somethingElse;
+ *   },
+ * });
+ * ```
+ *
+ * Or as fields on input objects:
+ *
+ * ```ts
+ * schema.inputObject({
+ *   name: "Something",
+ *   fields: {
+ *     something: schema.arg({ type: schema.String }),
+ *   },
+ * });
+ * ```
+ */
 export type Arg<
   Type extends InputType,
   DefaultValue extends InferValueFromInputType<Type> | undefined =
@@ -82,6 +125,42 @@ export type Arg<
   defaultValue: DefaultValue;
 };
 
+/**
+ * Creates a {@link Arg `@ts-gql/schema` GraphQL argument}.
+ *
+ * Args can can be used as arguments on output fields:
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.String,
+ *   args: {
+ *     something: schema.arg({ type: schema.String }),
+ *   },
+ *   resolve(rootVal, { something }) {
+ *     return something || somethingElse;
+ *   },
+ * });
+ * // ==
+ * graphql`(something: String): String`;
+ * ```
+ *
+ * Or as fields on input objects:
+ *
+ * ```ts
+ * const Something = schema.inputObject({
+ *   name: "Something",
+ *   fields: {
+ *     something: schema.arg({ type: schema.String }),
+ *   },
+ * });
+ * // ==
+ * graphql`
+ *   input Something {
+ *     something: String
+ *   }
+ * `;
+ * ```
+ */
 export function arg<
   Type extends InputType,
   DefaultValue extends InferValueFromInputType<Type> | undefined = undefined

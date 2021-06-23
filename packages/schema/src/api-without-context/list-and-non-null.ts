@@ -1,6 +1,11 @@
 import { GraphQLList, GraphQLNonNull } from "graphql/type/definition";
 import { NullableType, Type } from "../type";
 
+/**
+ * Wraps any `@ts-gql/schema` GraphQL type with in a list type.
+ *
+ * See the documentation for {@link list `schema.list`} for more information.
+ */
 export type ListType<Of extends Type<any>> = {
   kind: "list";
   of: Of;
@@ -16,6 +21,53 @@ export type ListType<Of extends Type<any>> = {
  * // ==
  * graphql`[String]`;
  * ```
+ *
+ * When used as an input type, you will recieve an array of the inner type.
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.String,
+ *   args: { thing: schema.arg({ type: schema.list(schema.String) }) },
+ *   resolve(rootVal, { thing }) {
+ *     const theThing: undefined | null | Array<string | null> = thing;
+ *     return "";
+ *   },
+ * });
+ * ```
+ *
+ * When used as an output type, you can return an iterable of the inner type
+ * that also matches `typeof val === 'object'` so for example, you'll probably
+ * return an Array most of the time but you could also return a Set you couldn't
+ * return a string though, even though a string is an iterable, it doesn't match
+ * `typeof val === 'object'`.
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.list(schema.String),
+ *   resolve() {
+ *     return [""];
+ *   },
+ * });
+ * ```
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.list(schema.String),
+ *   resolve() {
+ *     return new Set([""]);
+ *   },
+ * });
+ * ```
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.list(schema.String),
+ *   resolve() {
+ *     // this will not be allowed
+ *     return "some things";
+ *   },
+ * });
+ * ```
  */
 export function list<Of extends Type<any>>(of: Of): ListType<Of> {
   return {
@@ -30,7 +82,6 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
  * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
  *
  * See the documentation for {@link nonNull `schema.nonNull`} for more information.
- *
  */
 export type NonNullType<Of extends NullableType<any>> = {
   kind: "non-null";
@@ -41,6 +92,8 @@ export type NonNullType<Of extends NullableType<any>> = {
 
 /**
  * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
+ *
+ * Types in GraphQL are always nullable by default so if you want
  *
  * ```ts
  * const nonNullableString = schema.nonNull(schema.String);

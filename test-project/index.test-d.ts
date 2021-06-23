@@ -771,3 +771,20 @@ schema.object<{ thing: () => Promise<string> }>()({
     }),
   },
 });
+
+{
+  // @ts-expect-error
+  const thing: schema.NullableInputType = schema.list(
+    schema.object()({
+      name: "something",
+      fields: {},
+    })
+  );
+  // @ts-expect-error
+  const thing: schema.NullableInputType = schema.nonNull(
+    schema.object()({
+      name: "something",
+      fields: {},
+    })
+  );
+}

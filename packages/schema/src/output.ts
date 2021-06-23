@@ -616,17 +616,31 @@ export type SchemaAPIWithContext<Context> = {
    * ```ts
    * type PersonRootVal = { name: string; friends: PersonRootVal[] };
    *
-   * const Person: schema.ObjectType<PersonRootVal> = schema.object<PersonRootVal>()({
-   *   name: "Person",
-   *   fields: () => ({
-   *     name: schema.field({ type: schema.String }),
-   *     friends: schema.field({ type: schema.list(Person) }),
-   *   }),
-   * });
+   * const Person: schema.ObjectType<PersonRootVal> =
+   *   schema.object<PersonRootVal>()({
+   *     name: "Person",
+   *     fields: () => ({
+   *       name: schema.field({ type: schema.String }),
+   *       friends: schema.field({ type: schema.list(Person) }),
+   *     }),
+   *   });
    * ```
    */
   object: ObjectTypeFunc<Context>;
   union: UnionTypeFunc<Context>;
+  /**
+   * Creates a GraphQL field. These will generally be passed directly to
+   * `fields` object in a `schema.object` call.
+   *
+   * ```ts
+   * const Something = schema.object<{ thing: string }>()({
+   *   name: "Something",
+   *   fields: {
+   *     thing: schema.field({ type: schema.String }),
+   *   },
+   * });
+   * ```
+   */
   field: FieldFunc<Context>;
   /**
    * A helper to easily share fields across object and interface types.
@@ -674,9 +688,9 @@ export type SchemaAPIWithContext<Context> = {
    * elsewhere, the `RootVal` and `Key` type params.
    *
    * The `RootVal` is pretty simple and it's quite simple to see why
-   * `schema.fields` is useful here. You could explicitly write it with resolvers
-   * on the first arg but you'd have to do that on every field which would get
-   * very repetitive and wouldn't work for fields without resolvers.
+   * `schema.fields` is useful here. You could explicitly write it with
+   * resolvers on the first arg but you'd have to do that on every field which
+   * would get very repetitive and wouldn't work for fields without resolvers.
    *
    * ```ts
    * const someFields = schema.fields<{ name: string }>()({
@@ -724,7 +738,10 @@ export type SchemaAPIWithContext<Context> = {
    *   },
    * });
    *
-   * type OrganisationRootVal = { __typename: "Organisation"; name: string };
+   * type OrganisationRootVal = {
+   *   __typename: "Organisation";
+   *   name: string;
+   * };
    *
    * const Organisation = schema.object<OrganisationRootVal>()({
    *   name: "Organisation",
@@ -755,10 +772,11 @@ export type SchemaAPIWithContext<Context> = {
    *
    * ## Sharing field implementations
    *
-   * Even though interfaces don't contain field implementations, you may still want to share field implementations between interface implementations. You can use
-   * `schema.fields` to do that. See `schema.fields` for more information about why you
-   * should use `schema.fields` instead of just defining an object the fields and
-   * spreading that.
+   * Even though interfaces don't contain field implementations, you may still
+   * want to share field implementations between interface implementations. You
+   * can use `schema.fields` to do that. See `schema.fields` for more
+   * information about why you should use `schema.fields` instead of just
+   * defining an object the fields and spreading that.
    *
    * ```ts
    * const nodeFields = schema.fields<{ id: string }>({
