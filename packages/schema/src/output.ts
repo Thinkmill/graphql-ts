@@ -20,19 +20,9 @@ import {
   InputType,
   ScalarType,
   EnumType,
+  ListType,
+  NonNullType,
 } from "./api-without-context";
-
-type OutputListType<Of extends OutputType<any>> = {
-  kind: "list";
-  of: Of;
-  graphQLType: GraphQLList<Of["graphQLType"]>;
-};
-
-type OutputNonNullType<Of extends NullableOutputType<any>> = {
-  kind: "non-null";
-  of: Of;
-  graphQLType: GraphQLNonNull<Of["graphQLType"]>;
-};
 
 type OutputListTypeWithContext<Context> = {
   kind: "list";
@@ -60,12 +50,14 @@ export type OutputType<Context> =
   | NullableOutputType<Context>
   | OutputNonNullTypeWithContext<Context>;
 
+type OutputListTypeForInference<Of extends OutputType<any>> = ListType<Of>;
+
 type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
   Type extends ScalarType<infer Value>
     ? Value
     : Type extends EnumType<infer Values>
     ? Values[keyof Values]["value"]
-    : Type extends OutputListType<infer Value>
+    : Type extends OutputListTypeForInference<infer Value>
     ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
       // which means that things like `string` won't be allowed
       // (which is probably a good thing because returning a string from a resolver that needs
@@ -81,9 +73,12 @@ type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
     ? RootVal
     : never;
 
+type OutputNonNullTypeForInference<Of extends NullableOutputType<any>> =
+  NonNullType<Of>;
+
 export type InferValueFromOutputType<Type extends OutputType<any>> =
   MaybePromise<
-    Type extends OutputNonNullType<infer Value>
+    Type extends OutputNonNullTypeForInference<infer Value>
       ? InferValueFromOutputTypeWithoutAddingNull<Value>
       : InferValueFromOutputTypeWithoutAddingNull<Type> | null
   >;
