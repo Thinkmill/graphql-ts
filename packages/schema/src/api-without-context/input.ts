@@ -6,6 +6,12 @@ import {
 } from "graphql/type/definition";
 import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
+// (these are referenced in the docs)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { OutputType } from "../output";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { Type } from "../type";
+import { NonNullType } from "..";
 
 type InputListTypeForInference<Of extends InputType> = {
   kind: "list";
@@ -21,6 +27,11 @@ type InputNonNullTypeForInference<Of extends NullableInputType> = {
   __context: any;
 };
 
+/**
+ * Any input list type. This type only exists because of limitations in circular types.
+ *
+ * If you want to represent any list input type, you should do `ListType<InputType>`.
+ */
 type InputListType = {
   kind: "list";
   of: InputType;
@@ -28,20 +39,38 @@ type InputListType = {
   __context: any;
 };
 
-type InputNonNullType = {
-  kind: "non-null";
-  of: NullableInputType;
-  graphQLType: GraphQLNonNull<NullableInputType["graphQLType"]>;
-  __context: any;
-};
-
+/**
+ * Any nullable `@graphql-ts/schema` **input** type.
+ *
+ * Note that this is not generic over a `Context` like
+ * {@link OutputType `OutputType`} is because inputs types never interact with
+ * the `Context`.
+ *
+ * See also:
+ *
+ * - {@link InputType}
+ * - {@link Type}
+ * - {@link OutputType}
+ */
 export type NullableInputType =
   | ScalarType<any>
   | InputObjectType<any>
   | InputListType
   | EnumType<any>;
 
-export type InputType = NullableInputType | InputNonNullType;
+/**
+ * Any nullable `@graphql-ts/schema` **input** type.
+ *
+ * Note that this is not generic over a `Context` like {@link OutputType} is
+ * because inputs types never interact with the `Context`.
+ *
+ * See also:
+ *
+ * - {@link NullableInputType}
+ * - {@link Type}
+ * - {@link OutputType}
+ */
+export type InputType = NullableInputType | NonNullType<NullableInputType>;
 
 type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
   Type extends ScalarType<infer Value>
@@ -85,7 +114,7 @@ export type InputObjectType<
 };
 
 /**
- * A `@ts-gql/schema` GraphQL argument. These should be created with
+ * A `@graphql-ts/schema` GraphQL argument. These should be created with
  * {@link arg `schema.arg`}
  *
  * Args can can be used as arguments on output fields:
@@ -126,7 +155,7 @@ export type Arg<
 };
 
 /**
- * Creates a {@link Arg `@ts-gql/schema` GraphQL argument}.
+ * Creates a {@link Arg `@graphql-ts/schema` GraphQL argument}.
  *
  * Args can can be used as arguments on output fields:
  *
@@ -179,6 +208,40 @@ export function arg<
   return arg as any;
 }
 
+/**
+ * Creates a {@link InputObjectType `@graphql-ts/schema` input object type}
+ *
+ * ```ts
+ * const Something = schema.inputObject({
+ *   name: "",
+ * });
+ * ```
+ *
+ * ### Handling circular objects
+ *
+ * Circular input object require
+ *
+ * You can specify all of your non-circular fields outside of the fields object
+ * and then use `typeof` to get the type rather than writing it out as a type again.
+ *
+ * ```ts
+ * const nonCircularFields = {
+ *   thing: schema.arg({ type: schema.String }),
+ * };
+ *
+ * const Something: schema.InputObjectType<
+ *   typeof nonCircularFields & {
+ *     something: schema.Arg<Something, undefined>;
+ *   }
+ * > = schema.inputObject({
+ *   name: "Something",
+ *   fields: () => ({
+ *     something: schema.arg({ type: Something }),
+ *     ...nonCircularFields,
+ *   }),
+ * });
+ * ```
+ */
 export function inputObject<
   Fields extends {
     [Key in keyof any]: Arg<InputType, InferValueFromInputType<InputType>>;
@@ -216,22 +279,3 @@ export function inputObject<
     graphQLType,
   };
 }
-
-// type Thing<T extends string | undefined> = {
-//   something?: string;
-//   theThing: T;
-// };
-
-// function thing<B extends string | undefined = undefined>(
-//   arg: { something: string,a: } & (T extends undefined
-//     ? { defaultValue?: undefined }
-//     : { defaultValue: B })
-// ): Thing<B> {
-//   return undefined as any;
-// }
-
-// const x = thing({
-//   something: "",
-//   defaultValue: Math.random() > 0.5 ? "" : undefined,
-//   ...(Math.random() > 0.5 ? {} : { defaultValue: "" }),
-// });

@@ -4,12 +4,14 @@ import {
 } from "graphql/type/definition";
 
 /**
- * An individual enum value
+ * An individual enum value in a {@link EnumType `@graphql-ts/schema` enum type}
+ * created using {@link enumType `schema.enum`}. You can use the
+ * {@link enumValues `schema.enumValues`} shorthand to create enum values more easily.
  *
- * Note the value property and generic here represents the deserialized form of
- * the enum. It does not indicate the name of the enum value that is visible in
- * the GraphQL schema. The value can be anything, not necessarily a string.
- * Usually though, it will be a string which is equal to the key where the value is used.
+ * Note the value property/generic here represents the deserialized form of the
+ * enum. It does not indicate the name of the enum value that is visible in the
+ * GraphQL schema. The value can be anything, not necessarily a string. Usually
+ * though, it will be a string which is equal to the key where the value is used.
  */
 export type EnumValue<Value> = {
   description?: string;
@@ -18,8 +20,8 @@ export type EnumValue<Value> = {
 };
 
 /**
- * An enum type for `@ts-gql/schema` which wraps an underlying graphql-js
- * `GraphQLEnumType`. This should be created with `schema.enum`.
+ * An enum type for `@graphql-ts/schema` which wraps an underlying graphql-js
+ * `GraphQLEnumType`. This should be created with {@link enumType `schema.enum`}.
  *
  * ```ts
  * const MyEnum = schema.enum({
@@ -43,7 +45,7 @@ export type EnumType<Values extends Record<string, EnumValue<any>>> = {
 };
 
 /**
- * A shorthand to easily create enum values to pass to `schema.enum`.
+ * A shorthand to easily create {@link EnumValue enum values} to pass to {@link enumType}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
  * variant, you should pass values directly to `schema.enum` without using
@@ -55,7 +57,7 @@ export type EnumType<Values extends Record<string, EnumValue<any>>> = {
  *   values: schema.enumValues(["a", "b"]),
  * });
  * ```
- * ---
+ *
  * ```ts
  * const values = schema.enumValues(["a", "b"]);
  *
@@ -72,7 +74,7 @@ export function enumValues<Values extends readonly string[]>(
 }
 
 /**
- * Creates a GraphQL enum to be used within a schema created within `@ts-gql/schema`
+ * Creates a {@link EnumType `@graphql-ts/schema` enum type} with a number of .
  *
  * ```ts
  * const MyEnum = schema.enum({
@@ -87,7 +89,7 @@ export function enumValues<Values extends readonly string[]>(
  *   }
  * `;
  * ```
- * ---
+ *
  * ```ts
  * const MyEnum = schema.enum({
  *   name: "MyEnum",
@@ -117,9 +119,9 @@ export function enumValues<Values extends readonly string[]>(
  *     """
  *     thing thing
  *     """
- *     thing ​@deprecated(reason: "something should be used instead of thing")
+ *     thing @deprecated(reason: "something should be used instead of thing")
  *   }
- * `;
+ * `;)
  * ```
  */
 function enumType<Values extends Record<string, EnumValue<any>>>(config: {

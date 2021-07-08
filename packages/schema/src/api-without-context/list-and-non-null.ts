@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLNonNull } from "graphql/type/definition";
 import { NullableType, Type } from "../type";
 
 /**
- * Wraps any `@ts-gql/schema` GraphQL type with in a list type.
+ * Wraps any `@graphql-ts/schema` GraphQL type with in a list type.
  *
  * See the documentation for {@link list `schema.list`} for more information.
  */
@@ -14,7 +14,7 @@ export type ListType<Of extends Type<any>> = {
 };
 
 /**
- * Wraps any `@ts-gql/schema` GraphQL type in a list.
+ * Wraps any `@graphql-ts/schema` GraphQL type in a list.
  *
  * ```ts
  * const stringListType = schema.list(schema.String);
@@ -79,7 +79,7 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 }
 
 /**
- * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
+ * Wraps any nullable `@graphql-ts/schema` GraphQL type with a non-null type.
  *
  * See the documentation for {@link nonNull `schema.nonNull`} for more information.
  */
@@ -91,7 +91,7 @@ export type NonNullType<Of extends NullableType<any>> = {
 };
 
 /**
- * Wraps any nullable `@ts-gql/schema` GraphQL type with a non-null type.
+ * Wraps any nullable `@graphql-ts/schema` GraphQL type with a non-null type.
  *
  * Types in GraphQL are always nullable by default so if you want
  *
@@ -136,7 +136,7 @@ export type NonNullType<Of extends NullableType<any>> = {
  *
  * When using a non-null type as an output type, your resolver must never return
  * null. If you do return null(which unless you do type-casting/ts-ignore/etc.
- * `@ts-gql/schema` will not let you do) graphql-js will return an error to
+ * `@graphql-ts/schema` will not let you do) graphql-js will return an error to
  * consumers of your GraphQL API.
  *
  * Non-null types should be used very carefully on output types. If you have to

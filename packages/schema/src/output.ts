@@ -38,12 +38,14 @@ type OutputListTypeWithContext<Context> = {
   kind: "list";
   of: OutputType<Context>;
   graphQLType: GraphQLList<any>;
+  __context: (context: Context) => void;
 };
 
 type OutputNonNullTypeWithContext<Context> = {
   kind: "non-null";
   of: NullableOutputType<Context>;
   graphQLType: GraphQLNonNull<NullableOutputType<Context>["graphQLType"]>;
+  __context: (context: Context) => void;
 };
 
 export type NullableOutputType<Context> =
@@ -93,6 +95,7 @@ export type ObjectType<RootVal, Context> = {
   __rootVal: RootVal;
 };
 
+/** @component Something */
 type MaybePromise<T> = Promise<T> | T;
 
 export type FieldResolver<
@@ -109,6 +112,7 @@ export type FieldResolver<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
+/** A `@graphq` */
 export type Field<
   RootVal,
   Args extends Record<string, Arg<any>>,
@@ -646,7 +650,7 @@ export type SchemaAPIWithContext<Context> = {
    * A helper to easily share fields across object and interface types.
    *
    * ```ts
-   * const nodeFields = schema.fields<{ id: string }>({
+   * const nodeFields = schema.fields<{ id: string }>()({
    *   id: schema.field({ type: schema.ID }),
    * });
    *
@@ -671,8 +675,8 @@ export type SchemaAPIWithContext<Context> = {
    *
    * ## Why use `schema.fields` instead of just creating an object?
    *
-   * The definition of Field in `@ts-gql/schema` has some special things, let's
-   * look at the definition of it:
+   * The definition of Field in `@graphql-ts/schema` has some special things,
+   * let's look at the definition of it:
    *
    * ```ts
    * type Field<
@@ -756,9 +760,9 @@ export type SchemaAPIWithContext<Context> = {
    *
    * When using GraphQL interface and union types, there needs to a way to
    * determine which concrete object type has been returned from a resolver.
-   * With `graphql-js` and `@ts-gql/schema`, this is done with `isTypeOf` on
+   * With `graphql-js` and `@graphql-ts/schema`, this is done with `isTypeOf` on
    * object types and `resolveType` on interface and union types. Note
-   * `@ts-gql/schema` **does not aim to strictly type the implementation of
+   * `@graphql-ts/schema` **does not aim to strictly type the implementation of
    * `resolveType` and `isTypeOf`**. If you don't provide `resolveType` or
    * `isTypeOf`, a `__typename` property on the root value will be used, if that
    * fails, an error will be thrown at runtime.
