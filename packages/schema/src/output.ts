@@ -24,14 +24,14 @@ import {
   NonNullType,
 } from "./api-without-context";
 
-type OutputListTypeWithContext<Context> = {
+type OutputListType<Context> = {
   kind: "list";
   of: OutputType<Context>;
   graphQLType: GraphQLList<any>;
   __context: (context: Context) => void;
 };
 
-type OutputNonNullTypeWithContext<Context> = {
+type OutputNonNullType<Context> = {
   kind: "non-null";
   of: NullableOutputType<Context>;
   graphQLType: GraphQLNonNull<NullableOutputType<Context>["graphQLType"]>;
@@ -44,11 +44,11 @@ export type NullableOutputType<Context> =
   | UnionType<any, Context>
   | InterfaceType<any, any, Context>
   | EnumType<any>
-  | OutputListTypeWithContext<Context>;
+  | OutputListType<Context>;
 
 export type OutputType<Context> =
   | NullableOutputType<Context>
-  | OutputNonNullTypeWithContext<Context>;
+  | OutputNonNullType<Context>;
 
 type OutputListTypeForInference<Of extends OutputType<any>> = ListType<Of>;
 
@@ -83,6 +83,10 @@ export type InferValueFromOutputType<Type extends OutputType<any>> =
       : InferValueFromOutputTypeWithoutAddingNull<Type> | null
   >;
 
+/**
+ * A `@graphql-ts/schema` object type which should be created using
+ * {@link ObjectTypeFunc `schema.object`}
+ */
 export type ObjectType<RootVal, Context> = {
   kind: "object";
   graphQLType: GraphQLObjectType;
@@ -90,7 +94,6 @@ export type ObjectType<RootVal, Context> = {
   __rootVal: RootVal;
 };
 
-/** @component Something */
 type MaybePromise<T> = Promise<T> | T;
 
 export type FieldResolver<
@@ -107,7 +110,10 @@ export type FieldResolver<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
-/** A `@graphq` */
+/**
+ * A `@graphql-ts/schema` output field for an {@link ObjectType} which should be
+ * created using {@link FieldFunc `schema.field`}.
+ */
 export type Field<
   RootVal,
   Args extends Record<string, Arg<any>>,
