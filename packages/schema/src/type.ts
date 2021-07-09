@@ -13,10 +13,11 @@ import {
 import { list, nonNull } from "./api-without-context/list-and-non-null";
 
 /**
- * Any nullable `@graphql-ts/schema` GraphQL type for a given `Context`.
+ * Any **nullable** `@graphql-ts/schema` GraphQL type for a given `Context`.
  *
- * This won't generally be used but is used as the argument for
- * {@link nonNull `schema.nonNull`}.
+ * You generally won't need this because you'll likely want a nullable
+ * {@link NullableInputType input} or {@link NullableOutputType output} type but
+ * there are some uses cases for it like {@link nonNull `schema.nonNull`}.
  *
  * See also:
  *
@@ -34,14 +35,14 @@ export type NullableType<Context> =
  * Note that this includes both **input and output** types.
  *
  * You generally won't need this because you'll likely want an
- * {@link InputType input} or {@link InputType output} type but
- * {@link list `schema.list`} is an example of a use case for this.
+ * {@link InputType input} or {@link InputType output} type but there are some
+ * uses cases for it like {@link list `schema.list`}.
  *
  * See also:
  *
+ * - {@link NullableType}
  * - {@link InputType}
  * - {@link OutputType}
- * - {@link NullableType}
  */
 export type Type<Context> =
   | NullableType<Context>

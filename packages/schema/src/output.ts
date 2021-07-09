@@ -6,13 +6,13 @@ import {
   GraphQLInterfaceTypeExtensions,
   GraphQLIsTypeOfFn,
   GraphQLList,
-  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLObjectTypeExtensions,
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLTypeResolver,
   GraphQLUnionType,
+  GraphQLType,
 } from "graphql/type/definition";
 import {
   Arg,
@@ -27,14 +27,7 @@ import {
 type OutputListType<Context> = {
   kind: "list";
   of: OutputType<Context>;
-  graphQLType: GraphQLList<any>;
-  __context: (context: Context) => void;
-};
-
-type OutputNonNullType<Context> = {
-  kind: "non-null";
-  of: NullableOutputType<Context>;
-  graphQLType: GraphQLNonNull<NullableOutputType<Context>["graphQLType"]>;
+  graphQLType: GraphQLList<GraphQLType>;
   __context: (context: Context) => void;
 };
 
@@ -48,7 +41,7 @@ export type NullableOutputType<Context> =
 
 export type OutputType<Context> =
   | NullableOutputType<Context>
-  | OutputNonNullType<Context>;
+  | NonNullType<NullableOutputType<Context>>;
 
 type OutputListTypeForInference<Of extends OutputType<any>> = ListType<Of>;
 
@@ -108,8 +101,6 @@ export type FieldResolver<
   info: GraphQLResolveInfo
 ) => InferValueFromOutputType<TType>;
 
-type SomeTypeThatIsntARecordOfArgs = string;
-
 /**
  * A `@graphql-ts/schema` output field for an {@link ObjectType} which should be
  * created using {@link FieldFunc `schema.field`}.
@@ -147,6 +138,8 @@ export type InterfaceField<
     GraphQLFieldExtensions<any, any, InferValueFromArgs<Args>>
   >;
 };
+
+type SomeTypeThatIsntARecordOfArgs = string;
 
 type FieldFuncResolve<
   RootVal,

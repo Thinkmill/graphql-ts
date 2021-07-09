@@ -2,30 +2,15 @@ import {
   GraphQLInputObjectType,
   GraphQLInputType,
   GraphQLList,
-  GraphQLNonNull,
 } from "graphql/type/definition";
 import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
 // (these are referenced in the docs)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { OutputType } from "../output";
+import type { NullableOutputType, OutputType } from "../output";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Type } from "../type";
-import { NonNullType } from "..";
-
-type InputListTypeForInference<Of extends InputType> = {
-  kind: "list";
-  of: Of;
-  graphQLType: GraphQLList<any>;
-  __context: any;
-};
-
-type InputNonNullTypeForInference<Of extends NullableInputType> = {
-  kind: "non-null";
-  of: Of;
-  graphQLType: GraphQLNonNull<any>;
-  __context: any;
-};
+import { ListType, NonNullType } from "..";
 
 /**
  * Any input list type. This type only exists because of limitations in circular types.
@@ -40,11 +25,11 @@ type InputListType = {
 };
 
 /**
- * Any nullable `@graphql-ts/schema` **input** type.
+ * Any nullable `@graphql-ts/schema` GraphQL **input** type.
  *
  * Note that this is not generic over a `Context` like
- * {@link OutputType `OutputType`} is because inputs types never interact with
- * the `Context`.
+ * {@link NullableOutputType `NullableOutputType`} is because inputs types never
+ * interact with the `Context`.
  *
  * See also:
  *
@@ -59,7 +44,7 @@ export type NullableInputType =
   | EnumType<any>;
 
 /**
- * Any nullable `@graphql-ts/schema` **input** type.
+ * Any `@graphql-ts/schema` GraphQL **input** type.
  *
  * Note that this is not generic over a `Context` like {@link OutputType} is
  * because inputs types never interact with the `Context`.
@@ -71,6 +56,8 @@ export type NullableInputType =
  * - {@link OutputType}
  */
 export type InputType = NullableInputType | NonNullType<NullableInputType>;
+
+type InputListTypeForInference<Of extends InputType> = ListType<Of>;
 
 type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
   Type extends ScalarType<infer Value>
@@ -96,6 +83,9 @@ export type InferValueFromArg<TArg extends Arg<any, any>> =
       : undefined extends TArg["defaultValue"]
       ? undefined
       : never);
+
+type InputNonNullTypeForInference<Of extends NullableInputType> =
+  NonNullType<Of>;
 
 export type InferValueFromInputType<Type extends InputType> =
   Type extends InputNonNullTypeForInference<infer Value>
