@@ -4,8 +4,8 @@ import {
 } from "graphql/type/definition";
 
 /**
- * An individual enum value in a {@link EnumType `@graphql-ts/schema` enum type}
- * created using {@link enumType `schema.enum`}. You can use the
+ * An individual enum value in an {@link EnumType enum type} created using
+ * {@link enumType `schema.enum`}. You can use the
  * {@link enumValues `schema.enumValues`} shorthand to create enum values more easily.
  *
  * Note the value property/generic here represents the deserialized form of the
@@ -20,8 +20,8 @@ export type EnumValue<Value> = {
 };
 
 /**
- * An enum type for `@graphql-ts/schema` which wraps an underlying graphql-js
- * `GraphQLEnumType`. This should be created with {@link enumType `schema.enum`}.
+ * A GraphQL enum type which wraps an underlying graphql-js
+ * {@link GraphQLEnumType}. This should be created with {@link enumType `schema.enum`}.
  *
  * ```ts
  * const MyEnum = schema.enum({
@@ -75,8 +75,7 @@ export function enumValues<Values extends readonly string[]>(
 }
 
 /**
- * Creates a {@link EnumType `@graphql-ts/schema` enum type} with a number of
- * {@link EnumValue enum values}.
+ * Creates an {@link EnumType enum type} with a number of {@link EnumValue enum values}.
  *
  * ```ts
  * const MyEnum = schema.enum({

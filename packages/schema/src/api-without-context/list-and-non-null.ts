@@ -2,9 +2,9 @@ import { GraphQLList, GraphQLNonNull } from "graphql/type/definition";
 import { NullableType, Type } from "../type";
 
 /**
- * Wraps any `@graphql-ts/schema` GraphQL type with in a list type.
+ * Wraps any GraphQL type in a list type.
  *
- * See the documentation for {@link list `schema.list`} for more information.
+ * See the documentation of {@link list `schema.list`} for more information.
  */
 export type ListType<Of extends Type<any>> = {
   kind: "list";
@@ -14,7 +14,7 @@ export type ListType<Of extends Type<any>> = {
 };
 
 /**
- * Wraps any `@graphql-ts/schema` GraphQL type in a list.
+ * Wraps any GraphQL type in a {@link ListType}.
  *
  * ```ts
  * const stringListType = schema.list(schema.String);
@@ -79,8 +79,7 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 }
 
 /**
- * Wraps {@link NullableType any nullable `@graphql-ts/schema` GraphQL type} with
- * a non-null type.
+ * Wraps a {@link NullableType} with a non-null type.
  *
  * See the documentation for {@link nonNull `schema.nonNull`} for more information.
  */
@@ -92,8 +91,7 @@ export type NonNullType<Of extends NullableType<any>> = {
 };
 
 /**
- * Wraps {@link NullableType any nullable `@graphql-ts/schema` GraphQL type} with
- * a non-null type.
+ * Wraps a {@link NullableType} with a {@link NonNullType}.
  *
  * Types in GraphQL are always nullable by default so if you want to enforce
  * that a type must always be there, you can use the non-null type.

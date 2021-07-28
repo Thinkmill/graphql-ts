@@ -25,7 +25,7 @@ type InputListType = {
 };
 
 /**
- * Any nullable `@graphql-ts/schema` GraphQL **input** type.
+ * Any nullable GraphQL **input** type.
  *
  * Note that this is not generic over a `Context` like
  * {@link NullableOutputType `NullableOutputType`} is because inputs types never
@@ -44,7 +44,7 @@ export type NullableInputType =
   | EnumType<any>;
 
 /**
- * Any `@graphql-ts/schema` GraphQL **input** type.
+ * Any GraphQL **input** type.
  *
  * Note that this is not generic over a `Context` like {@link OutputType} is
  * because inputs types never interact with the `Context`.
@@ -104,8 +104,7 @@ export type InputObjectType<
 };
 
 /**
- * A `@graphql-ts/schema` GraphQL argument. These should be created with
- * {@link arg `schema.arg`}
+ * A GraphQL argument. These should be created with {@link arg `schema.arg`}
  *
  * Args can can be used as arguments on output fields:
  *
@@ -170,7 +169,7 @@ export type Arg<
 };
 
 /**
- * Creates a {@link Arg `@graphql-ts/schema` GraphQL argument}.
+ * Creates a {@link Arg GraphQL argument}.
  *
  * Args can can be used as arguments on output fields:
  *
@@ -224,7 +223,7 @@ export function arg<
 }
 
 /**
- * Creates a {@link InputObjectType `@graphql-ts/schema` input object type}
+ * Creates a {@link InputObjectType}
  *
  * ```ts
  * const Something = schema.inputObject({

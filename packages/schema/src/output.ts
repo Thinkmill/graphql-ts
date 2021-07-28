@@ -26,6 +26,8 @@ import {
 // (referenced in docs)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { NullableType, Type } from "./type";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { object, field } from "../api-with-context";
 
 /**
  * Any output list type. This type only exists because of limitations in circular types.
@@ -41,7 +43,7 @@ type OutputListType<Context> = {
 };
 
 /**
- * Any nullable `@graphql-ts/schema` GraphQL **output** type for a given `Context`.
+ * Any nullable GraphQL **output** type for a given `Context`.
  *
  * See also:
  *
@@ -58,7 +60,7 @@ export type NullableOutputType<Context> =
   | OutputListType<Context>;
 
 /**
- * Any `@graphql-ts/schema` GraphQL **output** type for a given `Context`.
+ * Any GraphQL **output** type for a given `Context`.
  *
  * See also:
  *
@@ -103,10 +105,7 @@ export type InferValueFromOutputType<Type extends OutputType<any>> =
       : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
   >;
 
-/**
- * A `@graphql-ts/schema` object type which should be created using
- * {@link ObjectTypeFunc `schema.object`}.
- */
+/** A GraphQL object type which should be created using {@link object `schema.object`}. */
 export type ObjectType<RootVal, Context> = {
   kind: "object";
   graphQLType: GraphQLObjectType;
@@ -129,8 +128,8 @@ export type FieldResolver<
 ) => InferValueFromOutputType<TType>;
 
 /**
- * A `@graphql-ts/schema` output field for an {@link ObjectType} which should be
- * created using {@link FieldFunc `schema.field`}.
+ * A GraphQL output field for an {@link ObjectType} which should be created using
+ * {@link field `schema.field`}.
  */
 export type Field<
   RootVal,
@@ -294,6 +293,11 @@ export type InterfacesToOutputFields<
   >
 >;
 
+/**
+ * Creates a GraphQL object type.
+ *
+ * See the docs of {@link object `schema.object`} for more details.
+ */
 export type ObjectTypeFunc<Context> = <
   RootVal
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
@@ -540,7 +544,6 @@ export type InterfaceType<
 export type InterfaceTypeFunc<Context> = <
   RootVal
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
   Fields extends {
@@ -588,8 +591,10 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
 
 export type SchemaAPIWithContext<Context> = {
   /**
-   * Creates a GraphQL object type. Note this is an **output** type, if you want
-   * an input object, use `schema.inputObject`.
+   * Creates a GraphQL object type.
+   *
+   * Note this is an **output** type, if you want an input object, use
+   * `schema.inputObject`.
    *
    * When calling `schema.object`, you must provide a type parameter that is the
    * root value of the object type. The root value what you receive as the first
@@ -655,10 +660,38 @@ export type SchemaAPIWithContext<Context> = {
    * ```
    */
   object: ObjectTypeFunc<Context>;
+  /**
+   * Create a GraphQL union type.
+   *
+   * A union type represents an object that could be one of a list of types.
+   * Note it is similar to an {@link InferfaceType} except that a union doesn't
+   * imply having a common set of fields among the member types.
+   *
+   * ```ts
+   * const A = schema.object<{ __typename: "A" }>()({
+   *   name: "A",
+   *   fields: {
+   *     something: schema.field({ type: schema.String }),
+   *   },
+   * });
+   * const B = schema.object<{ __typename: "B" }>()({
+   *   name: "B",
+   *   fields: {
+   *     differentThing: schema.field({ type: schema.String }),
+   *   },
+   * });
+   * const AOrB = schema.union({
+   *   name: "AOrB",
+   *   types: [A, B],
+   * });
+   * ```
+   */
   union: UnionTypeFunc<Context>;
   /**
-   * Creates a GraphQL field. These will generally be passed directly to
-   * `fields` object in a `schema.object` call.
+   * Creates a GraphQL field.
+   *
+   * These will generally be passed directly to the `fields` object in a
+   * `schema.object` call.
    *
    * ```ts
    * const Something = schema.object<{ thing: string }>()({
@@ -730,23 +763,52 @@ export type SchemaAPIWithContext<Context> = {
    * is that *the key that a field is at is part of its TypeScript type*.
    *
    * This is important to be able to represent the fact that a resolver is
-   * optional if the `RootVal` has a .
+   * optional if the `RootVal` has a property at the `Key` that matches the output type.
    *
    * ```ts
+   * // this is allowed
    * const someFields = schema.fields<{ name: string }>()({
-   *   someName: schema.field({ type: schema.String }),
+   *   name: schema.field({ type: schema.String }),
    * });
    *
    * const someFields = schema.fields<{ name: string }>()({
-   *   someName: schema.field({ type: schema.String }),
+   *   someName: schema.field({
+   *     // a resolver is required here since the RootVal is missing a `someName` property
+   *     type: schema.String,
+   *   }),
    * });
    * ```
+   *
+   * Note that there is no similar function for {@link Arg args} since they don't
+   * need special type parameters like {@link Field} does so you can create a
+   * regular object and put {@link Arg args} in it if you want to share them.
    */
   fields: FieldsFunc<Context>;
+  /**
+   * Creates a GraphQL interface field.
+   *
+   * These will generally be passed directly to `fields` object in a
+   * {@link `schema.interface`} call. Interfaces fields are similar to
+   * {@link Field regular fields} except that they **don't define how the field
+   * is resolved**.
+   *
+   * ```ts
+   * const Entity = schema.interface()({
+   *   name: "Entity",
+   *   fields: {
+   *     name: schema.interfaceField({ type: schema.String }),
+   *   },
+   * });
+   * ```
+   *
+   * Note that {@link Field regular fields} are assignable to
+   * {@link InterfaceField interface fields} but the opposite is not true. This
+   * means that you can use a regular field in an {@link InterfaceType interface type}.
+   */
   interfaceField: InterfaceFieldFunc<Context>;
   /**
-   * Creates a GraphQL interface type that can be used in other GraphQL object
-   * and interface types.
+   * Creates a GraphQL interface type that can be implemented by other GraphQL
+   * object and interface types.
    *
    * ```ts
    * const Entity = schema.interface()({

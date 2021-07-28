@@ -8,7 +8,7 @@ import {
 } from "graphql/type/scalars";
 
 /**
- * A `@graphql-ts/schema` scalar type which wraps an underlying graphql-js
+ * A GraphQL scalar type which wraps an underlying graphql-js
  * `GraphQLScalarType` with a type representing the deserialized form of the
  * scalar. These should be created used {@link scalar `schema.scalar`}.
  *
@@ -21,8 +21,6 @@ import {
  * // for args on output fields or fields on input types
  * schema.arg({ type: someScalar });
  * ```
- *
- * @template Type The type of a value of the scalar
  */
 export type ScalarType<Type> = {
   kind: "scalar";
@@ -32,8 +30,7 @@ export type ScalarType<Type> = {
 };
 
 /**
- * Creates a {@link ScalarType `@graphql-ts/schema` GraphQL scalar type} from a
- * graphql-js `GraphQLScalarType`.
+ * Creates a {@link ScalarType} from a graphql-js {@link GraphQLScalarType}.
  *
  * You should provide a type as a type parameter which is the type of the scalar
  * value. Note, while graphql-js allows you to express scalar types like the
