@@ -795,3 +795,81 @@ schema.object<{ thing: () => Promise<string> }>()({
     })
   );
 }
+
+schema.object<{}>()({
+  name: "Thing",
+  fields: {
+    // @ts-expect-error
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
+});
+
+schema.object<{ thing?: string }>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
+});
+
+schema.object<{ thing?: boolean }>()({
+  name: "Thing",
+  fields: {
+    // @ts-expect-error
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
+});
+
+schema.object<{}>()({
+  name: "Thing",
+  fields: {
+    // @ts-expect-error
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
+});
+
+schema.object<{ thing?: undefined }>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+    }),
+  },
+});
+
+schema.object()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+      // @ts-expect-error
+      resolve() {},
+    }),
+  },
+});
+
+schema.object()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({
+      type: schema.String,
+      resolve() {
+        return undefined;
+      },
+    }),
+  },
+});
+
+schema.object<any>()({
+  name: "Thing",
+  fields: {
+    thing: schema.field({ type: schema.String }),
+  },
+});

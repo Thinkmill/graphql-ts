@@ -45,7 +45,8 @@ export type EnumType<Values extends Record<string, EnumValue<any>>> = {
 };
 
 /**
- * A shorthand to easily create {@link EnumValue enum values} to pass to {@link enumType}.
+ * A shorthand to easily create {@link EnumValue enum values} to pass to
+ * {@link enumType `schema.enum`}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
  * variant, you should pass values directly to `schema.enum` without using
@@ -74,7 +75,8 @@ export function enumValues<Values extends readonly string[]>(
 }
 
 /**
- * Creates a {@link EnumType `@graphql-ts/schema` enum type} with a number of .
+ * Creates a {@link EnumType `@graphql-ts/schema` enum type} with a number of
+ * {@link EnumValue enum values}.
  *
  * ```ts
  * const MyEnum = schema.enum({

@@ -4,15 +4,16 @@ import {
   GraphQLString,
   GraphQLFloat,
   GraphQLInt,
-  GraphQLBoolean
+  GraphQLBoolean,
 } from "graphql/type/scalars";
 
 /**
- * A scalar type for `@graphql-ts/schema` which wraps an underlying graphql-js
- * `GraphQLScalarType` with an type representing the deserialized form of the scalar.
+ * A `@graphql-ts/schema` scalar type which wraps an underlying graphql-js
+ * `GraphQLScalarType` with a type representing the deserialized form of the
+ * scalar. These should be created used {@link scalar `schema.scalar`}.
  *
  * ```ts
- * declare const someScalar: ScalarType<string>;
+ * const someScalar = schema.scalar<string>(new GraphQLScalarType({}));
  *
  * // for fields on output types
  * schema.field({ type: someScalar });
@@ -31,16 +32,18 @@ export type ScalarType<Type> = {
 };
 
 /**
- * Creates a `@graphql-ts/schema` scalar type from a graphql-js scalar.
+ * Creates a {@link ScalarType `@graphql-ts/schema` GraphQL scalar type} from a
+ * graphql-js `GraphQLScalarType`.
  *
  * You should provide a type as a type parameter which is the type of the scalar
  * value. Note, while graphql-js allows you to express scalar types like the
  * `ID` type which accepts integers and strings as both input values and return
  * values from resolvers which are transformed into strings before calling
  * resolvers and returning the query respectively, the type you use should be
- * `string` for `ID` since that is what it is transformed into. `@graphql-ts/schema`
- * doesn't currently express the coercion of scalars, you should instead convert
- * values to the canonical form yourself before returning from resolvers.
+ * `string` for `ID` since that is what it is transformed into.
+ * `@graphql-ts/schema` doesn't currently express the coercion of scalars, you
+ * should instead convert values to the canonical form yourself before returning
+ * from resolvers.
  *
  * ```ts
  * const JSON = schema.scalar<JSONValue>(GraphQLJSON);

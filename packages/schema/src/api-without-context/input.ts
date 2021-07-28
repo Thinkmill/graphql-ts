@@ -119,6 +119,8 @@ export type InputObjectType<
  *     return something || somethingElse;
  *   },
  * });
+ * // ==
+ * graphql`fieldName(something: String): String`;
  * ```
  *
  * Or as fields on input objects:
@@ -130,6 +132,29 @@ export type InputObjectType<
  *     something: schema.arg({ type: schema.String }),
  *   },
  * });
+ * // ==
+ * graphql`
+ *   input Something {
+ *     something: String
+ *   }
+ * `;
+ * ```
+ *
+ * When the type of an arg is {@link NonNullType non-null}, the value will always exist.
+ *
+ * ```ts
+ * schema.field({
+ *   type: schema.String,
+ *   args: {
+ *     something: schema.arg({ type: schema.nonNull(schema.String) }),
+ *   },
+ *   resolve(rootVal, { something }) {
+ *     // `something` will always be a string
+ *     return something;
+ *   },
+ * });
+ * // ==
+ * graphql`fieldName(something: String!): String`;
  * ```
  */
 export type Arg<

@@ -1,6 +1,25 @@
-export { bindSchemaAPIToContext } from "./output";
 export * as schema from "./schema-api";
-export * from "./output";
+export { bindSchemaAPIToContext } from "./output";
+export type {
+  Field,
+  FieldFunc,
+  FieldResolver,
+  FieldsFunc,
+  InferValueFromOutputType,
+  InterfaceField,
+  InterfaceFieldFunc,
+  InterfaceToInterfaceFields,
+  InterfaceType,
+  InterfaceTypeFunc,
+  InterfacesToOutputFields,
+  NullableOutputType,
+  ObjectType,
+  ObjectTypeFunc,
+  OutputType,
+  SchemaAPIWithContext,
+  UnionType,
+  UnionTypeFunc,
+} from "./output";
 export type {
   Arg,
   EnumType,

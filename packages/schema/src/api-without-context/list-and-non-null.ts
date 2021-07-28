@@ -79,7 +79,8 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 }
 
 /**
- * Wraps any nullable `@graphql-ts/schema` GraphQL type with a non-null type.
+ * Wraps {@link NullableType any nullable `@graphql-ts/schema` GraphQL type} with
+ * a non-null type.
  *
  * See the documentation for {@link nonNull `schema.nonNull`} for more information.
  */
@@ -91,9 +92,11 @@ export type NonNullType<Of extends NullableType<any>> = {
 };
 
 /**
- * Wraps any nullable `@graphql-ts/schema` GraphQL type with a non-null type.
+ * Wraps {@link NullableType any nullable `@graphql-ts/schema` GraphQL type} with
+ * a non-null type.
  *
- * Types in GraphQL are always nullable by default so if you want
+ * Types in GraphQL are always nullable by default so if you want to enforce
+ * that a type must always be there, you can use the non-null type.
  *
  * ```ts
  * const nonNullableString = schema.nonNull(schema.String);
@@ -145,9 +148,9 @@ export type NonNullType<Of extends NullableType<any>> = {
  * fallible operation fails, consumers of your GraphQL API will be unable to see
  * any of the other fields on the object that the non-null field was on. For
  * example, an id on some type is a good candidate for being non-null because if
- * you have the entity, you will already have the id so getting the id will
- * never fail but fetching a related entity from a database would be fallible so
- * even if it will never be null in the success case, you should make it nullable.
+ * you have the item, you will already have the id so getting the id will never
+ * fail but fetching a related item from a database would be fallible so even if
+ * it will never be null in the success case, you should make it nullable.
  *
  * ```ts
  * schema.field({

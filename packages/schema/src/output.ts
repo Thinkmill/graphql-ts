@@ -23,7 +23,16 @@ import {
   ListType,
   NonNullType,
 } from "./api-without-context";
+// (referenced in docs)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { NullableType, Type } from "./type";
 
+/**
+ * Any output list type. This type only exists because of limitations in circular types.
+ *
+ * If you want to represent any list input type, you should do
+ * `ListType<OutputType<Context>>`.
+ */
 type OutputListType<Context> = {
   kind: "list";
   of: OutputType<Context>;
@@ -31,6 +40,15 @@ type OutputListType<Context> = {
   __context: (context: Context) => void;
 };
 
+/**
+ * Any nullable `@graphql-ts/schema` GraphQL **output** type for a given `Context`.
+ *
+ * See also:
+ *
+ * - {@link NullableType}
+ * - {@link InputType}
+ * - {@link OutputType}
+ */
 export type NullableOutputType<Context> =
   | ScalarType<any>
   | ObjectType<any, Context>
@@ -39,6 +57,15 @@ export type NullableOutputType<Context> =
   | EnumType<any>
   | OutputListType<Context>;
 
+/**
+ * Any `@graphql-ts/schema` GraphQL **output** type for a given `Context`.
+ *
+ * See also:
+ *
+ * - {@link Type}
+ * - {@link InputType}
+ * - {@link NullableOutputType}
+ */
 export type OutputType<Context> =
   | NullableOutputType<Context>
   | NonNullType<NullableOutputType<Context>>;
@@ -73,12 +100,12 @@ export type InferValueFromOutputType<Type extends OutputType<any>> =
   MaybePromise<
     Type extends OutputNonNullTypeForInference<infer Value>
       ? InferValueFromOutputTypeWithoutAddingNull<Value>
-      : InferValueFromOutputTypeWithoutAddingNull<Type> | null
+      : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
   >;
 
 /**
  * A `@graphql-ts/schema` object type which should be created using
- * {@link ObjectTypeFunc `schema.object`}
+ * {@link ObjectTypeFunc `schema.object`}.
  */
 export type ObjectType<RootVal, Context> = {
   kind: "object";
@@ -158,25 +185,30 @@ type FieldFuncResolve<
   //     }),
   //   },
   // });
-  [RootVal] extends [
-    {
-      [K in Key]:
+  [Key] extends [keyof RootVal]
+    ? RootVal[Key] extends
         | InferValueFromOutputType<Type>
         | ((
             args: InferValueFromArgs<Args>,
             context: Context,
             info: GraphQLResolveInfo
-          ) => InferValueFromOutputType<Type>);
-    }
-  ]
-    ? {
-        resolve?: FieldResolver<
-          RootVal,
-          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-          Type,
-          Context
-        >;
-      }
+          ) => InferValueFromOutputType<Type>)
+      ? {
+          resolve?: FieldResolver<
+            RootVal,
+            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+            Type,
+            Context
+          >;
+        }
+      : {
+          resolve: FieldResolver<
+            RootVal,
+            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+            Type,
+            Context
+          >;
+        }
     : {
         resolve: FieldResolver<
           RootVal,
@@ -280,7 +312,7 @@ export type ObjectTypeFunc<Context> = <
   Interfaces extends readonly InterfaceType<RootVal, any, Context>[] = []
 >(config: {
   name: string;
-  fields: MaybeFunc<Fields>;
+  fields: Fields | (() => Fields);
   /**
    * A description of the object type that is visible when introspected.
    *
@@ -505,8 +537,6 @@ export type InterfaceType<
   fields: () => Fields;
 };
 
-export type MaybeFunc<T> = T | (() => T);
-
 export type InterfaceTypeFunc<Context> = <
   RootVal
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
@@ -524,7 +554,7 @@ export type InterfaceTypeFunc<Context> = <
   deprecationReason?: string;
   interfaces?: [...Interfaces];
   resolveType?: GraphQLTypeResolver<RootVal, Context>;
-  fields: MaybeFunc<Fields>;
+  fields: Fields | (() => Fields);
   extensions?: Readonly<GraphQLInterfaceTypeExtensions>;
 }) => InterfaceType<RootVal, Fields, Context>;
 
