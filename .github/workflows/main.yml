@@ -57,3 +57,28 @@ jobs:
 
       - name: Linting
         run: pnpm run lint
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Set Node.js 14.x
+        uses: actions/setup-node@main
+        with:
+          node-version: 14.x
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-v5-ubuntu-latest-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-v5-ubuntu-latest-
+
+      - name: Install pnpm
+        run: npm i -g pnpm@5.13.1
+
+      - name: Install Dependencies
+        run: pnpm i
+
+      - name: Tests
+        run: pnpm run test
