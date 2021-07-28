@@ -27,7 +27,11 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { NullableType, Type } from "./type";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { object, field } from "../api-with-context";
+import type {
+  object,
+  field,
+  interface as interfaceFunc,
+} from "./api-with-context";
 
 /**
  * Any output list type. This type only exists because of limitations in circular types.
@@ -664,7 +668,7 @@ export type SchemaAPIWithContext<Context> = {
    * Create a GraphQL union type.
    *
    * A union type represents an object that could be one of a list of types.
-   * Note it is similar to an {@link InferfaceType} except that a union doesn't
+   * Note it is similar to an {@link InterfaceType} except that a union doesn't
    * imply having a common set of fields among the member types.
    *
    * ```ts
@@ -788,9 +792,9 @@ export type SchemaAPIWithContext<Context> = {
    * Creates a GraphQL interface field.
    *
    * These will generally be passed directly to `fields` object in a
-   * {@link `schema.interface`} call. Interfaces fields are similar to
-   * {@link Field regular fields} except that they **don't define how the field
-   * is resolved**.
+   * {@link interfaceFunc `schema.interface`} call. Interfaces fields are similar
+   * to {@link Field regular fields} except that they **don't define how the
+   * field is resolved**.
    *
    * ```ts
    * const Entity = schema.interface()({
