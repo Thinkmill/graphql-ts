@@ -71,11 +71,14 @@ const Circular: CircularInputType = schema.inputObject({
 
 {
   // should be unknown
-  type x = schema.InferValueFromOutputType<schema.OutputType>;
+  type a = schema.InferValueFromOutputType<schema.OutputType>;
 }
 {
   // should be unknown
-  type x = schema.InferValueFromInputType<schema.InputType>;
+  type a = schema.InferValueFromInputType<schema.InputType>;
+  type b = schema.InferValueFromArg<schema.Arg<schema.InputType>>;
+  // should be { readonly a: unknown }
+  type c = schema.InferValueFromArgs<{ a: schema.Arg<schema.InputType> }>;
 }
 
 {

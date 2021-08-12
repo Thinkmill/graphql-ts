@@ -39,7 +39,7 @@ type InputListType = {
  */
 export type NullableInputType =
   | ScalarType<unknown>
-  | InputObjectType<{ [key: string]: Arg<InputType, boolean> }>
+  | InputObjectType<{ [key: string]: Arg<InputType> }>
   | InputListType
   | EnumType<Record<string, EnumValue<unknown>>>;
 
