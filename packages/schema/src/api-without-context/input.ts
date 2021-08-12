@@ -38,14 +38,10 @@ type InputListType = {
  * - {@link OutputType}
  */
 export type NullableInputType =
-  | ScalarType<unknown>
-  | InputObjectType<{ [key: string]: Arg<InputType> }>
+  | ScalarType<any>
+  | InputObjectType<any>
   | InputListType
-  | EnumType<Record<string, EnumValue<unknown>>>;
-
-type X = Arg<InputType>;
-
-type Y = InferValueFromArg<X>;
+  | EnumType<any>;
 
 /**
  * Any GraphQL **input** type.
