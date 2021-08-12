@@ -240,9 +240,10 @@ export function arg<
  * in the type because of TypeScript's limits with circularity.
  *
  * ```ts
- * const Something: schema.InputObjectType<{
- *   something: schema.Arg<Something>;
- * }> = schema.inputObject({
+ * type SomethingInputType = schema.InputObjectType<{
+ *   something: schema.Arg<SomethingInputType>;
+ * }>;
+ * const Something: SomethingInputType = schema.inputObject({
  *   name: "Something",
  *   fields: () => ({
  *     something: schema.arg({ type: Something }),
@@ -258,16 +259,16 @@ export function arg<
  * const nonCircularFields = {
  *   thing: schema.arg({ type: schema.String }),
  * };
- *
- * const Something: schema.InputObjectType<
+ * type SomethingInputType = schema.InputObjectType<
  *   typeof nonCircularFields & {
- *     something: schema.Arg<typeof Something>;
+ *     something: schema.Arg<SomethingInputType>;
  *   }
- * > = schema.inputObject({
+ * >;
+ * const Something: SomethingInputType = schema.inputObject({
  *   name: "Something",
  *   fields: () => ({
- *     something: schema.arg({ type: Something }),
  *     ...nonCircularFields,
+ *     something: schema.arg({ type: Something }),
  *   }),
  * });
  * ```
