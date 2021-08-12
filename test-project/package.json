@@ -1,11 +1,11 @@
 {
   "name": "@graphql-ts/test-project",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "private": true,
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/test-project",
   "license": "MIT",
   "dependencies": {
-    "@graphql-ts/schema": "^0.2.0",
+    "@graphql-ts/schema": "^0.1.0",
     "graphql": "^15.5.0"
   }
 }
