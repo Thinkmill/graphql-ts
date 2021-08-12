@@ -1,5 +1,49 @@
 # @graphql-ts/schema
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5](https://github.com/Thinkmill/graphql-ts/pull/5) [`9f2e0fa`](https://github.com/Thinkmill/graphql-ts/commit/9f2e0fab2c7c483c3f4c13b285d6a33e75bb563c) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Removed `MaybeFunc` export
+
+* [#5](https://github.com/Thinkmill/graphql-ts/pull/5) [`9f2e0fa`](https://github.com/Thinkmill/graphql-ts/commit/9f2e0fab2c7c483c3f4c13b285d6a33e75bb563c) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Changed the second type parameter of `Arg` from `DefaultValue extends InferValueFromInputType<Type> | undefined = InferValueFromInputType<Type> | undefined` to `HasDefaultValue extends boolean = boolean`. This makes it easier to type circular input objects because you TypeScript won't emit a circularity error and require you to provide a value for the second type parameter. For example, previously to type a circular input object, it looked like this where `undefined` had to be passed:
+
+  ```ts
+  type CircularInputType = schema.InputObjectType<{
+    circular: schema.Arg<typeof Circular, undefined>;
+  }>;
+
+  const Circular: CircularInputType = schema.inputObject({
+    name: "Circular",
+    fields: () => ({
+      circular: schema.arg({ type: Circular })
+    })
+  });
+  ```
+
+  Now, the `undefined` type parameter can be removed
+
+  ```ts
+  type CircularInputType = schema.InputObjectType<{
+    circular: schema.Arg<typeof Circular>;
+  }>;
+
+  const Circular: CircularInputType = schema.inputObject({
+    name: "Circular",
+    fields: () => ({
+      circular: schema.arg({ type: Circular })
+    })
+  });
+  ```
+
+### Patch Changes
+
+- [#5](https://github.com/Thinkmill/graphql-ts/pull/5) [`9f2e0fa`](https://github.com/Thinkmill/graphql-ts/commit/9f2e0fab2c7c483c3f4c13b285d6a33e75bb563c) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Fixed list types that contain output types being assignable to `NullableInputType`/`InputType`
+
+* [#5](https://github.com/Thinkmill/graphql-ts/pull/5) [`9f2e0fa`](https://github.com/Thinkmill/graphql-ts/commit/9f2e0fab2c7c483c3f4c13b285d6a33e75bb563c) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - JSDoc improvements
+
+- [#5](https://github.com/Thinkmill/graphql-ts/pull/5) [`9f2e0fa`](https://github.com/Thinkmill/graphql-ts/commit/9f2e0fab2c7c483c3f4c13b285d6a33e75bb563c) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Resolvers are now allowed to return `undefined` in addition to `null` for fields with nullable output types along with optional properties on a `RootVal` without a resolver being allowed. Resolvers still cannot return `void`(no return) and a property being missing from a `RootVal` without a resolver is still disallowed.
+
 ## 0.1.2
 
 ### Patch Changes
