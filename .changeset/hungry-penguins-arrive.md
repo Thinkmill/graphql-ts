@@ -2,4 +2,4 @@
 "@graphql-ts/schema": minor
 ---
 
-Updated definitions of `NullableInputType` and `NullableOutputType` so that `InferValueFromInputType<NullableInputType>` and `InferValueFromOutputType<NullableOutputType>` return `unknown` instead of `any` along with other combinations like the non-nullable variants.
+Updated definitions of `NullableInputType` so that `InferValueFromInputType<NullableInputType>` and etc. return `unknown` instead of `any`.

@@ -893,3 +893,43 @@ schema.object<any>()({
     thing: schema.field({ type: schema.String }),
   },
 });
+
+{
+  type AssetMode = "a" | "b";
+
+  type FileData = {
+    mode: AssetMode;
+    filename: string;
+    filesize: number;
+  };
+
+  const fileFields = schema.fields<FileData>()({
+    filename: schema.field({ type: schema.nonNull(schema.String) }),
+    filesize: schema.field({ type: schema.nonNull(schema.Int) }),
+    ref: schema.field({
+      type: schema.nonNull(schema.String),
+      resolve(data) {
+        return "";
+      },
+    }),
+    src: schema.field({
+      type: schema.nonNull(schema.String),
+      resolve(data, args, context) {
+        return "";
+      },
+    }),
+  });
+
+  const FileFieldOutput = schema.interface<FileData>()({
+    name: "FileFieldOutput",
+    fields: fileFields,
+    resolveType: () => "LocalFileFieldOutput",
+  });
+
+  schema.field({
+    type: FileFieldOutput,
+    resolve() {
+      return undefined as any as FileData;
+    },
+  });
+}

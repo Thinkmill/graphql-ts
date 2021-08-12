@@ -57,21 +57,11 @@ type OutputListType<Context> = {
  * - {@link OutputType}
  */
 export type NullableOutputType<Context> =
-  | ScalarType<unknown>
-  | ObjectType<unknown, Context>
-  | UnionType<unknown, Context>
-  | InterfaceType<
-      unknown,
-      {
-        [key: string]: InterfaceField<
-          Record<string, Arg<InputType>>,
-          OutputType<Context>,
-          Context
-        >;
-      },
-      Context
-    >
-  | EnumType<Record<string, EnumValue<unknown>>>
+  | ScalarType<any>
+  | ObjectType<any, Context>
+  | UnionType<any, Context>
+  | InterfaceType<any, any, Context>
+  | EnumType<any>
   | OutputListType<Context>;
 
 /**
