@@ -17,13 +17,13 @@ export type NullableOutputType = tsgqlSchema.NullableOutputType<Context>;
 export type OutputType = tsgqlSchema.OutputType<Context>;
 export type Field<
   RootVal,
-  Args extends Record<string, tsgqlSchema.Arg<any>>,
+  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
   TType extends OutputType,
   Key extends string
 > = tsgqlSchema.Field<RootVal, Args, TType, Key, Context>;
 export type FieldResolver<
   RootVal,
-  Args extends Record<string, tsgqlSchema.Arg<any>>,
+  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
   TType extends OutputType
 > = tsgqlSchema.FieldResolver<RootVal, Args, TType, Context>;
 export type ObjectType<RootVal> = tsgqlSchema.ObjectType<RootVal, Context>;
@@ -32,10 +32,14 @@ export type InterfaceType<
   RootVal,
   Fields extends Record<
     string,
-    tsgqlSchema.InterfaceField<any, OutputType, Context>
+    tsgqlSchema.InterfaceField<
+      Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
+      OutputType,
+      Context
+    >
   >
 > = tsgqlSchema.InterfaceType<RootVal, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, tsgqlSchema.Arg<any>>,
+  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
   TType extends OutputType
 > = tsgqlSchema.InterfaceField<Args, TType, Context>;

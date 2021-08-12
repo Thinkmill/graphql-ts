@@ -22,6 +22,7 @@ import {
   EnumType,
   ListType,
   NonNullType,
+  EnumValue,
 } from "./api-without-context";
 // (referenced in docs)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,11 +57,21 @@ type OutputListType<Context> = {
  * - {@link OutputType}
  */
 export type NullableOutputType<Context> =
-  | ScalarType<any>
-  | ObjectType<any, Context>
-  | UnionType<any, Context>
-  | InterfaceType<any, any, Context>
-  | EnumType<any>
+  | ScalarType<unknown>
+  | ObjectType<unknown, Context>
+  | UnionType<unknown, Context>
+  | InterfaceType<
+      unknown,
+      {
+        [key: string]: InterfaceField<
+          Record<string, Arg<InputType>>,
+          OutputType<Context>,
+          Context
+        >;
+      },
+      Context
+    >
+  | EnumType<Record<string, EnumValue<unknown>>>
   | OutputListType<Context>;
 
 /**
@@ -121,7 +132,7 @@ type MaybePromise<T> = Promise<T> | T;
 
 export type FieldResolver<
   RootVal,
-  Args extends Record<string, Arg<any>>,
+  Args extends Record<string, Arg<InputType>>,
   TType extends OutputType<Context>,
   Context
 > = (
@@ -137,7 +148,7 @@ export type FieldResolver<
  */
 export type Field<
   RootVal,
-  Args extends Record<string, Arg<any>>,
+  Args extends Record<string, Arg<InputType>>,
   TType extends OutputType<Context>,
   Key extends string,
   Context
@@ -156,7 +167,7 @@ export type Field<
 };
 
 export type InterfaceField<
-  Args extends Record<string, Arg<any>>,
+  Args extends Record<string, Arg<InputType>>,
   Type extends OutputType<Context>,
   Context
 > = {
@@ -173,7 +184,7 @@ type SomeTypeThatIsntARecordOfArgs = string;
 
 type FieldFuncResolve<
   RootVal,
-  Args extends { [Key in keyof Args]: Arg<any, any> },
+  Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
   Key extends string,
   Context
@@ -223,7 +234,7 @@ type FieldFuncResolve<
 
 type FieldFuncArgs<
   RootVal,
-  Args extends { [Key in keyof Args]: Arg<any, any> },
+  Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
   Key extends string,
   Context
@@ -239,7 +250,7 @@ export type FieldFunc<Context> = <
   RootVal,
   Type extends OutputType<Context>,
   Key extends string,
-  Args extends { [Key in keyof Args]: Arg<any, any> } = {}
+  Args extends { [Key in keyof Args]: Arg<InputType> } = {}
 >(
   field: FieldFuncArgs<RootVal, Args, Type, Key, Context>
 ) => Field<RootVal, Args, Type, Key, Context>;
@@ -403,13 +414,7 @@ function bindObjectTypeToContext<Context>(): ObjectTypeFunc<Context> {
 function buildFields(
   fields: Record<
     string,
-    Field<
-      any,
-      Record<string, Arg<InputType, any>>,
-      OutputType<any>,
-      string,
-      any
-    >
+    Field<any, Record<string, Arg<InputType>>, OutputType<any>, string, any>
   >
 ): GraphQLFieldConfigMap<any, any> {
   return Object.fromEntries(
@@ -505,7 +510,7 @@ function bindFieldsToContext<Context>(): FieldsFunc<Context> {
 
 type InterfaceFieldFuncArgs<
   RootVal,
-  Args extends { [Key in keyof Args]: Arg<any, any> },
+  Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
   Context
 > = {
@@ -519,7 +524,7 @@ type InterfaceFieldFuncArgs<
 export type InterfaceFieldFunc<Context> = <
   RootVal,
   Type extends OutputType<Context>,
-  Args extends { [Key in keyof Args]: Arg<any, any> } = {}
+  Args extends { [Key in keyof Args]: Arg<InputType> } = {}
 >(
   field: InterfaceFieldFuncArgs<RootVal, Args, Type, Context>
 ) => InterfaceField<Args, Type, Context>;
@@ -742,7 +747,7 @@ export type SchemaAPIWithContext<Context> = {
    * ```ts
    * type Field<
    *   RootVal,
-   *   Args extends Record<string, Arg<any>>,
+   *   Args extends Record<string, Arg<InputType>>,
    *   TType extends OutputType<Context>,
    *   Key extends string,
    *   Context

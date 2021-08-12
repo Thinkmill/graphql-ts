@@ -3,7 +3,7 @@ import {
   GraphQLInputType,
   GraphQLList,
 } from "graphql/type/definition";
-import { EnumType } from "./enum";
+import { EnumType, EnumValue } from "./enum";
 import { ScalarType } from "./scalars";
 // (these are referenced in the docs)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,10 +38,14 @@ type InputListType = {
  * - {@link OutputType}
  */
 export type NullableInputType =
-  | ScalarType<any>
-  | InputObjectType<any>
+  | ScalarType<unknown>
+  | InputObjectType<{ [key: string]: Arg<InputType, boolean> }>
   | InputListType
-  | EnumType<any>;
+  | EnumType<Record<string, EnumValue<unknown>>>;
+
+type X = Arg<InputType>;
+
+type Y = InferValueFromArg<X>;
 
 /**
  * Any GraphQL **input** type.
@@ -67,22 +71,20 @@ type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
     : Type extends InputListTypeForInference<infer Value>
     ? InferValueFromInputType<Value>[]
     : Type extends InputObjectType<infer Fields>
-    ? {
-        readonly [Key in keyof Fields]: InferValueFromArg<Fields[Key]>;
-      }
+    ? InferValueFromArgs<Fields>
     : never;
 
-export type InferValueFromArgs<Args extends Record<string, Arg<any, any>>> = {
+export type InferValueFromArgs<Args extends Record<string, Arg<InputType>>> = {
   readonly [Key in keyof Args]: InferValueFromArg<Args[Key]>;
 };
 
-export type InferValueFromArg<TArg extends Arg<any, any>> =
+export type InferValueFromArg<TArg extends Arg<InputType>> =
   | InferValueFromInputType<TArg["type"]>
   | ("non-null" extends TArg["type"]["kind"]
       ? never
-      : undefined extends TArg["defaultValue"]
-      ? undefined
-      : never);
+      : TArg["__hasDefaultValue"] extends true
+      ? never
+      : undefined);
 
 type InputNonNullTypeForInference<Of extends NullableInputType> =
   NonNullType<Of>;
@@ -92,16 +94,13 @@ export type InferValueFromInputType<Type extends InputType> =
     ? InferValueFromInputTypeWithoutAddingNull<Value>
     : InferValueFromInputTypeWithoutAddingNull<Type> | null;
 
-export type InputObjectType<
-  Fields extends {
-    [Key in keyof any]: Arg<InputType, InferValueFromInputType<InputType>>;
-  }
-> = {
-  kind: "input";
-  __fields: Fields;
-  __context: (context: unknown) => void;
-  graphQLType: GraphQLInputObjectType;
-};
+export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
+  {
+    kind: "input";
+    __fields: Fields;
+    __context: (context: unknown) => void;
+    graphQLType: GraphQLInputObjectType;
+  };
 
 /**
  * A GraphQL argument. These should be created with {@link arg `schema.arg`}
@@ -158,14 +157,13 @@ export type InputObjectType<
  */
 export type Arg<
   Type extends InputType,
-  DefaultValue extends InferValueFromInputType<Type> | undefined =
-    | InferValueFromInputType<Type>
-    | undefined
+  HasDefaultValue extends boolean = boolean
 > = {
   type: Type;
   description?: string;
   deprecationReason?: string;
-  defaultValue: DefaultValue;
+  __hasDefaultValue: HasDefaultValue;
+  defaultValue: unknown;
 };
 
 /**
@@ -215,7 +213,7 @@ export function arg<
   } & (DefaultValue extends undefined
     ? { defaultValue?: DefaultValue }
     : { defaultValue: DefaultValue })
-): Arg<Type, DefaultValue> {
+): Arg<Type, DefaultValue extends undefined ? false : true> {
   if (!arg.type) {
     throw new Error("A type must be passed to schema.arg()");
   }
@@ -223,20 +221,42 @@ export function arg<
 }
 
 /**
- * Creates a {@link InputObjectType}
+ * Creates an {@link InputObjectType}
  *
  * ```ts
  * const Something = schema.inputObject({
- *   name: "",
+ *   name: "Something",
+ *   fields: {
+ *     something: schema.arg({ type: schema.String }),
+ *   },
  * });
+ * // ==
+ * graphql`
+ *   input Something {
+ *     something: String
+ *   }
+ * `;
  * ```
  *
  * ### Handling circular objects
  *
- * Circular input object require
+ * Circular input objects require explicitly specifying the fields on the object
+ * in the type because of TypeScript's limits with circularity.
+ *
+ * ```ts
+ * const Something: schema.InputObjectType<{
+ *   something: schema.Arg<Something>;
+ * }> = schema.inputObject({
+ *   name: "Something",
+ *   fields: () => ({
+ *     something: schema.arg({ type: Something }),
+ *   }),
+ * });
+ * ```
  *
  * You can specify all of your non-circular fields outside of the fields object
- * and then use `typeof` to get the type rather than writing it out as a type again.
+ * and then use `typeof` to get the type to avoid writing the non-circular
+ * fields as types again.
  *
  * ```ts
  * const nonCircularFields = {
@@ -245,7 +265,7 @@ export function arg<
  *
  * const Something: schema.InputObjectType<
  *   typeof nonCircularFields & {
- *     something: schema.Arg<Something, undefined>;
+ *     something: schema.Arg<typeof Something>;
  *   }
  * > = schema.inputObject({
  *   name: "Something",
@@ -257,9 +277,7 @@ export function arg<
  * ```
  */
 export function inputObject<
-  Fields extends {
-    [Key in keyof any]: Arg<InputType, InferValueFromInputType<InputType>>;
-  }
+  Fields extends { [key: string]: Arg<InputType> }
 >(config: {
   name: string;
   description?: string;

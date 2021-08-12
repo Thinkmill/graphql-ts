@@ -37,7 +37,7 @@ export type EnumValue<Value> = {
  * `;
  * ```
  */
-export type EnumType<Values extends Record<string, EnumValue<any>>> = {
+export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
   kind: "enum";
   values: Values;
   graphQLType: GraphQLEnumType;
@@ -125,7 +125,7 @@ export function enumValues<Values extends readonly string[]>(
  * `;)
  * ```
  */
-function enumType<Values extends Record<string, EnumValue<any>>>(config: {
+function enumType<Values extends Record<string, EnumValue<unknown>>>(config: {
   name: string;
   description?: string;
   extensions?: Readonly<GraphQLEnumTypeExtensions>;

@@ -44,6 +44,17 @@ const Something = schema.inputObject({
   },
 });
 
+type CircularInputType = schema.InputObjectType<{
+  circular: schema.Arg<CircularInputType>;
+}>;
+
+const Circular: CircularInputType = schema.inputObject({
+  name: "Circular",
+  fields: () => ({
+    circular: schema.arg({ type: Circular }),
+  }),
+});
+
 {
   type SomethingType = InferValueFromInputType<typeof Something>;
 
@@ -59,9 +70,18 @@ const Something = schema.inputObject({
 }
 
 {
+  // should be unknown
+  type x = schema.InferValueFromOutputType<schema.OutputType>;
+}
+{
+  // should be unknown
+  type x = schema.InferValueFromInputType<schema.InputType>;
+}
+
+{
   type RecursiveInput = InputObjectType<{
-    nullableString: Arg<ScalarType<string>, any>;
-    recursive: Arg<RecursiveInput, any>;
+    nullableString: Arg<ScalarType<string>>;
+    recursive: Arg<RecursiveInput>;
   }>;
 
   const Recursive: RecursiveInput = schema.inputObject({
@@ -489,6 +509,7 @@ schema.object()({
   fields: {
     id: schema.field({
       type: schema.ID,
+
       resolve(rootVal, args) {
         // @ts-expect-error
         args.something;
@@ -580,7 +601,7 @@ schema.fields<{ thing: Promise<string> }>()({
     type: schema.String,
   });
 
-  const _assert: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, false> = arg;
 }
 
 {
@@ -589,7 +610,7 @@ schema.fields<{ thing: Promise<string> }>()({
     defaultValue: undefined,
   });
 
-  const _assert: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, false> = arg;
 }
 
 {
@@ -598,7 +619,7 @@ schema.fields<{ thing: Promise<string> }>()({
     defaultValue: "",
   });
 
-  const _assert: schema.Arg<typeof schema.String, string> = arg;
+  const _assert: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -607,7 +628,7 @@ schema.fields<{ thing: Promise<string> }>()({
     defaultValue: null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, null> = arg;
+  const _assert: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -616,7 +637,7 @@ schema.fields<{ thing: Promise<string> }>()({
     defaultValue: null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, null> = arg;
+  const _assert: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -625,11 +646,7 @@ schema.fields<{ thing: Promise<string> }>()({
     defaultValue: Math.random() > 0.5 ? "" : null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, string | null> = arg;
-  // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, null> = arg;
-  // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, string> = arg;
+  const _assert: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -650,14 +667,14 @@ schema.fields<{ thing: Promise<string> }>()({
     ...x,
   });
 
-  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, string> = arg;
-  const _assert3: (
-    x: schema.Arg<typeof schema.String, string | undefined>
-  ) => void = (x: typeof arg) => {};
+  const _assert2: schema.Arg<typeof schema.String, true> = arg;
+  const _assert3: (x: schema.Arg<typeof schema.String, boolean>) => void = (
+    x: typeof arg
+  ) => {};
 }
 
 {
@@ -676,11 +693,11 @@ schema.fields<{ thing: Promise<string> }>()({
     ...x,
   });
 
-  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -698,11 +715,11 @@ schema.fields<{ thing: Promise<string> }>()({
     type: schema.String,
     ...x,
   });
-  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, true> = arg;
 }
 
 {
@@ -713,11 +730,11 @@ schema.fields<{ thing: Promise<string> }>()({
     ...thing,
   });
 
-  const _assert: schema.Arg<typeof schema.String, string | undefined> = arg;
+  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, undefined> = arg;
+  const _assert1: schema.Arg<typeof schema.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, string> = arg;
+  const _assert2: schema.Arg<typeof schema.String, true> = arg;
 }
 
 schema.arg({
