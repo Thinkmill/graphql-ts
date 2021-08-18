@@ -2,6 +2,7 @@
   "name": "@graphql-ts/site",
   "version": "1.0.0",
   "license": "MIT",
+  "private": true,
   "dependencies": {
     "@babel/core": "^7.14.3",
     "@babel/node": "7.14.7",
