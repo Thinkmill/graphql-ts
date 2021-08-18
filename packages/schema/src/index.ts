@@ -1,3 +1,44 @@
+/**
+ * `@graphql-ts/schema` is a thin wrapper around
+ * [GraphQL.js](https://github.com/graphql/graphql-js) providing type-safety
+ * for constructing GraphQL Schemas while avoiding
+ * type-generation and [declaration
+ * merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html).
+ *
+ * ```ts
+ * import { schema } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
+ *
+ * const Query = schema.object()({
+ *   name: "Query",
+ *   fields: {
+ *     hello: schema.field({
+ *       type: schema.String,
+ *       resolve() {
+ *         return "Hello!";
+ *       },
+ *     }),
+ *   },
+ * });
+ *
+ * const graphQLSchema = new GraphQLSchema({
+ *   query: Query.graphQLType,
+ * });
+ *
+ * graphql({
+ *   source: `
+ *     query {
+ *       hello
+ *     }
+ *   `,
+ *   schema: graphQLSchema,
+ * }).then((result) => {
+ *   console.log(result);
+ * });
+ * ```
+ *
+ * @module
+ */
 export * as schema from "./schema-api";
 export { bindSchemaAPIToContext } from "./output";
 export type {
