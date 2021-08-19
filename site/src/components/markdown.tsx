@@ -1,57 +1,55 @@
 import ReactMarkdown, { ReactMarkdownOptions } from "react-markdown";
-import markdownRenderer from "chakra-ui-markdown-renderer";
 import Highlight, { Prism } from "prism-react-renderer";
-import { codeFont } from "../lib/theme.css";
-import { colors } from "../lib/utils";
+import { codeFont, colors } from "../lib/theme.css";
 import { SymbolReference } from "./symbol-references";
 import { useDocsContext } from "../lib/DocsContext";
+
+import * as styles from "./markdown.css";
 
 export function Markdown({ content }: { content: string }) {
   return <ReactMarkdown children={content} components={components} />;
 }
 
-const chakraComponents = markdownRenderer();
 const theme = {
   plain: {
-    color: "#403f53",
-    backgroundColor: "#FBFBFB",
+    color: colors.coolGray600,
+    backgroundColor: colors.gray50,
   },
   styles: [
-    { types: ["class-name"], style: { color: colors.symbol } },
-    { types: ["changed"], style: { color: "rgb(162, 191, 252)" } },
-    { types: ["deleted"], style: { color: "rgba(239, 83, 80, 0.56)" } },
-    { types: ["inserted", "attr-name"], style: { color: "rgb(72, 118, 214)" } },
-    { types: ["comment"], style: { color: "rgb(152, 159, 177)" } },
+    { types: ["class-name"], style: { color: colors.lightBlue700 } },
+    { types: ["changed"], style: { color: colors.cyan400 } },
+    { types: ["deleted"], style: { color: colors.red400 } },
+    { types: ["inserted", "attr-name"], style: { color: colors.teal500 } },
+    { types: ["comment"], style: { color: colors.blueGray500 } },
     {
-      types: ["string", "builtin", "char", "constant", "url"],
-      style: { color: "rgb(44, 128, 147)" },
+      types: ["builtin", "char", "constant", "url"],
+      style: { color: colors.teal700 },
     },
-    { types: ["string"], style: { color: colors.string } },
-    { types: ["variable"], style: { color: "rgb(201, 103, 101)" } },
-    { types: ["number"], style: { color: "rgb(170, 9, 130)" } },
-    { types: ["punctuation"], style: { color: colors.comma } },
+    { types: ["string"], style: { color: colors.pink400 } },
+    { types: ["variable"], style: { color: colors.rose500 } },
+    { types: ["number"], style: { color: colors.pink600 } },
+    { types: ["punctuation"], style: { color: colors.blueGray400 } },
     {
       types: ["function", "selector", "doctype"],
-      style: { color: "rgb(153, 76, 195)" },
+      style: { color: colors.coolGray700 },
     },
-    { types: ["tag"], style: { color: "rgb(153, 76, 195)" } },
-    { types: ["operator"], style: { color: colors.colon } },
+    { types: ["tag"], style: { color: colors.fuchsia500 } },
+    { types: ["operator"], style: { color: colors.blueGray400 } },
     {
       types: ["property", "keyword", "namespace"],
-      style: { color: colors.keyword },
+      style: { color: colors.lightBlue500 },
     },
-    { types: ["boolean"], style: { color: "rgb(188, 84, 84)" } },
+    { types: ["boolean"], style: { color: colors.rose500 } },
   ],
 };
 
 const components: ReactMarkdownOptions["components"] = {
-  ...chakraComponents,
   code(props) {
     if (props.inline) {
       return <code className={codeFont}>{props.children}</code>;
     }
     return (
-      <pre className={codeFont}>
+      <pre className={styles.codeblock}>
         <Highlight
           Prism={Prism}
           code={props.children.join("").trim()}
@@ -84,6 +82,10 @@ const components: ReactMarkdownOptions["components"] = {
                         ) {
                           token.types = ["imports"];
                         }
+                        // Fix for `type:` property
+                        if (token.content === "type") {
+                          token.types = ["plain"];
+                        }
                         return (
                           <span key={key} {...getTokenProps({ token, key })} />
                         );
@@ -99,7 +101,6 @@ const components: ReactMarkdownOptions["components"] = {
     );
   },
   a(props) {
-    const Comp = chakraComponents.a as "a";
     let href = ((props.node.properties as any).href as string) || "";
     const { symbols, goodIdentifiers } = useDocsContext();
     const fullName = href.replace("#symbol-", "");
@@ -118,9 +119,9 @@ const components: ReactMarkdownOptions["components"] = {
       href = `#${goodIdentifiers[fullName]}`;
     }
     return (
-      <Comp css={{ color: "blue" }} href={href}>
+      <a className={styles.a} href={href}>
         {props.children}
-      </Comp>
+      </a>
     );
   },
 };
