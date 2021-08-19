@@ -3,5 +3,5 @@ command = "cd .. && npm i -g pnpm@6.11.5 && pnpm i --store-dir=site/node_modules
 publish = "out"
 
 [build.environment]
-# This essentially means "don't run npm install" - https://community.netlify.com/t/using-pnpm-and-pnpm-workspaces/2759/10
-NPM_FLAGS = "--prefix=/dev/null"
+# This essentially means "don't run npm install" - https://github.com/netlify/build/issues/1633#issuecomment-873535715
+NPM_FLAGS = "--prefix=./empty-for-netlify"
