@@ -4,10 +4,10 @@ import {
   stuff,
   _exportedSymbols,
   canonicalExportLocations as _canonicalExportLocations,
-} from "../index";
+} from "../extract/index";
 import { useContext, useEffect } from "react";
 import { Tooltip, Heading, Stack } from "@chakra-ui/react";
-import { TypeParam, SerializedType } from "../utils";
+import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
 import { DocContext, useDocContext } from "../frontend/DocContext";
 import { codeFont, colors, groupExports, splitDocs } from "../frontend/utils";
