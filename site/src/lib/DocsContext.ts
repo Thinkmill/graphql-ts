@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { SerializedSymbol } from "../extract/utils";
 
-export type DocContextType = {
+export type DocsContextType = {
   symbols: Record<string, SerializedSymbol>;
   hashesToFullNames: Record<string, string>;
   references: Record<string, string[]>;
@@ -13,8 +13,8 @@ export type DocContextType = {
   goodIdentifiers: Record<string, string>;
 };
 
-export const DocContext = createContext<DocContextType>(null as any);
+export const DocsContext = createContext<DocsContextType>(null as any);
 
-export function useDocContext() {
-  return useContext(DocContext);
+export function useDocsContext() {
+  return useContext(DocsContext);
 }

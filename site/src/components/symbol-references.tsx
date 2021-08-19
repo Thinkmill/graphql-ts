@@ -6,9 +6,9 @@ import {
   useMemo,
 } from "react";
 import { Tooltip } from "@chakra-ui/react";
-import { useDocContext } from "./DocContext";
-import { codeFont } from "./theme.css";
-import { colors, splitDocs } from "./utils";
+import { useDocsContext } from "../lib/DocsContext";
+import { codeFont } from "../lib/theme.css";
+import { colors, splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
 
 const NamesInScopeContext = createContext<Set<string>>(new Set());
@@ -20,7 +20,7 @@ export function SymbolName({
   name: string;
   fullName: string;
 }) {
-  const { goodIdentifiers } = useDocContext();
+  const { goodIdentifiers } = useDocsContext();
   return (
     <a
       id={goodIdentifiers[fullName]}
@@ -74,7 +74,7 @@ export function SymbolReference({
   fullName: string;
 }) {
   const { symbols, canonicalExportLocations, goodIdentifiers } =
-    useDocContext();
+    useDocsContext();
   const namesInScope = useContext(NamesInScopeContext);
   const externalReference = symbols[fullName]
     ? undefined

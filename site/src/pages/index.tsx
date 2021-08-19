@@ -9,20 +9,20 @@ import { useContext, useEffect } from "react";
 import { Tooltip, Heading, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
-import { DocContext, useDocContext } from "../frontend/DocContext";
-import { colors, groupExports, splitDocs } from "../frontend/utils";
-import { Markdown } from "../frontend/markdown";
+import { DocsContext, useDocsContext } from "../lib/DocsContext";
+import { colors, groupExports, splitDocs } from "../lib/utils";
+import { Markdown } from "../components/markdown";
 import {
   SymbolName,
   SymbolReference,
   AddNameToScope,
-} from "../frontend/symbol-references";
-import { Navigation } from "../frontend/Navigation";
-import { Header } from "../frontend/Layout";
-import { codeFont, themeClass } from "../frontend/theme.css";
+} from "../components/symbol-references";
+import { Navigation } from "../components/navigation";
+import { Header } from "../components/layout";
+import { codeFont, themeClass } from "../lib/theme.css";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
-  const { goodIdentifiers } = useDocContext();
+  const { goodIdentifiers } = useDocsContext();
   return (
     <a
       css={{ marginBottom: "1rem", display: "block", height: 1 }}
@@ -424,7 +424,7 @@ export default function Index(
   const rootSymbol = Object.keys(props.accessibleSymbols)[0];
 
   return (
-    <DocContext.Provider
+    <DocsContext.Provider
       value={{
         symbols: props.accessibleSymbols,
         hashesToFullNames: Object.fromEntries(
@@ -453,7 +453,7 @@ export default function Index(
           <RenderRootThing fullName={rootSymbol} />{" "}
         </div>
       </div>
-    </DocContext.Provider>
+    </DocsContext.Provider>
   );
 }
 
@@ -483,7 +483,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     references,
     symbolsForInnerBit,
     goodIdentifiers,
-  } = useContext(DocContext);
+  } = useContext(DocsContext);
   let rootThing = symbols[fullName];
   let isExported = false;
   if (canonicalExportLocations[fullName]) {

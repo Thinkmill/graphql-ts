@@ -1,12 +1,44 @@
 import hashString from "@emotion/hash";
+import { useState, ReactNode } from "react";
 
-import { useDocContext } from "./DocContext";
+import { useDocsContext } from "../lib/DocsContext";
 import { SymbolReference } from "./symbol-references";
-import { codeFont } from "./theme.css";
-import { colors, groupExports } from "./utils";
+import { colors, groupExports } from "../lib/utils";
+
+import {
+  expandableContents,
+  expandableSummary,
+  expandableChevron,
+} from "./navigation.css";
+import { codeFont } from "../lib/theme.css";
+
+function Expandable({
+  summary,
+  children,
+}: {
+  summary: ReactNode;
+  children: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(true);
+  const onClick = () => setIsOpen(!isOpen);
+  return (
+    <div>
+      <div onClick={onClick} className={expandableSummary}>
+        <img
+          className={expandableChevron}
+          src={`/icons/chevron-${isOpen ? "down" : "right"}.svg`}
+          width="20"
+          height="20"
+        />
+        {summary}
+      </div>
+      {isOpen ? <div className={expandableContents}>{children}</div> : null}
+    </div>
+  );
+}
 
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
-  const docContext = useDocContext();
+  const docContext = useDocsContext();
   const rootSymbol = docContext.symbols[rootSymbolName];
   if (rootSymbol.kind !== "module") {
     throw new Error("Root symbols must be modules");
@@ -36,17 +68,17 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
           const symbol = docContext.symbols[group.fullName];
           if (symbol.kind === "module") {
             return (
-              <details key={symbol.name} open>
-                <summary>
+              <Expandable
+                key={symbol.name}
+                summary={
                   <SymbolReference
                     fullName={group.fullName}
                     name={group.exportName}
                   />
-                </summary>
-                <div css={{ marginLeft: 16 }}>
-                  <Navigation rootSymbolName={group.fullName} />
-                </div>
-              </details>
+                }
+              >
+                <Navigation rootSymbolName={group.fullName} />
+              </Expandable>
             );
           }
           return (

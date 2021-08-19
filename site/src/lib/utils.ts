@@ -1,9 +1,9 @@
-import { DocContextType } from "./DocContext";
+import { DocsContextType } from "./DocsContext";
 
 export function groupExports(
   fullName: string,
-  canonicalExportLocations: DocContextType["canonicalExportLocations"],
-  allSymbols: DocContextType["symbols"]
+  canonicalExportLocations: DocsContextType["canonicalExportLocations"],
+  allSymbols: DocsContextType["symbols"]
 ) {
   const rootThing = allSymbols[fullName];
   if (rootThing.kind !== "module") {

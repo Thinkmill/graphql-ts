@@ -1,10 +1,10 @@
 import ReactMarkdown, { ReactMarkdownOptions } from "react-markdown";
 import markdownRenderer from "chakra-ui-markdown-renderer";
 import Highlight, { Prism } from "prism-react-renderer";
-import { codeFont } from "./theme.css";
-import { colors } from "./utils";
+import { codeFont } from "../lib/theme.css";
+import { colors } from "../lib/utils";
 import { SymbolReference } from "./symbol-references";
-import { useDocContext } from "./DocContext";
+import { useDocsContext } from "../lib/DocsContext";
 
 export function Markdown({ content }: { content: string }) {
   return <ReactMarkdown children={content} components={components} />;
@@ -101,7 +101,7 @@ const components: ReactMarkdownOptions["components"] = {
   a(props) {
     const Comp = chakraComponents.a as "a";
     let href = ((props.node.properties as any).href as string) || "";
-    const { symbols, goodIdentifiers } = useDocContext();
+    const { symbols, goodIdentifiers } = useDocsContext();
     const fullName = href.replace("#symbol-", "");
 
     if (
