@@ -6,7 +6,7 @@ import {
   canonicalExportLocations as _canonicalExportLocations,
 } from "../extract/index";
 import { useContext, useEffect } from "react";
-import { Tooltip, Heading, Stack } from "@chakra-ui/react";
+import { Tooltip, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
 import { DocsContext, useDocsContext } from "../lib/DocsContext";
@@ -537,12 +537,18 @@ function RenderRootThing({ fullName }: { fullName: string }) {
             <summary css={{ display: "block" }}>
               <Docs content={rootThing.docs} />
               {li}
-              <span css={[{ color: colors.keyword }, codeFont]}>
+
+              <span className={codeFont} css={{ color: colors.keyword }}>
                 export * as{" "}
               </span>
               <SymbolName name={rootThing.name} fullName={fullName} />
-              <span css={[{ color: colors.keyword }, codeFont]}> from</span>
-              <span css={[{ color: colors.bracket }, codeFont]}>{" {"}</span>
+              <span className={codeFont} css={{ color: colors.keyword }}>
+                {" "}
+                from
+              </span>
+              <span className={codeFont} css={{ color: colors.bracket }}>
+                {" {"}
+              </span>
             </summary>
           ) : (
             <summary css={{ display: "block" }}>
@@ -553,19 +559,19 @@ function RenderRootThing({ fullName }: { fullName: string }) {
               </span>
               <a
                 id={goodIdentifiers[fullName]}
-                css={[
-                  codeFont,
-                  {
-                    color: colors.string,
-                    ":hover": { textDecoration: "underline" },
-                    ":target": { backgroundColor: "#ffff54ba" },
-                  },
-                ]}
+                className={codeFont}
+                css={{
+                  color: colors.string,
+                  ":hover": { textDecoration: "underline" },
+                  ":target": { backgroundColor: "#ffff54ba" },
+                }}
                 href={`#${goodIdentifiers[fullName]}`}
               >
                 {JSON.stringify(rootThing.name)}
               </a>{" "}
-              <span css={[{ color: colors.bracket }, codeFont]}>{" {"}</span>
+              <span className={codeFont} css={{ color: colors.bracket }}>
+                {" {"}
+              </span>
             </summary>
           )}
           <div css={{ padding: 32 }}>
@@ -579,16 +585,18 @@ function RenderRootThing({ fullName }: { fullName: string }) {
                 return (
                   <div key={exportName}>
                     <SymbolAnchor fullName={symbol} />
-                    <Heading
+                    <h1
                       className={codeFont}
                       css={{
                         "a:target + &": {
                           backgroundColor: "#ffff54ba",
                         },
+                        fontSize: 38,
+                        fontWeight: "bold",
                       }}
                     >
                       {exportName}
-                    </Heading>
+                    </h1>
                     <RenderRootThing fullName={symbol} />
                     {!!relatedSymbols?.length && (
                       <div css={{ paddingLeft: 32, paddingTop: 8 }}>
