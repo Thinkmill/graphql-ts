@@ -7,5 +7,5 @@
       { "runtime": "automatic", "importSource": "@emotion/react" }
     ]
   ],
-  "plugins": ["@babel/plugin-transform-runtime"]
+  "plugins": ["@babel/plugin-transform-runtime", "@vanilla-extract/babel-plugin"]
 }

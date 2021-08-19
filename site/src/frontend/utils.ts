@@ -65,12 +65,6 @@ export function groupExports(
   return transformedExports;
 }
 
-export const codeFont = {
-  fontVariantLigatures: "none",
-  fontFamily:
-    "'Fira Code', 'Source Code Pro', 'Menlo', 'Monaco', 'Courier New', monospace",
-};
-
 export const colors = {
   parameter: "#111111",
   symbol: "#4876d6",

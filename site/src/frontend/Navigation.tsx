@@ -1,7 +1,9 @@
+import hashString from "@emotion/hash";
+
 import { useDocContext } from "./DocContext";
 import { SymbolReference } from "./symbol-references";
-import { codeFont, colors, groupExports } from "./utils";
-import hashString from "@emotion/hash";
+import { codeFont } from "./theme.css";
+import { colors, groupExports } from "./utils";
 
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
   const docContext = useDocContext();
@@ -22,7 +24,8 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
             return (
               <li key={i}>
                 <a
-                  css={[codeFont, { color: colors.symbol }]}
+                  className={codeFont}
+                  css={{ color: colors.symbol }}
                   href={"#a" + hashString(rootSymbolName) + `re-exports-${i}`}
                 >
                   {group.exports.length} Re-exports
@@ -34,7 +37,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
           if (symbol.kind === "module") {
             return (
               <details key={symbol.name} open>
-                <summary css={{ marginLeft: -16 }}>
+                <summary>
                   <SymbolReference
                     fullName={group.fullName}
                     name={group.exportName}

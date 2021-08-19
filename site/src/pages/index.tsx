@@ -10,7 +10,7 @@ import { Tooltip, Heading, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
 import { DocContext, useDocContext } from "../frontend/DocContext";
-import { codeFont, colors, groupExports, splitDocs } from "../frontend/utils";
+import { colors, groupExports, splitDocs } from "../frontend/utils";
 import { Markdown } from "../frontend/markdown";
 import {
   SymbolName,
@@ -18,6 +18,8 @@ import {
   AddNameToScope,
 } from "../frontend/symbol-references";
 import { Navigation } from "../frontend/Navigation";
+import { Header } from "../frontend/Layout";
+import { codeFont, themeClass } from "../frontend/theme.css";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
   const { goodIdentifiers } = useDocContext();
@@ -436,18 +438,20 @@ export default function Index(
         goodIdentifiers,
       }}
     >
-      <Heading marginBottom="4">@graphql-ts/schema API Documentation</Heading>
-      <div
-        css={{
-          display: "flex",
-          justifyContent: "start",
-          alignItems: "start",
-        }}
-      >
-        <div css={{ marginLeft: 24, marginTop: 24 }}>
-          <Navigation rootSymbolName={rootSymbol} />
+      <div className={themeClass}>
+        <Header />
+        <div
+          css={{
+            display: "flex",
+            justifyContent: "start",
+            alignItems: "start",
+          }}
+        >
+          <div>
+            <Navigation rootSymbolName={rootSymbol} />
+          </div>
+          <RenderRootThing fullName={rootSymbol} />{" "}
         </div>
-        <RenderRootThing fullName={rootSymbol} />{" "}
       </div>
     </DocContext.Provider>
   );
@@ -493,7 +497,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     return (
       <div>
         <Docs content={rootThing.docs} />
-        <span css={codeFont}>
+        <span className={codeFont}>
           <span style={{ color: colors.keyword }}>
             {isExported ? "export " : ""}function
           </span>{" "}
@@ -686,7 +690,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     return (
       <div>
         <Docs content={rootThing.docs} />
-        <span style={codeFont}>
+        <span className={codeFont}>
           <span style={{ color: colors.keyword }}>
             {isExported ? "export " : ""}
             {rootThing.variableKind}
@@ -704,7 +708,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
   return (
     <div>
       <Docs content={rootThing.docs} />
-      <span css={codeFont}>
+      <span className={codeFont}>
         <span style={{ color: colors.keyword }}>
           {isExported ? "export " : ""}
           type

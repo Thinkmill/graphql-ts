@@ -7,7 +7,8 @@ import {
 } from "react";
 import { Tooltip } from "@chakra-ui/react";
 import { useDocContext } from "./DocContext";
-import { codeFont, colors, splitDocs } from "./utils";
+import { codeFont } from "./theme.css";
+import { colors, splitDocs } from "./utils";
 import { Markdown } from "./markdown";
 
 const NamesInScopeContext = createContext<Set<string>>(new Set());
@@ -23,14 +24,12 @@ export function SymbolName({
   return (
     <a
       id={goodIdentifiers[fullName]}
-      css={[
-        codeFont,
-        {
-          color: colors.symbol,
-          ":hover": { textDecoration: "underline" },
-          ":target": { backgroundColor: "#ffff54ba" },
-        },
-      ]}
+      className={codeFont}
+      css={{
+        color: colors.symbol,
+        ":hover": { textDecoration: "underline" },
+        ":target": { backgroundColor: "#ffff54ba" },
+      }}
       href={`#${goodIdentifiers[fullName]}`}
     >
       {name}
@@ -99,7 +98,9 @@ export function SymbolReference({
         hasArrow
         label="This symbol is defined outside of this package so it isn't included in this documentation"
       >
-        <span css={[codeFont, { color: "#f92672" }]}>{name}</span>
+        <span className={codeFont} css={{ color: "#f92672" }}>
+          {name}
+        </span>
       </Tooltip>
     );
   }
@@ -133,7 +134,7 @@ export function SymbolReference({
   ) {
     const canonicalExportLocation = canonicalExportLocations[fullName];
     return (
-      <span css={codeFont}>
+      <span className={codeFont}>
         <span
           css={{
             color: colors.keyword,
@@ -169,10 +170,8 @@ export function SymbolReference({
 
   return tooltip(
     <a
-      css={[
-        codeFont,
-        { color: colors.symbol, ":hover": { textDecoration: "underline" } },
-      ]}
+      className={codeFont}
+      css={{ color: colors.symbol, ":hover": { textDecoration: "underline" } }}
       href={`#${goodIdentifiers[fullName]}`}
     >
       {name}

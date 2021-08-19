@@ -1,7 +1,8 @@
 import ReactMarkdown, { ReactMarkdownOptions } from "react-markdown";
 import markdownRenderer from "chakra-ui-markdown-renderer";
 import Highlight, { Prism } from "prism-react-renderer";
-import { codeFont, colors } from "./utils";
+import { codeFont } from "./theme.css";
+import { colors } from "./utils";
 import { SymbolReference } from "./symbol-references";
 import { useDocContext } from "./DocContext";
 
@@ -47,10 +48,10 @@ const components: ReactMarkdownOptions["components"] = {
   ...chakraComponents,
   code(props) {
     if (props.inline) {
-      return <code css={codeFont}>{props.children}</code>;
+      return <code className={codeFont}>{props.children}</code>;
     }
     return (
-      <pre css={codeFont}>
+      <pre className={codeFont}>
         <Highlight
           Prism={Prism}
           code={props.children.join("").trim()}
