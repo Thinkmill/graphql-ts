@@ -29,7 +29,8 @@
     "version": "changeset version && pnpm i --frozen-lockfile=false",
     "test": "jest",
     "types": "tsc",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "site": "cd site && pnpm dev"
   },
   "preconstruct": {
     "packages": [
