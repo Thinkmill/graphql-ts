@@ -6,8 +6,8 @@ import {
   ts,
   Symbol,
 } from "ts-morph";
-import { convertTypeNode } from "./type-thing-from-node";
-import { _convertType } from "./type-thing-from-type";
+import { convertTypeNode } from "./convert-node";
+import { _convertType } from "./convert-type";
 import hashString from "@emotion/hash";
 
 export type TypeParam = {

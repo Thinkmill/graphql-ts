@@ -10,7 +10,7 @@ import {
   assertNever,
   getSymbolIdentifier,
 } from "./utils";
-import { _convertType } from "./type-thing-from-type";
+import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
 
 export function convertTypeNode(node: TypeNode): SerializedType {
