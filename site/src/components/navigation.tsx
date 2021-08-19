@@ -6,6 +6,7 @@ import { SymbolReference } from "./symbol-references";
 import { colors, groupExports } from "../lib/utils";
 
 import {
+  item,
   expandableContents,
   expandableSummary,
   expandableChevron,
@@ -37,6 +38,10 @@ function Expandable({
   );
 }
 
+function Item({ children }: { children: ReactNode }) {
+  return <li className={item}>{children}</li>;
+}
+
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
   const docContext = useDocsContext();
   const rootSymbol = docContext.symbols[rootSymbolName];
@@ -54,7 +59,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
         {groupedExports.map((group, i) => {
           if (group.kind === "exports") {
             return (
-              <li key={i}>
+              <Item key={i}>
                 <a
                   className={codeFont}
                   css={{ color: colors.symbol }}
@@ -62,7 +67,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
                 >
                   {group.exports.length} Re-exports
                 </a>
-              </li>
+              </Item>
             );
           }
           const symbol = docContext.symbols[group.fullName];
@@ -82,13 +87,13 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
             );
           }
           return (
-            <li key={group.exportName}>
+            <Item key={group.exportName}>
               {" "}
               <SymbolReference
                 fullName={group.fullName}
                 name={group.exportName}
               />
-            </li>
+            </Item>
           );
         })}
       </ul>

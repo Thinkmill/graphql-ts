@@ -1,24 +1,32 @@
 import { style } from "@vanilla-extract/css";
 import { tokens } from "../lib/theme.css";
 
+export const item = style({
+  paddingLeft: 16,
+  paddingRight: 16,
+});
+
 export const expandable = style({
-  paddingLeft: "1rem",
+  paddingLeft: 6,
 });
 
 export const expandableContents = style({
-  borderLeft: `0.15rem solid ${tokens.color.gray400}`,
-  paddingLeft: "1rem",
-  marginLeft: "1rem",
+  borderLeft: `2px solid ${tokens.color.gray400}`,
+  marginLeft: 2,
+  paddingLeft: 6,
+  marginBottom: 8,
 });
 
 export const expandableSummary = style({
   display: "flex",
   fontWeight: "bold",
-  marginBottom: "0.25rem",
+  marginBottom: 8,
+  marginLeft: -16,
 });
 
 export const expandableChevron = style({
   cursor: "pointer",
-  marginLeft: "0.45rem",
-  marginRight: "0.45rem",
+  marginTop: 3,
+  marginLeft: 8,
+  marginRight: 3,
 });

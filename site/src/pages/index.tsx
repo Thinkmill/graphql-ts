@@ -18,7 +18,7 @@ import {
   AddNameToScope,
 } from "../components/symbol-references";
 import { Navigation } from "../components/navigation";
-import { Header } from "../components/layout";
+import { Contents, Header, NavigationContainer } from "../components/layout";
 import { codeFont, themeClass } from "../lib/theme.css";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
@@ -447,10 +447,12 @@ export default function Index(
             alignItems: "start",
           }}
         >
-          <div>
+          <NavigationContainer>
             <Navigation rootSymbolName={rootSymbol} />
-          </div>
-          <RenderRootThing fullName={rootSymbol} />{" "}
+          </NavigationContainer>
+          <Contents>
+            <RenderRootThing fullName={rootSymbol} />{" "}
+          </Contents>
         </div>
       </div>
     </DocsContext.Provider>
@@ -546,7 +548,9 @@ function RenderRootThing({ fullName }: { fullName: string }) {
             <summary css={{ display: "block" }}>
               <Docs content={rootThing.docs} />
               {li}
-              <span css={[{ color: colors.keyword }, codeFont]}>module </span>
+              <span className={codeFont} css={{ color: colors.keyword }}>
+                module{" "}
+              </span>
               <a
                 id={goodIdentifiers[fullName]}
                 css={[
@@ -576,14 +580,12 @@ function RenderRootThing({ fullName }: { fullName: string }) {
                   <div key={exportName}>
                     <SymbolAnchor fullName={symbol} />
                     <Heading
-                      css={[
-                        codeFont,
-                        {
-                          "a:target + &": {
-                            backgroundColor: "#ffff54ba",
-                          },
+                      className={codeFont}
+                      css={{
+                        "a:target + &": {
+                          backgroundColor: "#ffff54ba",
                         },
-                      ]}
+                      }}
                     >
                       {exportName}
                     </Heading>

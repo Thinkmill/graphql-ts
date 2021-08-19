@@ -8,5 +8,14 @@ export const header = style({
   color: tokens.color.gray800,
   backgroundColor: tokens.color.gray100,
   borderBottom: `1px solid ${tokens.color.gray300}`,
-  marginBottom: "1rem",
+});
+
+export const navigationContainer = style({
+  padding: "16px 24px",
+  borderRight: `1px solid ${tokens.color.gray100}`,
+  marginRight: 16,
+});
+
+export const contents = style({
+  padding: 16,
 });
