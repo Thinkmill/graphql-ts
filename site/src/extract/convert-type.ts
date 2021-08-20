@@ -75,6 +75,20 @@ export function _convertType(type: Type, depth: number): SerializedType {
     }
   }
 
+  const aliasSymbol = type.getAliasSymbol();
+
+  if (aliasSymbol) {
+    collectSymbol(aliasSymbol);
+    return {
+      kind: "reference",
+      fullName: getSymbolIdentifier(aliasSymbol),
+      name: aliasSymbol.getName(),
+      typeArguments: (type as Type)
+        .getTypeArguments()
+        .map((x) => convertType(x)),
+    };
+  }
+
   const literalValue = type.getLiteralValue();
 
   if (literalValue !== undefined) {
