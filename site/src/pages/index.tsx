@@ -732,9 +732,10 @@ function ExportedFrom({ fullName }: { fullName: string }) {
   const docContext = useDocsContext();
   if (docContext.rootSymbols.has(fullName)) {
     return (
-      <span css={{ color: colors.string }}>
-        {JSON.stringify(docContext.symbols[fullName].name)}
-      </span>
+      <SymbolReference
+        fullName={fullName}
+        name={docContext.symbols[fullName].name}
+      />
     );
   }
   const { exportName, fileSymbolName } =

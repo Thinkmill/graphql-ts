@@ -22,8 +22,8 @@
   "preconstruct": {
     "entrypoints": [
       "index.ts",
-      "api-without-context/index.ts",
-      "api-with-context/index.ts"
+      "api-with-context/index.ts",
+      "api-without-context/index.ts"
     ]
   }
 }

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  ReactElement,
-  ReactNode,
-  useMemo,
-} from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import { Tooltip } from "@chakra-ui/react";
 import { useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
@@ -73,7 +67,7 @@ export function SymbolReference({
   name: string;
   fullName: string;
 }) {
-  const { symbols, canonicalExportLocations, goodIdentifiers } =
+  const { symbols, canonicalExportLocations, goodIdentifiers, rootSymbols } =
     useDocsContext();
   const namesInScope = useContext(NamesInScopeContext);
   const externalReference = symbols[fullName]
@@ -107,26 +101,42 @@ export function SymbolReference({
 
   const symbol = symbols[fullName];
   const firstDocsBit = splitDocs(symbol.docs).first;
-  const tooltip = firstDocsBit
-    ? (x: ReactElement) => (
-        <Tooltip
-          label={
-            <span
-              css={{
-                "& :last-child": { marginBottom: 0 },
-                "& *": {
-                  color: "inherit !important",
-                },
-              }}
-            >
-              <Markdown content={firstDocsBit} />
-            </span>
-          }
-        >
-          {x}
-        </Tooltip>
-      )
-    : (x: ReactElement) => x;
+
+  const isRootSymbol = rootSymbols.has(fullName);
+
+  let inner = (
+    <a
+      className={codeFont}
+      css={{
+        color: isRootSymbol ? colors.string : colors.symbol,
+        ":hover": { textDecoration: "underline" },
+      }}
+      href={`#${goodIdentifiers[fullName]}`}
+    >
+      {isRootSymbol ? JSON.stringify(name) : name}
+    </a>
+  );
+
+  if (firstDocsBit) {
+    inner = (
+      <Tooltip
+        label={
+          <span
+            css={{
+              "& :last-child": { marginBottom: 0 },
+              "& *": {
+                color: "inherit !important",
+              },
+            }}
+          >
+            <Markdown content={firstDocsBit} />
+          </span>
+        }
+      >
+        {inner}
+      </Tooltip>
+    );
+  }
 
   if (
     namesInScope.has(name) &&
@@ -143,38 +153,14 @@ export function SymbolReference({
           import
         </span>
         <span css={{ color: colors.bracket }}>(</span>
-        <a
-          href={`#${goodIdentifiers[canonicalExportLocation.fileSymbolName]}`}
-          css={{
-            color: colors.string,
-            ":hover": { textDecoration: "underline" },
-          }}
-        >
-          {JSON.stringify(symbols[canonicalExportLocation.fileSymbolName].name)}
-        </a>
-        <span css={{ color: colors.bracket }}>)</span>.
-        {tooltip(
-          <a
-            css={{
-              color: colors.symbol,
-              ":hover": { textDecoration: "underline" },
-            }}
-            href={`#${goodIdentifiers[fullName]}`}
-          >
-            {name}
-          </a>
-        )}
+        <SymbolReference
+          fullName={canonicalExportLocation.fileSymbolName}
+          name={symbols[canonicalExportLocation.fileSymbolName].name}
+        />
+        <span css={{ color: colors.bracket }}>)</span>.{inner}
       </span>
     );
   }
 
-  return tooltip(
-    <a
-      className={codeFont}
-      css={{ color: colors.symbol, ":hover": { textDecoration: "underline" } }}
-      href={`#${goodIdentifiers[fullName]}`}
-    >
-      {name}
-    </a>
-  );
+  return inner;
 }
