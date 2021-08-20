@@ -1,3 +1,4 @@
+import { SerializedSymbol } from "../extract/utils";
 import { DocsContextType } from "./DocsContext";
 
 export function groupExports(
@@ -38,28 +39,42 @@ export function groupExports(
     } else {
       const canonicalLocation = canonicalExportLocations[exportedSymbol];
       const prev = transformedExports[transformedExports.length - 1];
-      if (
-        prev?.kind === "exports" &&
-        prev.from === canonicalLocation.fileSymbolName
-      ) {
-        prev.exports.push({
-          localName: exportName,
-          sourceName: canonicalLocation.exportName,
-          fullName: exportedSymbol,
-        });
-      } else {
-        transformedExports.push({
-          kind: "exports",
-          from: canonicalLocation.fileSymbolName,
-          exports: [
-            {
-              localName: exportName,
-              sourceName: canonicalLocation.exportName,
-              fullName: exportedSymbol,
-            },
-          ],
-        });
+      if (prev?.kind === "exports") {
+        if (prev.from === canonicalLocation.fileSymbolName) {
+          prev.exports.push({
+            localName: exportName,
+            sourceName: canonicalLocation.exportName,
+            fullName: exportedSymbol,
+          });
+          continue;
+        }
+        const prevSymbol = allSymbols[prev.from] as Extract<
+          SerializedSymbol,
+          { kind: "module" }
+        >;
+        const potentialExport = Object.entries(prevSymbol.exports).find(
+          ([, symbolId]) => symbolId === exportedSymbol
+        );
+        if (potentialExport) {
+          prev.exports.push({
+            localName: exportName,
+            sourceName: potentialExport[0],
+            fullName: exportedSymbol,
+          });
+          continue;
+        }
       }
+      transformedExports.push({
+        kind: "exports",
+        from: canonicalLocation.fileSymbolName,
+        exports: [
+          {
+            localName: exportName,
+            sourceName: canonicalLocation.exportName,
+            fullName: exportedSymbol,
+          },
+        ],
+      });
     }
   }
   return transformedExports;
