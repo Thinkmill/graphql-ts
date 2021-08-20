@@ -83,9 +83,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
       kind: "reference",
       fullName: getSymbolIdentifier(aliasSymbol),
       name: aliasSymbol.getName(),
-      typeArguments: (type as Type)
-        .getTypeArguments()
-        .map((x) => convertType(x)),
+      typeArguments: type.getTypeArguments().map((x) => convertType(x)),
     };
   }
 
