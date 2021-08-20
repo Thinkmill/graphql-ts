@@ -63,6 +63,7 @@ export type ObjectMember =
   | {
       kind: "prop";
       name: string;
+      docs: string;
       optional: boolean;
       readonly: boolean;
       type: SerializedType;
@@ -75,6 +76,10 @@ export type ObjectMember =
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
+    }
+  | {
+      kind: "unknown";
+      content: string;
     };
 
 export type SerializedType =

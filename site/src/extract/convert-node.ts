@@ -164,6 +164,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
           return {
             kind: "prop",
             name: member.getName(),
+            docs: getDocs(member),
             optional: member.hasQuestionToken(),
             readonly: member.isReadonly(),
             type: convertTypeNode(member.getTypeNodeOrThrow()),

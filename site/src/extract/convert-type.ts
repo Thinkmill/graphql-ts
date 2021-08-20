@@ -4,11 +4,11 @@ import {
   ParameterDeclaration,
   PropertySignature,
   MethodSignature,
+  PropertyAssignment,
 } from "ts-morph";
 import { collectSymbol } from ".";
 import {
   assert,
-  assertNever,
   getDocs,
   getParameters,
   getTypeParameters,
@@ -61,13 +61,14 @@ export function _convertType(type: Type, depth: number): SerializedType {
     if (type.isTypeParameter()) {
       return { kind: "type-parameter", name: symbol.getName() };
     }
-    if (symbol.getName() !== "__type") {
+    const name = symbol.getName();
+    if (name !== "__type" && name !== "__function" && name !== "__object") {
       symbol = symbol.getAliasedSymbol() || symbol;
       collectSymbol(symbol);
       return {
         kind: "reference",
         fullName: getSymbolIdentifier(symbol),
-        name: symbol.getName(),
+        name,
         typeArguments: (type as Type)
           .getTypeArguments()
           .map((x) => convertType(x)),
@@ -232,9 +233,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
     const members: ObjectMember[] = type
       .getProperties()
       .map((prop): ObjectMember => {
-        const decl = prop.getDeclarations()[0] as
-          | PropertySignature
-          | MethodSignature;
+        const decl = prop.getDeclarations()[0];
         if (decl instanceof PropertySignature) {
           let type = convertType(decl.getType());
           const isOptional = decl.hasQuestionToken();
@@ -251,6 +250,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
           }
           return {
             kind: "prop",
+            docs: getDocs(decl),
             name: prop.getName(),
             readonly: decl.isReadonly(),
             optional: isOptional,
@@ -268,7 +268,30 @@ export function _convertType(type: Type, depth: number): SerializedType {
             returnType: convertType(decl.getReturnType()),
           };
         }
-        return assertNever(decl);
+        if (decl instanceof PropertyAssignment) {
+          let type = convertType(decl.getType());
+          const isOptional = decl.hasQuestionToken();
+          if (isOptional && type.kind === "union") {
+            type = {
+              kind: "union",
+              types: type.types.filter(
+                (x) => x.kind !== "intrinsic" || x.value !== "undefined"
+              ),
+            };
+            if (type.types.length === 1) {
+              type = type.types[0];
+            }
+          }
+          return {
+            kind: "prop",
+            name: prop.getName(),
+            docs: "",
+            readonly: false,
+            optional: isOptional,
+            type,
+          };
+        }
+        return { kind: "unknown", content: decl.getText() };
       });
     const stringIndexType = type.getStringIndexType();
     const numberIndexType = type.getNumberIndexType();

@@ -10,6 +10,7 @@ import {
   VariableDeclaration,
   JSDoc,
   Node,
+  ArrowFunction,
 } from "ts-morph";
 import path from "path";
 import fs from "fs/promises";
@@ -229,7 +230,23 @@ function resolveSymbolQueue() {
       });
     } else if (decl instanceof VariableDeclaration) {
       const typeNode = decl.getTypeNode();
+      const init = decl.getInitializer();
       const variableStatement = decl.getVariableStatementOrThrow();
+
+      if (!typeNode && init instanceof ArrowFunction) {
+        const returnTypeNode = init.getReturnTypeNode();
+        state.publicSymbols.set(symbol, {
+          kind: "function",
+          name: symbol.getName(),
+          parameters: getParameters(init),
+          docs: getDocs(variableStatement),
+          typeParams: getTypeParameters(init),
+          returnType: returnTypeNode
+            ? convertTypeNode(returnTypeNode)
+            : _convertType(init.getReturnType(), 0),
+        });
+        continue;
+      }
       state.publicSymbols.set(symbol, {
         kind: "variable",
         name: symbol.getName(),

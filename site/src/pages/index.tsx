@@ -111,7 +111,8 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
         {type.members.map((prop, i) => {
           if (prop.kind === "prop") {
             return (
-              <span key={i} style={{ paddingLeft: 32 }}>
+              <span key={i} style={{ marginLeft: 32 }}>
+                <Docs content={prop.docs} />
                 {prop.readonly ? (
                   <span style={{ color: colors.keyword }}>readonly </span>
                 ) : null}
@@ -125,7 +126,7 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
           }
           if (prop.kind === "index") {
             return (
-              <span key={i} style={{ paddingLeft: 32 }}>
+              <span key={i} style={{ marginLeft: 32 }}>
                 {"  "}[key<span style={{ color: colors.colon }}>:</span>{" "}
                 <Type type={prop.key} />]
                 <span style={{ color: colors.colon }}>:</span>{" "}
@@ -133,8 +134,17 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
               </span>
             );
           }
+          if (prop.kind === "unknown") {
+            return (
+              <span key={i} style={{ marginLeft: 32 }}>
+                {prop.content}
+                <br />
+              </span>
+            );
+          }
           return (
-            <span key={i} style={{ paddingLeft: 32 }}>
+            <span key={i} style={{ marginLeft: 32 }}>
+              <Docs content={prop.docs} />
               {prop.name}
               <span style={{ color: colors.colon }}>: </span>
               <Type type={prop.returnType} />;<br />
