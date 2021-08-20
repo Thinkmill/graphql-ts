@@ -9,6 +9,7 @@ import {
   PropertySignature,
   VariableDeclaration,
   JSDoc,
+  Node,
 } from "ts-morph";
 import path from "path";
 import fs from "fs/promises";
@@ -59,7 +60,7 @@ async function resolvePreconstructEntrypoints(
   pkgPath: string
 ): Promise<Record<string, string>> {
   const pkgJson = JSON.parse(
-    await fs.readFile(pkgDir + "/package.json", "utf8")
+    await fs.readFile(pkgPath + "/package.json", "utf8")
   );
   const configEntrypoints = pkgJson?.preconstruct?.entrypoints || [
     "index.{js,jsx,ts,tsx}",
@@ -79,8 +80,6 @@ async function resolvePreconstructEntrypoints(
     })
   );
 }
-
-const pkgDir = path.resolve("../packages/schema");
 
 export function collectSymbol(symbol: Symbol) {
   const decl = symbol.getDeclarations()[0];
@@ -252,6 +251,13 @@ function resolveSymbolQueue() {
           : _convertType(decl.getType(), 0),
       });
     } else {
+      let docs = Node.isJSDocableNode(decl) ? getDocs(decl) : "";
+      state.publicSymbols.set(symbol, {
+        kind: "unknown",
+        name: symbol.getName(),
+        docs,
+        content: decl.getText(),
+      });
       console.log(symbol.getName(), decl.getKindName());
     }
   }

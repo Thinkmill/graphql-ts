@@ -94,7 +94,7 @@ export function splitDocs(docs: string): {
   first: string;
   rest: string | undefined;
 } {
-  const [_, first, rest] = /(^[^]+?)\n\n([^]+)/.exec(docs) || ["", docs, ""];
+  const [, first, rest] = /(^[^]+?)\n\n([^]+)/.exec(docs) || ["", docs, ""];
   return {
     first,
     rest: rest || undefined,

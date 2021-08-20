@@ -710,6 +710,18 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     );
   }
 
+  if (rootThing.kind === "unknown") {
+    return (
+      <div>
+        <Docs content={rootThing.docs} />
+        <SymbolName name={rootThing.name} fullName={fullName} />
+        <pre className={codeFont}>
+          <code>{rootThing.content}</code>
+        </pre>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Docs content={rootThing.docs} />

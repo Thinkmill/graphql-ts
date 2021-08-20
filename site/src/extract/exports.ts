@@ -5,6 +5,8 @@ import {
   TypeAliasDeclaration,
   PropertySignature,
   VariableDeclaration,
+  ClassDeclaration,
+  InterfaceDeclaration,
 } from "ts-morph";
 
 type ExportName = string;
@@ -14,11 +16,12 @@ function collectImportableSymbolsFromSourceFile(
   state: Map<Symbol, Map<SourceFile, ExportName>>
 ) {
   for (const [exportName, decls] of sourceFile.getExportedDeclarations()) {
-    if (decls.length !== 1) {
-      throw new Error(
-        "unexpected more than one exported decl for the same export name"
-      );
-    }
+    // this should be properly handled
+    // if (decls.length !== 1) {
+    //   throw new Error(
+    //     "unexpected more than one exported decl for the same export name"
+    //   );
+    // }
     const decl = decls[0];
     const symbol = decl.getSymbolOrThrow();
 
@@ -35,11 +38,13 @@ function collectImportableSymbolsFromSourceFile(
       decl instanceof FunctionDeclaration ||
       decl instanceof TypeAliasDeclaration ||
       decl instanceof PropertySignature ||
-      decl instanceof VariableDeclaration
+      decl instanceof VariableDeclaration ||
+      decl instanceof ClassDeclaration ||
+      decl instanceof InterfaceDeclaration
     ) {
       // nothing other than itself can be referenced by importing these
     } else {
-      throw new Error(`unhandled export kind ${decl.constructor.name}`);
+      // throw new Error(`unhandled export kind ${decl.constructor.name}`);
     }
   }
 }

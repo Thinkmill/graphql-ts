@@ -183,13 +183,20 @@ export function convertTypeNode(node: TypeNode): SerializedType {
               : _convertType(member.getReturnType(), 0),
           };
         }
-        // if (Node.isCallSignatureDeclaration(member)) {
-        //   return {
-        //     kind: "call",
-        //     parameters: getParameters(member),
-        //     returnType: convertTypeNode(member.getReturnTypeNodeOrThrow()),
-        //   };
-        // }
+        if (Node.isCallSignatureDeclaration(member)) {
+          const returnTypeNode = member.getReturnTypeNode();
+          return {
+            kind: "method",
+            name: "",
+            optional: false,
+            parameters: getParameters(member),
+            typeParams: getTypeParameters(member),
+            docs: getDocs(member),
+            returnType: returnTypeNode
+              ? convertTypeNode(returnTypeNode)
+              : _convertType(member.getReturnType(), 0),
+          };
+        }
         throw new Error("unhandled object member");
       }),
     };

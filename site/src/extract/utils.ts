@@ -44,6 +44,12 @@ export type SerializedSymbol =
       docs: string;
       typeParams: TypeParam[];
       type: SerializedType;
+    }
+  | {
+      kind: "unknown";
+      name: string;
+      docs: string;
+      content: string;
     };
 
 export type TupleElement = {
