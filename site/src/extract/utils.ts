@@ -12,8 +12,8 @@ import hashString from "@emotion/hash";
 
 export type TypeParam = {
   name: string;
-  constraint: SerializedType | undefined;
-  default: SerializedType | undefined;
+  constraint: SerializedType | null;
+  default: SerializedType | null;
 };
 
 export type SerializedSymbol =
@@ -47,7 +47,7 @@ export type SerializedSymbol =
     };
 
 export type TupleElement = {
-  label?: string;
+  label: string | null;
   kind: "optional" | "required" | "rest" | "variadic";
   type: SerializedType;
 };
@@ -119,8 +119,8 @@ export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
     const defaultType = typeParam.getDefault();
     return {
       name: typeParam.getName(),
-      constraint: constraint ? convertTypeNode(constraint) : undefined,
-      default: defaultType ? convertTypeNode(defaultType) : undefined,
+      constraint: constraint ? convertTypeNode(constraint) : null,
+      default: defaultType ? convertTypeNode(defaultType) : null,
     };
   });
 }

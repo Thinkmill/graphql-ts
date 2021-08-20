@@ -10,6 +10,9 @@ import {
   VariableDeclaration,
   JSDoc,
 } from "ts-morph";
+import path from "path";
+import fs from "fs/promises";
+import fastGlob from "fast-glob";
 import { findCanonicalExportLocations } from "./exports";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
@@ -38,175 +41,218 @@ function typeFlagsToString(type: ts.Type) {
   );
 }
 
-let project = new Project({ tsConfigFilePath: "../tsconfig.json" });
+function getInitialState() {
+  return {
+    rootSymbols: new Map<Symbol, string>(),
+    publicSymbols: new Map<Symbol, SerializedSymbol>(),
+    symbolsQueue: new Set<Symbol>(),
+    symbolsToSymbolsWhichReferenceTheSymbol: new Map<Symbol, Set<Symbol>>(),
+    currentlyVistedSymbol: undefined as Symbol | undefined,
+    exportedSymbols: new Set<Symbol>(),
+    pkgDir: "",
+  };
+}
 
-const publicSymbols = new Map<Symbol, SerializedSymbol>();
+let state = getInitialState();
 
-const symbolsQueue = new Set<Symbol>();
-const symbolsToSymbolsWhichReferenceTheSymbol = new Map<Symbol, Set<Symbol>>();
+async function resolvePreconstructEntrypoints(
+  pkgPath: string
+): Promise<Record<string, string>> {
+  const pkgJson = JSON.parse(
+    await fs.readFile(pkgDir + "/package.json", "utf8")
+  );
+  const configEntrypoints = pkgJson?.preconstruct?.entrypoints || [
+    "index.{js,jsx,ts,tsx}",
+  ];
 
-let currentlyVistedSymbol: Symbol | undefined = undefined;
+  const files = await fastGlob(configEntrypoints, {
+    cwd: path.join(pkgPath, "src"),
+    onlyFiles: true,
+  });
+  return Object.fromEntries(
+    files.map((entrypoint) => {
+      const filepath = path.join(pkgPath, "src", entrypoint);
+      const entrypointPart = entrypoint.replace(/\/?(index)?\.[jt]sx?/, "");
+      const entrypointName =
+        pkgJson.name + (entrypointPart === "" ? "" : "/" + entrypointPart);
+      return [filepath, entrypointName];
+    })
+  );
+}
 
-const exportedSymbols = new Set<Symbol>();
+const pkgDir = path.resolve("../packages/schema");
 
 export function collectSymbol(symbol: Symbol) {
   const decl = symbol.getDeclarations()[0];
-  if (!decl.getSourceFile().getFilePath().includes("schema/src/")) {
+  if (
+    !decl.getSourceFile().getFilePath().includes(path.join(state.pkgDir, "src"))
+  ) {
     return;
   }
-  if (currentlyVistedSymbol) {
-    if (!symbolsToSymbolsWhichReferenceTheSymbol.has(symbol)) {
-      symbolsToSymbolsWhichReferenceTheSymbol.set(symbol, new Set());
+  if (state.currentlyVistedSymbol) {
+    if (!state.symbolsToSymbolsWhichReferenceTheSymbol.has(symbol)) {
+      state.symbolsToSymbolsWhichReferenceTheSymbol.set(symbol, new Set());
     }
     const symbolsThatReferenceTheThing =
-      symbolsToSymbolsWhichReferenceTheSymbol.get(symbol)!;
-    symbolsThatReferenceTheThing.add(currentlyVistedSymbol);
+      state.symbolsToSymbolsWhichReferenceTheSymbol.get(symbol)!;
+    symbolsThatReferenceTheThing.add(state.currentlyVistedSymbol);
   }
-  if (publicSymbols.has(symbol)) return;
-  symbolsQueue.add(symbol);
+  if (state.publicSymbols.has(symbol)) return;
+  state.symbolsQueue.add(symbol);
 }
 
-const sourceFile = project
-  .getSourceFiles()
-  .filter((x) => x.getFilePath().includes("schema/src/index"))[0];
+export async function getInfo() {
+  state = getInitialState();
+  let project = new Project({ tsConfigFilePath: "../tsconfig.json" });
+  const pkgPath = path.resolve("../packages/schema");
+  const entrypoints = await resolvePreconstructEntrypoints(pkgPath);
+  for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
+    const sourceFile = project.getSourceFileOrThrow(filepath);
+    const symbol = sourceFile.getSymbolOrThrow();
+    state.rootSymbols.set(symbol, entrypointName);
+    state.symbolsQueue.add(symbol);
+  }
 
-let isFirstSymbol = true;
+  resolveSymbolQueue();
 
-collectSymbol(sourceFile.getSymbolOrThrow());
+  return {
+    rootSymbols: [...state.rootSymbols.keys()].map((symbol) =>
+      getSymbolIdentifier(symbol)
+    ),
+    accessibleSymbols: Object.fromEntries(
+      [...state.publicSymbols].map(([symbol, rootThing]) => [
+        getSymbolIdentifier(symbol),
+        rootThing,
+      ])
+    ),
+    symbolReferences: Object.fromEntries(
+      [...state.symbolsToSymbolsWhichReferenceTheSymbol].map(
+        ([symbol, symbolsThatReferenceIt]) => {
+          return [
+            getSymbolIdentifier(symbol.getAliasedSymbol() || symbol),
+            [...symbolsThatReferenceIt].map((x) =>
+              getSymbolIdentifier(x.getAliasedSymbol() || x)
+            ),
+          ];
+        }
+      )
+    ),
+    canonicalExportLocations: Object.fromEntries(
+      [
+        ...findCanonicalExportLocations(
+          [...state.rootSymbols.keys()].map(
+            (symbol) => symbol.getDeclarations()[0] as SourceFile
+          )
+        ),
+      ].map(([symbol, { exportName, file }]) => {
+        return [
+          getSymbolIdentifier(symbol),
+          {
+            exportName,
+            fileSymbolName: getSymbolIdentifier(file.getSymbolOrThrow()),
+          },
+        ];
+      })
+    ),
+  };
+}
 
-while (symbolsQueue.size) {
-  const symbol: Symbol = symbolsQueue.values().next().value;
-  symbolsQueue.delete(symbol);
-  currentlyVistedSymbol = symbol;
-  const decl = symbol.getDeclarations()[0];
-  if (decl instanceof TypeAliasDeclaration) {
-    const typeNode = decl.getTypeNode();
-    publicSymbols.set(symbol, {
-      kind: "type-alias",
-      name: symbol.getName(),
-      docs: getDocs(decl),
-      typeParams: getTypeParameters(decl),
-      type: typeNode
-        ? convertTypeNode(typeNode)
-        : _convertType(decl.getType(), 0),
-    });
-  } else if (decl instanceof FunctionDeclaration) {
-    const returnTypeNode = decl.getReturnTypeNode();
-    publicSymbols.set(symbol, {
-      kind: "function",
-      name: symbol.getName(),
-      parameters: getParameters(decl),
-      docs: getDocs(decl),
-      typeParams: getTypeParameters(decl),
-      returnType: returnTypeNode
-        ? convertTypeNode(returnTypeNode)
-        : _convertType(decl.getReturnType(), 0),
-    });
-  } else if (decl instanceof TypeAliasDeclaration) {
-    const typeNode = decl.getTypeNode();
-    publicSymbols.set(symbol, {
-      kind: "type-alias",
-      name: symbol.getName(),
-      docs: getDocs(decl),
-      typeParams: getTypeParameters(decl),
-      type: typeNode
-        ? convertTypeNode(typeNode)
-        : _convertType(decl.getType(), 0),
-    });
-  } else if (decl instanceof SourceFile) {
-    let exports: Record<string, string> = {};
-    for (const [
-      exportName,
-      exportedDeclarations,
-    ] of decl.getExportedDeclarations()) {
-      const decl = exportedDeclarations[0];
-      const innerSymbol = decl.getSymbolOrThrow();
-      exportedSymbols.add(innerSymbol);
-      collectSymbol(innerSymbol);
-      exports[exportName] = getSymbolIdentifier(innerSymbol);
-    }
-    const jsDocs: JSDoc[] = [];
-    decl.forEachChild((node) => {
-      if (!!(node.compilerNode as any).jsDoc) {
-        const nodes: any[] | undefined = (node.compilerNode as any).jsDoc;
-        const jsdocs: JSDoc[] =
-          nodes?.map((n) => (node as any)._getNodeFromCompilerNode(n)) ?? [];
-        for (const doc of jsdocs) {
-          if (doc.getTags().some((tag) => tag.getTagName() === "module")) {
-            jsDocs.push(doc);
+function resolveSymbolQueue() {
+  while (state.symbolsQueue.size) {
+    const symbol: Symbol = state.symbolsQueue.values().next().value;
+    state.symbolsQueue.delete(symbol);
+    state.currentlyVistedSymbol = symbol;
+    const decl = symbol.getDeclarations()[0];
+    if (decl instanceof TypeAliasDeclaration) {
+      const typeNode = decl.getTypeNode();
+      state.publicSymbols.set(symbol, {
+        kind: "type-alias",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        typeParams: getTypeParameters(decl),
+        type: typeNode
+          ? convertTypeNode(typeNode)
+          : _convertType(decl.getType(), 0),
+      });
+    } else if (decl instanceof FunctionDeclaration) {
+      const returnTypeNode = decl.getReturnTypeNode();
+      state.publicSymbols.set(symbol, {
+        kind: "function",
+        name: symbol.getName(),
+        parameters: getParameters(decl),
+        docs: getDocs(decl),
+        typeParams: getTypeParameters(decl),
+        returnType: returnTypeNode
+          ? convertTypeNode(returnTypeNode)
+          : _convertType(decl.getReturnType(), 0),
+      });
+    } else if (decl instanceof TypeAliasDeclaration) {
+      const typeNode = decl.getTypeNode();
+      state.publicSymbols.set(symbol, {
+        kind: "type-alias",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        typeParams: getTypeParameters(decl),
+        type: typeNode
+          ? convertTypeNode(typeNode)
+          : _convertType(decl.getType(), 0),
+      });
+    } else if (decl instanceof SourceFile) {
+      let exports: Record<string, string> = {};
+      for (const [
+        exportName,
+        exportedDeclarations,
+      ] of decl.getExportedDeclarations()) {
+        const decl = exportedDeclarations[0];
+        const innerSymbol = decl.getSymbolOrThrow();
+        state.exportedSymbols.add(innerSymbol);
+        collectSymbol(innerSymbol);
+        exports[exportName] = getSymbolIdentifier(innerSymbol);
+      }
+      const jsDocs: JSDoc[] = [];
+      decl.forEachChild((node) => {
+        if (!!(node.compilerNode as any).jsDoc) {
+          const nodes: any[] | undefined = (node.compilerNode as any).jsDoc;
+          const jsdocs: JSDoc[] =
+            nodes?.map((n) => (node as any)._getNodeFromCompilerNode(n)) ?? [];
+          for (const doc of jsdocs) {
+            if (doc.getTags().some((tag) => tag.getTagName() === "module")) {
+              jsDocs.push(doc);
+            }
           }
         }
-      }
-    });
-    publicSymbols.set(symbol, {
-      kind: "module",
-      name: isFirstSymbol ? "@graphql-ts/schema" : symbol.getName(),
-      docs: getDocsFromJSDocNodes(jsDocs),
-      exports,
-    });
-    isFirstSymbol = false;
-  } else if (decl instanceof VariableDeclaration) {
-    const typeNode = decl.getTypeNode();
-    const variableStatement = decl.getVariableStatementOrThrow();
-    publicSymbols.set(symbol, {
-      kind: "variable",
-      name: symbol.getName(),
-      docs: getDocs(variableStatement),
-      variableKind: variableStatement.getDeclarationKind(),
-      type: typeNode
-        ? convertTypeNode(typeNode)
-        : _convertType(decl.getType(), 0),
-    });
-  } else if (decl instanceof PropertySignature) {
-    const typeNode = decl.getTypeNode();
-    publicSymbols.set(symbol, {
-      kind: "variable",
-      name: symbol.getName(),
-      docs: getDocs(decl),
-      variableKind: "const",
-      type: typeNode
-        ? convertTypeNode(typeNode)
-        : _convertType(decl.getType(), 0),
-    });
-  } else {
-    console.log(symbol.getName(), decl.getKindName());
+      });
+      state.publicSymbols.set(symbol, {
+        kind: "module",
+        name: state.rootSymbols.get(symbol) || symbol.getName(),
+        docs: getDocsFromJSDocNodes(jsDocs),
+        exports,
+      });
+    } else if (decl instanceof VariableDeclaration) {
+      const typeNode = decl.getTypeNode();
+      const variableStatement = decl.getVariableStatementOrThrow();
+      state.publicSymbols.set(symbol, {
+        kind: "variable",
+        name: symbol.getName(),
+        docs: getDocs(variableStatement),
+        variableKind: variableStatement.getDeclarationKind(),
+        type: typeNode
+          ? convertTypeNode(typeNode)
+          : _convertType(decl.getType(), 0),
+      });
+    } else if (decl instanceof PropertySignature) {
+      const typeNode = decl.getTypeNode();
+      state.publicSymbols.set(symbol, {
+        kind: "variable",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        variableKind: "const",
+        type: typeNode
+          ? convertTypeNode(typeNode)
+          : _convertType(decl.getType(), 0),
+      });
+    } else {
+      console.log(symbol.getName(), decl.getKindName());
+    }
   }
 }
-
-export const accessibleSymbols = Object.fromEntries(
-  [...publicSymbols].map(([symbol, rootThing]) => [
-    getSymbolIdentifier(symbol),
-    rootThing,
-  ])
-);
-
-export const stuff = Object.fromEntries(
-  [...symbolsToSymbolsWhichReferenceTheSymbol].map(
-    ([symbol, symbolsThatReferenceIt]) => {
-      return [
-        getSymbolIdentifier(symbol.getAliasedSymbol() || symbol),
-        [...symbolsThatReferenceIt].map((x) =>
-          getSymbolIdentifier(x.getAliasedSymbol() || x)
-        ),
-      ];
-    }
-  )
-);
-
-export const _exportedSymbols = [...exportedSymbols].map((x) =>
-  getSymbolIdentifier(x.getAliasedSymbol() || x)
-);
-
-export const canonicalExportLocations = Object.fromEntries(
-  [...findCanonicalExportLocations([sourceFile])].map(
-    ([symbol, { exportName, file }]) => {
-      return [
-        getSymbolIdentifier(symbol),
-        {
-          exportName,
-          fileSymbolName: getSymbolIdentifier(file.getSymbolOrThrow()),
-        },
-      ];
-    }
-  )
-);

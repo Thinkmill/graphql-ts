@@ -221,7 +221,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
       kind: "tuple",
       readonly: false,
       elements: node.getElements().map((element): TupleElement => {
-        let label: string | undefined = undefined;
+        let label: string | null = null;
         if (TypeNode.isNamedTupleMember(element)) {
           label = element.getName();
           element = element.getTypeNode();

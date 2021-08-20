@@ -44,7 +44,7 @@ function Item({ children }: { children: ReactNode }) {
 
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
   const docContext = useDocsContext();
-  const rootSymbol = docContext.symbols[rootSymbolName];
+  let rootSymbol = docContext.symbols[rootSymbolName];
   if (rootSymbol.kind !== "module") {
     throw new Error("Root symbols must be modules");
   }
@@ -53,50 +53,52 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
     docContext.canonicalExportLocations,
     docContext.symbols
   );
+  if (docContext.canonicalExportLocations[rootSymbolName]) {
+    rootSymbol = {
+      ...rootSymbol,
+      name: docContext.canonicalExportLocations[rootSymbolName].exportName,
+    };
+  }
   return (
-    <div>
-      <ul>
-        {groupedExports.map((group, i) => {
-          if (group.kind === "exports") {
+    <Expandable
+      summary={
+        <SymbolReference fullName={rootSymbolName} name={rootSymbol.name} />
+      }
+    >
+      <div>
+        <ul>
+          {groupedExports.map((group, i) => {
+            if (group.kind === "exports") {
+              return (
+                <Item key={i}>
+                  <a
+                    className={codeFont}
+                    css={{ color: colors.symbol }}
+                    href={"#a" + hashString(rootSymbolName) + `re-exports-${i}`}
+                  >
+                    {group.exports.length} Re-exports
+                  </a>
+                </Item>
+              );
+            }
+            const symbol = docContext.symbols[group.fullName];
+            if (symbol.kind === "module") {
+              return (
+                <Navigation key={symbol.name} rootSymbolName={group.fullName} />
+              );
+            }
             return (
-              <Item key={i}>
-                <a
-                  className={codeFont}
-                  css={{ color: colors.symbol }}
-                  href={"#a" + hashString(rootSymbolName) + `re-exports-${i}`}
-                >
-                  {group.exports.length} Re-exports
-                </a>
+              <Item key={group.exportName}>
+                {" "}
+                <SymbolReference
+                  fullName={group.fullName}
+                  name={group.exportName}
+                />
               </Item>
             );
-          }
-          const symbol = docContext.symbols[group.fullName];
-          if (symbol.kind === "module") {
-            return (
-              <Expandable
-                key={symbol.name}
-                summary={
-                  <SymbolReference
-                    fullName={group.fullName}
-                    name={group.exportName}
-                  />
-                }
-              >
-                <Navigation rootSymbolName={group.fullName} />
-              </Expandable>
-            );
-          }
-          return (
-            <Item key={group.exportName}>
-              {" "}
-              <SymbolReference
-                fullName={group.fullName}
-                name={group.exportName}
-              />
-            </Item>
-          );
-        })}
-      </ul>
-    </div>
+          })}
+        </ul>
+      </div>
+    </Expandable>
   );
 }

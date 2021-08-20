@@ -128,7 +128,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
         assert(kind !== undefined);
         return {
           // TODO
-          label: undefined,
+          label: null,
           kind,
           type,
         };
@@ -218,8 +218,8 @@ export function _convertType(type: Type, depth: number): SerializedType {
         const defaultType = typeParam.getDefault();
         return {
           name: typeParam.getSymbolOrThrow().getName(),
-          constraint: constraint ? convertType(constraint) : undefined,
-          default: defaultType ? convertType(defaultType) : undefined,
+          constraint: constraint ? convertType(constraint) : null,
+          default: defaultType ? convertType(defaultType) : null,
         };
       }),
       returnType: convertType(signature.getReturnType()),

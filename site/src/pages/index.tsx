@@ -1,10 +1,5 @@
 import { InferGetStaticPropsType } from "next";
-import {
-  accessibleSymbols,
-  stuff,
-  _exportedSymbols,
-  canonicalExportLocations as _canonicalExportLocations,
-} from "../extract/index";
+import { getInfo } from "../extract/index";
 import { useContext, useEffect } from "react";
 import { Tooltip, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
@@ -322,6 +317,7 @@ function openParentDetails(element: HTMLElement) {
 export default function Index(
   props: InferGetStaticPropsType<typeof getStaticProps>
 ) {
+  const rootSymbols = new Set(props.rootSymbols);
   const unexportedToExportedRef = new Map<string, string>();
   const unexportedToUnexportedRef = new Map<string, string>();
 
@@ -373,18 +369,18 @@ export default function Index(
   const goodIdentifiers: Record<string, string> = {};
 
   const findIdentifier = (symbol: string): string => {
+    if (rootSymbols.has(symbol)) {
+      return props.accessibleSymbols[symbol].name;
+    }
     const canon = props.canonicalExportLocations[symbol];
     assert(!!canon);
     const { exportName, fileSymbolName } = canon;
-    if (props.accessibleSymbols[fileSymbolName].name === "@graphql-ts/schema") {
-      return exportName;
-    }
     return `${findIdentifier(fileSymbolName)}.${exportName}`;
   };
 
   for (const [symbolId, symbol] of Object.entries(props.accessibleSymbols)) {
-    if (symbol.name === "@graphql-ts/schema") {
-      goodIdentifiers[symbolId] = "root";
+    if (rootSymbols.has(symbolId)) {
+      goodIdentifiers[symbolId] = symbol.name;
     } else if (props.canonicalExportLocations[symbolId]) {
       goodIdentifiers[symbolId] = findIdentifier(symbolId);
     } else {
@@ -421,8 +417,6 @@ export default function Index(
     };
   }, []);
 
-  const rootSymbol = Object.keys(props.accessibleSymbols)[0];
-
   return (
     <DocsContext.Provider
       value={{
@@ -436,6 +430,7 @@ export default function Index(
         canonicalExportLocations: props.canonicalExportLocations,
         symbolsForInnerBit,
         goodIdentifiers,
+        rootSymbols,
       }}
     >
       <div className={themeClass}>
@@ -448,10 +443,14 @@ export default function Index(
           }}
         >
           <NavigationContainer>
-            <Navigation rootSymbolName={rootSymbol} />
+            {props.rootSymbols.map((rootSymbol) => (
+              <Navigation key={rootSymbol} rootSymbolName={rootSymbol} />
+            ))}
           </NavigationContainer>
           <Contents>
-            <RenderRootThing fullName={rootSymbol} />{" "}
+            {props.rootSymbols.map((rootSymbol) => (
+              <RenderRootThing key={rootSymbol} fullName={rootSymbol} />
+            ))}
           </Contents>
         </div>
       </div>
@@ -642,12 +641,10 @@ function RenderRootThing({ fullName }: { fullName: string }) {
                 <div
                   key={i}
                   id={"a" + hashString(fullName) + `re-exports-${i}`}
-                  css={[
-                    codeFont,
-                    {
-                      ":target": { backgroundColor: "#ffff54ba" },
-                    },
-                  ]}
+                  className={codeFont}
+                  css={{
+                    ":target": { backgroundColor: "#ffff54ba" },
+                  }}
                 >
                   <span css={{ color: colors.keyword }}>export</span>
                   {" {"}
@@ -683,9 +680,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
                   </div>
                   {" } "}
                   <span css={{ color: colors.keyword }}>from </span>{" "}
-                  <span css={{ color: colors.string }}>
-                    {JSON.stringify(symbols[exported.from].name)}
-                  </span>
+                  <ExportedFrom fullName={exported.from} />
                   <br />
                 </div>
               );
@@ -733,17 +728,27 @@ function RenderRootThing({ fullName }: { fullName: string }) {
   );
 }
 
+function ExportedFrom({ fullName }: { fullName: string }) {
+  const docContext = useDocsContext();
+  if (docContext.rootSymbols.has(fullName)) {
+    return (
+      <span css={{ color: colors.string }}>
+        {JSON.stringify(docContext.symbols[fullName].name)}
+      </span>
+    );
+  }
+  const { exportName, fileSymbolName } =
+    docContext.canonicalExportLocations[fullName];
+  return (
+    <span>
+      <ExportedFrom fullName={fileSymbolName} />.
+      <SymbolReference fullName={fullName} name={exportName} />
+    </span>
+  );
+}
+
 export async function getStaticProps() {
-  return {
-    props: {
-      accessibleSymbols: JSON.parse(
-        JSON.stringify(accessibleSymbols)
-      ) as typeof accessibleSymbols,
-      symbolReferences: stuff,
-      _exportedSymbols,
-      canonicalExportLocations: _canonicalExportLocations,
-    },
-  };
+  return { props: await getInfo() };
 }
 
 function assert(

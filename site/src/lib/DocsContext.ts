@@ -11,6 +11,7 @@ export type DocsContextType = {
   >;
   symbolsForInnerBit: Map<string, string[]>;
   goodIdentifiers: Record<string, string>;
+  rootSymbols: Set<string>;
 };
 
 export const DocsContext = createContext<DocsContextType>(null as any);

@@ -26,6 +26,7 @@
     "@vanilla-extract/css": "^1.2.3",
     "chakra-ui-markdown-renderer": "3.0.1",
     "css-loader": "6.2.0",
+    "fast-glob": "3.2.7",
     "framer-motion": "^4.1.16",
     "graphql": "^15.5.0",
     "monaco-editor": "^0.24.0",
