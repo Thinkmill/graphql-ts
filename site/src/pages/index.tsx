@@ -1,6 +1,6 @@
 import { InferGetStaticPropsType } from "next";
 import { getInfo } from "../extract/index";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, Fragment } from "react";
 import { Tooltip, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
@@ -28,7 +28,11 @@ function SymbolAnchor({ fullName }: { fullName: string }) {
 
 function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
-    return <span style={{ color: "#2c8093" }}>{type.value}</span>;
+    return (
+      <span className={codeFont} style={{ color: "#2c8093" }}>
+        {type.value}
+      </span>
+    );
   }
   if (type.kind === "reference") {
     return (
@@ -36,18 +40,20 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
         <SymbolReference name={type.name} fullName={type.fullName} />
         {!!type.typeArguments.length && (
           <span>
-            {"<"}
+            <span className={codeFont}>{"<"}</span>
             {type.typeArguments.map((param, i) => {
               return (
                 <span key={i}>
                   <Type type={param} />
                   {i === type.typeArguments.length - 1 ? null : (
-                    <span style={{ color: colors.comma }}>, </span>
+                    <span className={codeFont} style={{ color: colors.comma }}>
+                      ,{" "}
+                    </span>
                   )}
                 </span>
               );
             })}
-            {">"}
+            <span className={codeFont}>{">"}</span>
           </span>
         )}
       </span>
@@ -57,15 +63,23 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         {type.readonly ? (
-          <span style={{ color: colors.keyword }}>readonly </span>
+          <span className={codeFont} style={{ color: colors.keyword }}>
+            readonly{" "}
+          </span>
         ) : null}
         <Type type={type.inner} />
-        <span style={{ color: colors.bracket }}>[]</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          []
+        </span>
       </span>
     );
   }
   if (type.kind === "type-parameter") {
-    return <span style={{ color: colors.parameter }}>{type.name}</span>;
+    return (
+      <span className={codeFont} style={{ color: colors.parameter }}>
+        {type.name}
+      </span>
+    );
   }
   if (type.kind === "union") {
     return (
@@ -75,7 +89,9 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
             <span key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
-                <span style={{ color: colors.colon }}> | </span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  {" | "}
+                </span>
               )}
             </span>
           );
@@ -91,7 +107,9 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
             <span key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
-                <span style={{ color: colors.colon }}> & </span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  {" & "}
+                </span>
               )}
             </span>
           );
@@ -101,57 +119,66 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "object") {
     if (type.members.length === 0) {
-      return <span>{"{}"}</span>;
+      return <span className={codeFont}>{"{}"}</span>;
     }
     return (
       <span>
-        {"{ "}
-        <br />
-
+        <span className={codeFont}>{"{ "}</span>
         {type.members.map((prop, i) => {
           if (prop.kind === "prop") {
             return (
-              <span key={i} style={{ marginLeft: 32 }}>
+              <div key={i} style={{ marginLeft: 32 }}>
                 <Docs content={prop.docs} />
                 {prop.readonly ? (
-                  <span style={{ color: colors.keyword }}>readonly </span>
+                  <span className={codeFont} style={{ color: colors.keyword }}>
+                    readonly{" "}
+                  </span>
                 ) : null}
-                <span>{prop.name}</span>
-                <span style={{ color: colors.colon }}>
-                  {prop.optional ? "?" : ""}:
-                </span>{" "}
-                <Type type={prop.type} />;<br />
-              </span>
+                <span className={codeFont}>{prop.name}</span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  {prop.optional ? "?: " : ": "}
+                </span>
+                <Type type={prop.type} />
+                <span className={codeFont}>;</span>
+              </div>
             );
           }
           if (prop.kind === "index") {
             return (
-              <span key={i} style={{ marginLeft: 32 }}>
-                {"  "}[key<span style={{ color: colors.colon }}>:</span>{" "}
-                <Type type={prop.key} />]
-                <span style={{ color: colors.colon }}>:</span>{" "}
-                <Type type={prop.value} />;<br />
-              </span>
+              <div key={i} style={{ marginLeft: 32 }}>
+                <span className={codeFont}>
+                  [key<span style={{ color: colors.colon }}>:</span>
+                </span>
+                <Type type={prop.key} />
+                <span className={codeFont}>]</span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  :
+                </span>
+                <Type type={prop.value} />
+                <span className={codeFont}>;</span>
+              </div>
             );
           }
           if (prop.kind === "unknown") {
             return (
-              <span key={i} style={{ marginLeft: 32 }}>
+              <div key={i} style={{ marginLeft: 32 }}>
                 {prop.content}
-                <br />
-              </span>
+              </div>
             );
           }
           return (
-            <span key={i} style={{ marginLeft: 32 }}>
+            <div key={i} style={{ marginLeft: 32 }}>
               <Docs content={prop.docs} />
-              {prop.name}
-              <span style={{ color: colors.colon }}>: </span>
-              <Type type={prop.returnType} />;<br />
-            </span>
+              <span className={codeFont}>{prop.name}</span>
+              <span className={codeFont} style={{ color: colors.colon }}>
+                :{" "}
+              </span>
+              <Type type={prop.returnType} />
+              <span className={codeFont}>;</span>
+            </div>
           );
         })}
-        {" }"}
+        <span className={codeFont}>{" }"}</span>
       </span>
     );
   }
@@ -159,24 +186,34 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         {type.readonly && (
-          <span style={{ color: colors.keyword }}>readonly </span>
+          <span className={codeFont} style={{ color: colors.keyword }}>
+            readonly{" "}
+          </span>
         )}
-        <span style={{ color: colors.bracket }}>[</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          [
+        </span>
         {type.elements.map((element, i) => {
           return (
             <span key={i}>
               {(element.kind === "rest" || element.kind === "variadic") && (
-                <span style={{ color: colors.colon }}>...</span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  ...
+                </span>
               )}
               <Type type={element.type} />
-              {element.kind === "optional" && <span>?</span>}
+              {element.kind === "optional" && (
+                <span className={codeFont}>?</span>
+              )}
               {element.kind === "rest" && (
-                <span>
-                  <span style={{ color: colors.bracket }}>[]</span>
+                <span className={codeFont} style={{ color: colors.bracket }}>
+                  []
                 </span>
               )}
               {i !== type.elements.length - 1 && (
-                <span style={{ color: colors.comma }}>, </span>
+                <span className={codeFont} style={{ color: colors.comma }}>
+                  ,{" "}
+                </span>
               )}
             </span>
           );
@@ -189,9 +226,13 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         <Type type={type.object} />
-        <span style={{ color: colors.bracket }}>[</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          [
+        </span>
         <Type type={type.index} />
-        <span style={{ color: colors.bracket }}>]</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          ]
+        </span>
       </span>
     );
   }
@@ -199,47 +240,76 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         <Type type={type.checkType} />
-        <span style={{ color: colors.keyword }}> extends </span>
+        <span className={codeFont} style={{ color: colors.keyword }}>
+          {" "}
+          extends{" "}
+        </span>
         <Type type={type.extendsType} />
-        <span style={{ color: colors.colon }}> ? </span>
+        <span className={codeFont} style={{ color: colors.colon }}>
+          {" "}
+          ?{" "}
+        </span>
         <Type type={type.trueType} />
-        <span style={{ color: colors.colon }}> : </span>
+        <span className={codeFont} style={{ color: colors.colon }}>
+          {" "}
+          :{" "}
+        </span>
         <Type type={type.falseType} />
       </span>
     );
   }
   if (type.kind === "string-literal") {
-    return <span style={{ color: colors.string }}>"{type.value}"</span>;
+    return (
+      <span className={codeFont} style={{ color: colors.string }}>
+        "{type.value}"
+      </span>
+    );
   }
   if (type.kind === "numeric-literal" || type.kind === "bigint-literal") {
-    return <span style={{ color: colors.string }}>{type.value}</span>;
+    return (
+      <span className={codeFont} style={{ color: colors.string }}>
+        {type.value}
+      </span>
+    );
   }
   if (type.kind === "signature") {
     return (
-      <span>
+      <Fragment>
         <TypeParams params={type.typeParams} />
-        <span style={{ color: colors.bracket }}>(</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          (
+        </span>
         {type.parameters.map((param, i) => {
           return (
-            <span key={i}>
-              <span style={{ color: colors.parameter }}>{param.name}</span>
-              <span style={{ color: colors.colon }}>:</span>{" "}
+            <Fragment key={i}>
+              <span className={codeFont} style={{ color: colors.parameter }}>
+                {param.name}
+              </span>
+              <span className={codeFont} style={{ color: colors.colon }}>
+                :
+              </span>{" "}
               <Type type={param.type} />
               {i !== type.parameters.length - 1 && (
-                <span style={{ color: colors.comma }}>, </span>
+                <span className={codeFont} style={{ color: colors.comma }}>
+                  ,{" "}
+                </span>
               )}
-            </span>
+            </Fragment>
           );
         })}
-        <span style={{ color: colors.bracket }}>)</span>
-        <span style={{ color: colors.keyword }}>{" => "}</span>
+        <span className={codeFont} style={{ color: colors.bracket }}>
+          )
+        </span>
+        <span className={codeFont} style={{ color: colors.keyword }}>
+          {" => "}
+        </span>
         <Type type={type.returnType} />
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "infer") {
     return (
-      <span>
+      <span className={codeFont}>
         <span style={{ color: colors.keyword }}>infer </span>
         <span style={{ color: colors.parameter }}>{type.name}</span>
       </span>
@@ -248,70 +318,91 @@ function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "mapped") {
     return (
       <span>
-        {"{ "}
+        <span className={codeFont}>{"{ "}</span>
         <br />
         <span style={{ paddingLeft: 32 }}>
-          [<span style={{ color: colors.parameter }}>{type.param.name} </span>
-          <span style={{ color: colors.keyword }}>in</span>{" "}
+          <span className={codeFont}>
+            [<span style={{ color: colors.parameter }}>{type.param.name} </span>
+            <span style={{ color: colors.keyword }}>in</span>{" "}
+          </span>
           <Type type={type.param.constraint} />]
-          <span style={{ color: colors.colon }}>:</span>{" "}
-          <Type type={type.type} />;<br />
+          <span className={codeFont} style={{ color: colors.colon }}>
+            :{" "}
+          </span>
+          <Type type={type.type} />
+          <span className={codeFont}>;</span>
+          <br />
         </span>
-        {" }"}
+        <span className={codeFont}>{" }"}</span>
       </span>
     );
   }
 
   if (type.kind === "keyof") {
     return (
-      <span>
-        <span style={{ color: colors.keyword }}>keyof </span>
+      <Fragment>
+        <span className={codeFont} style={{ color: colors.keyword }}>
+          keyof{" "}
+        </span>
         <Type type={type.value} />
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "paren") {
     return (
-      <span>
-        (
-        <Type type={type.value} />)
-      </span>
+      <Fragment>
+        <span className={codeFont}>(</span>
+        <Type type={type.value} />
+        <span className={codeFont}>)</span>
+      </Fragment>
     );
   }
-  return <span style={{ color: "red" }}>{type.value}</span>;
+  return (
+    <span className={codeFont} style={{ color: "red" }}>
+      {type.value}
+    </span>
+  );
 }
 
 function TypeParams({ params }: { params: TypeParam[] }) {
   if (!params.length) return null;
   return (
-    <span>
+    <Fragment>
       <span style={{ color: colors.bracket }}>{"<"}</span>
       {params.map((param, i) => {
         return (
-          <span key={i}>
-            <span style={{ color: colors.parameter }}>{param.name}</span>
+          <Fragment key={i}>
+            <span className={codeFont} style={{ color: colors.parameter }}>
+              {param.name}
+            </span>
             {param.constraint && (
-              <span>
-                {" "}
-                <span style={{ color: colors.keyword }}>extends</span>{" "}
+              <Fragment>
+                <span className={codeFont} style={{ color: colors.keyword }}>
+                  {" "}
+                  extends{" "}
+                </span>
                 <Type type={param.constraint} />
-              </span>
+              </Fragment>
             )}
             {param.default && (
-              <span>
+              <Fragment>
                 {" "}
-                <span style={{ color: colors.colon }}>=</span>{" "}
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  =
+                </span>{" "}
                 <Type type={param.default} />
-              </span>
+              </Fragment>
             )}
             {i === params.length - 1 ? null : (
-              <span style={{ color: colors.comma }}>, </span>
+              <span className={codeFont} style={{ color: colors.comma }}>
+                ,{" "}
+              </span>
             )}
-          </span>
+          </Fragment>
         );
       })}
       <span style={{ color: colors.bracket }}>{">"}</span>
-    </span>
+    </Fragment>
   );
 }
 
@@ -505,26 +596,39 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     };
   }
   if (rootThing.kind === "function") {
+    const x = rootThing;
     return (
       <div>
         <Docs content={rootThing.docs} />
-        <span className={codeFont}>
-          <span style={{ color: colors.keyword }}>
-            {isExported ? "export " : ""}function
-          </span>{" "}
+        <span>
+          <span className={codeFont} style={{ color: colors.keyword }}>
+            {isExported ? "export " : ""}function{" "}
+          </span>
           <SymbolName name={rootThing.name} fullName={fullName} />
           <TypeParams params={rootThing.typeParams} />
-          <span style={{ color: colors.bracket }}>(</span>
+          <span className={codeFont} style={{ color: colors.bracket }}>
+            (
+          </span>
           {rootThing.parameters.map((param, i) => {
             return (
               <span key={i}>
-                <span style={{ color: colors.parameter }}>{param.name}</span>
-                <span style={{ color: colors.colon }}>:</span>{" "}
+                <span className={codeFont} style={{ color: colors.parameter }}>
+                  {param.name}
+                </span>
+                <span className={codeFont} style={{ color: colors.colon }}>
+                  :{" "}
+                </span>
                 <Type type={param.type} />
+                {x.parameters.length - 1 !== i && (
+                  <span className={codeFont}>, </span>
+                )}
               </span>
             );
           })}
-          <span style={{ color: colors.bracket }}>)</span>:{" "}
+          <span className={codeFont} style={{ color: colors.bracket }}>
+            )
+          </span>
+          <span className={codeFont}>: </span>
           <Type type={rootThing.returnType} />
         </span>
       </div>
@@ -577,7 +681,7 @@ function RenderRootThing({ fullName }: { fullName: string }) {
                 href={`#${goodIdentifiers[fullName]}`}
               >
                 {JSON.stringify(rootThing.name)}
-              </a>{" "}
+              </a>
               <span className={codeFont} css={{ color: colors.bracket }}>
                 {" {"}
               </span>
@@ -705,16 +809,20 @@ function RenderRootThing({ fullName }: { fullName: string }) {
     return (
       <div>
         <Docs content={rootThing.docs} />
-        <span className={codeFont}>
-          <span style={{ color: colors.keyword }}>
+        <span>
+          <span className={codeFont} style={{ color: colors.keyword }}>
             {isExported ? "export " : ""}
-            {rootThing.variableKind}
-          </span>{" "}
+            {rootThing.variableKind}{" "}
+          </span>
           <SymbolName name={rootThing.name} fullName={fullName} />
-          <span style={{ color: colors.colon }}>: </span>
+          <span className={codeFont} style={{ color: colors.colon }}>
+            :{" "}
+          </span>
           <Type type={rootThing.type} />
-          <span style={{ color: colors.bracket }}>{" = "}</span>
-          ...
+          <span className={codeFont} style={{ color: colors.bracket }}>
+            {" = "}
+          </span>
+          <span className={codeFont}>...</span>
         </span>
       </div>
     );
@@ -735,14 +843,15 @@ function RenderRootThing({ fullName }: { fullName: string }) {
   return (
     <div>
       <Docs content={rootThing.docs} />
-      <span className={codeFont}>
-        <span style={{ color: colors.keyword }}>
+      <span>
+        <span className={codeFont} style={{ color: colors.keyword }}>
           {isExported ? "export " : ""}
-          type
-        </span>{" "}
+          type{" "}
+        </span>
         <AddNameToScope name={rootThing.name}>
           <SymbolName name={rootThing.name} fullName={fullName} />
-          <TypeParams params={rootThing.typeParams} /> ={" "}
+          <TypeParams params={rootThing.typeParams} />
+          <span className={codeFont}> = </span>
           <Type type={rootThing.type} />
         </AddNameToScope>
       </span>

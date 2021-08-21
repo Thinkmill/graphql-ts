@@ -76,10 +76,11 @@ export function SymbolReference({
   if (externalReference !== undefined) {
     return (
       <a
-        css={[
-          codeFont,
-          { color: colors.symbol, ":hover": { textDecoration: "underline" } },
-        ]}
+        className={codeFont}
+        css={{
+          color: colors.symbol,
+          ":hover": { textDecoration: "underline" },
+        }}
         href={externalReference}
       >
         {name}
