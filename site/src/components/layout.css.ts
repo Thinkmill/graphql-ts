@@ -11,9 +11,10 @@ export const header = style({
 });
 
 export const navigationContainer = style({
-  padding: "16px 24px",
+  padding: "16px 24px 16px 16px",
   borderRight: `1px solid ${tokens.color.gray100}`,
   marginRight: 16,
+  minWidth: 360,
 });
 
 export const contents = style({

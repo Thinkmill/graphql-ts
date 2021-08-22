@@ -5,12 +5,11 @@ import { useDocsContext } from "../lib/DocsContext";
 import { SymbolReference } from "./symbol-references";
 import { colors, groupExports } from "../lib/utils";
 
-import {
-  item,
-  expandableContents,
-  expandableSummary,
-  expandableChevron,
-} from "./navigation.css";
+import ChevronDown from "./icons/chevron-down";
+import ChevronRight from "./icons/chevron-right";
+import Minus from "./icons/minus";
+
+import * as styles from "./navigation.css";
 import { codeFont } from "../lib/theme.css";
 
 function Expandable({
@@ -24,22 +23,28 @@ function Expandable({
   const onClick = () => setIsOpen(!isOpen);
   return (
     <div>
-      <div onClick={onClick} className={expandableSummary}>
-        <img
-          className={expandableChevron}
-          src={`/icons/chevron-${isOpen ? "down" : "right"}.svg`}
-          width="20"
-          height="20"
-        />
+      <div onClick={onClick} className={styles.expandableSummary}>
+        {isOpen ? (
+          <ChevronDown className={styles.expandableChevron} />
+        ) : (
+          <ChevronRight className={styles.expandableChevron} />
+        )}
         {summary}
       </div>
-      {isOpen ? <div className={expandableContents}>{children}</div> : null}
+      {isOpen ? (
+        <div className={styles.expandableContents}>{children}</div>
+      ) : null}
     </div>
   );
 }
 
 function Item({ children }: { children: ReactNode }) {
-  return <li className={item}>{children}</li>;
+  return (
+    <li className={styles.item}>
+      <Minus className={styles.itemIcon} />
+      {children}
+    </li>
+  );
 }
 
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
