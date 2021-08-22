@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
-import DotsHorizontal from "./icons/dots-horizontal";
 import ChevronDoubleDown from "./icons/chevron-double-down";
 import ChevronDoubleUp from "./icons/chevron-double-up";
 

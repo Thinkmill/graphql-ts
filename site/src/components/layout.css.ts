@@ -10,6 +10,12 @@ export const header = style({
   borderBottom: `1px solid ${tokens.color.gray300}`,
 });
 
+export const pageContainer = style({
+  display: "flex",
+  justifyContent: "start",
+  alignItems: "start",
+});
+
 export const navigationContainer = style({
   padding: "16px 24px 16px 16px",
   borderRight: `1px solid ${tokens.color.gray100}`,
