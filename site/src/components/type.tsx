@@ -6,7 +6,6 @@ import { colors } from "../lib/utils";
 
 import { SymbolReference } from "./symbol-references";
 import { Docs } from "./docs";
-import { printIntrospectionSchema } from "graphql";
 
 export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
@@ -268,8 +267,8 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
                 {param.name}
               </span>
               <span className={codeFont} style={{ color: colors.colon }}>
-                :
-              </span>{" "}
+                :{" "}
+              </span>
               <Type type={param.type} />
               {i !== type.parameters.length - 1 && (
                 <span className={codeFont} style={{ color: colors.comma }}>
