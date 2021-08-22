@@ -15,10 +15,14 @@ export function Docs({ content }: { content: string | undefined }) {
   const { first, rest } = splitDocs(content);
 
   if (!rest) {
-    return <Markdown content={first} />;
+    return (
+      <div className={styles.docs}>
+        <Markdown content={first} />
+      </div>
+    );
   }
   return (
-    <div>
+    <div className={styles.docs}>
       <Markdown content={first} />
       {isOpen ? (
         <>

@@ -6,6 +6,7 @@ import { colors } from "../lib/utils";
 
 import { SymbolReference } from "./symbol-references";
 import { Docs } from "./docs";
+import { printIntrospectionSchema } from "graphql";
 
 export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
@@ -108,7 +109,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         {type.members.map((prop, i) => {
           if (prop.kind === "prop") {
             return (
-              <div key={i} style={{ marginLeft: 32 }}>
+              <div key={i} style={{ marginLeft: 16 }}>
                 <Docs content={prop.docs} />
                 {prop.readonly ? (
                   <span className={codeFont} style={{ color: colors.keyword }}>

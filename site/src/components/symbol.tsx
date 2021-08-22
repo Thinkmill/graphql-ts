@@ -13,13 +13,12 @@ import {
 } from "./symbol-references";
 import { Type, TypeParams } from "./type";
 
+import * as styles from "./symbol.css";
+
 function SymbolAnchor({ fullName }: { fullName: string }) {
   const { goodIdentifiers } = useDocsContext();
   return (
-    <a
-      css={{ marginBottom: "1rem", display: "block", height: 1 }}
-      id={goodIdentifiers[fullName]}
-    ></a>
+    <a css={{ display: "block", height: 1 }} id={goodIdentifiers[fullName]}></a>
   );
 }
 
@@ -63,7 +62,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
   if (rootSymbol.kind === "function") {
     const x = rootSymbol;
     return (
-      <div>
+      <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
         <span>
           <span className={codeFont} style={{ color: colors.keyword }}>
@@ -106,53 +105,41 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       symbols
     );
 
-    const li = <li css={{ marginBottom: -24, marginLeft: -16 }} />;
-
     return (
-      <div>
+      <div className={styles.rootSymbolContainer}>
         <details open>
           {isExported ? (
             <summary css={{ display: "block" }}>
               <Docs content={rootSymbol.docs} />
-              {li}
-
-              <span className={codeFont} css={{ color: colors.keyword }}>
-                export * as{" "}
-              </span>
-              <SymbolName name={rootSymbol.name} fullName={fullName} />
-              <span className={codeFont} css={{ color: colors.keyword }}>
-                {" "}
-                from
-              </span>
-              <span className={codeFont} css={{ color: colors.bracket }}>
-                {" {"}
-              </span>
+              <div className={styles.innerExportsHeading}>
+                <span css={{ color: colors.keyword }}>export * as </span>
+                <SymbolName name={rootSymbol.name} fullName={fullName} />
+                <span css={{ color: colors.keyword }}> from</span>
+                <span css={{ color: colors.bracket }}>{" {"}</span>
+              </div>
             </summary>
           ) : (
             <summary css={{ display: "block" }}>
+              <h2 className={styles.moduleHeading}>{rootSymbol.name}</h2>
               <Docs content={rootSymbol.docs} />
-              {li}
-              <span className={codeFont} css={{ color: colors.keyword }}>
-                module{" "}
-              </span>
-              <a
-                id={goodIdentifiers[fullName]}
-                className={codeFont}
-                css={{
-                  color: colors.string,
-                  ":hover": { textDecoration: "underline" },
-                  ":target": { backgroundColor: "#ffff54ba" },
-                }}
-                href={`#${goodIdentifiers[fullName]}`}
-              >
-                {JSON.stringify(rootSymbol.name)}
-              </a>
-              <span className={codeFont} css={{ color: colors.bracket }}>
-                {" {"}
-              </span>
+              <div className={styles.innerExportsHeading}>
+                <span css={{ color: colors.keyword }}>module </span>
+                <a
+                  id={goodIdentifiers[fullName]}
+                  css={{
+                    color: colors.string,
+                    ":hover": { textDecoration: "underline" },
+                    ":target": { backgroundColor: "#ffff54ba" },
+                  }}
+                  href={`#${goodIdentifiers[fullName]}`}
+                >
+                  {JSON.stringify(rootSymbol.name)}
+                </a>
+                <span css={{ color: colors.bracket }}>{" {"}</span>
+              </div>
             </summary>
           )}
-          <div css={{ padding: 32 }}>
+          <div className={styles.innerExportsContainer}>
             {transformedExports.map((exported, i) => {
               if (exported.kind === "canonical") {
                 const { exportName, fullName: symbol } = exported;
@@ -163,26 +150,17 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                 return (
                   <div key={exportName}>
                     <SymbolAnchor fullName={symbol} />
-                    <h1
-                      className={codeFont}
-                      css={{
-                        "a:target + &": {
-                          backgroundColor: "#ffff54ba",
-                        },
-                        fontSize: 38,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {exportName}
-                    </h1>
+                    <h3 className={styles.symbolHeading}>{exportName}</h3>
                     <RenderRootSymbol fullName={symbol} />
                     {!!relatedSymbols?.length && (
-                      <div css={{ paddingLeft: 32, paddingTop: 8 }}>
-                        <p>References:</p>
+                      <div className={styles.referencesContainer}>
+                        <h4 className={styles.referencesHeading}>
+                          References:
+                        </h4>
                         <ul>
                           {relatedSymbols.map((thing, i) => {
                             return (
-                              <li key={i}>
+                              <li key={i} className={styles.referenceItem}>
                                 <SymbolReference
                                   key={i}
                                   fullName={thing}
@@ -195,24 +173,21 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                       </div>
                     )}
                     {innerBits && (
-                      <details css={{ paddingTop: 8 }}>
+                      <details className={styles.referencesContainer}>
                         <summary>
                           <Tooltip label="The symbols below were referenced in the symbol above (and potentially elsewhere) but are not exported publicly">
                             Unexported symbols referenced here
                           </Tooltip>
                         </summary>
-                        <Stack spacing="6">
-                          {innerBits.map((thing) => {
-                            return (
-                              <div key={thing}>
-                                <RenderRootSymbol fullName={thing} />
-                              </div>
-                            );
-                          })}
-                        </Stack>
+                        {innerBits.map((thing) => {
+                          return (
+                            <div key={thing}>
+                              <RenderRootSymbol fullName={thing} />
+                            </div>
+                          );
+                        })}
                       </details>
                     )}
-                    <br />
                   </div>
                 );
               }
@@ -266,13 +241,18 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
             })}
           </div>
         </details>
-        <span css={[{ color: colors.bracket }, codeFont]}>{"}"}</span>
+        <div
+          css={{ color: colors.bracket }}
+          className={styles.innerExportsHeading}
+        >
+          {"}"}
+        </div>
       </div>
     );
   }
   if (rootSymbol.kind === "variable") {
     return (
-      <div>
+      <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
         <span>
           <span className={codeFont} style={{ color: colors.keyword }}>
@@ -295,7 +275,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
 
   if (rootSymbol.kind === "unknown") {
     return (
-      <div>
+      <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
         <SymbolName name={rootSymbol.name} fullName={fullName} />
         <pre className={codeFont}>
@@ -306,7 +286,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
   }
 
   return (
-    <div>
+    <div className={styles.rootSymbolContainer}>
       <Docs content={rootSymbol.docs} />
       <span>
         <span className={codeFont} style={{ color: colors.keyword }}>

@@ -1,6 +1,13 @@
 import { composeStyles, style } from "@vanilla-extract/css";
 import { tokens } from "../lib/theme.css";
 
+export const docs = style({
+  borderLeft: `2px solid ${tokens.color.emerald200}`,
+  paddingLeft: 16,
+  marginTop: 16,
+  marginBottom: 16,
+});
+
 const expandLink = style({
   display: "flex",
   cursor: "pointer",
