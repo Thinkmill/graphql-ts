@@ -101,10 +101,34 @@ export function collectSymbol(symbol: Symbol) {
   state.symbolsQueue.add(symbol);
 }
 
-export async function getInfo() {
+export type DocInfo = {
+  rootSymbols: string[];
+  accessibleSymbols: {
+    [k: string]: SerializedSymbol;
+  };
+  symbolReferences: {
+    [k: string]: string[];
+  };
+  canonicalExportLocations: {
+    [k: string]: {
+      exportName: string;
+      fileSymbolName: string;
+    };
+  };
+};
+
+export async function getInfo({
+  tsConfigFilePath,
+  packagePath,
+}: {
+  tsConfigFilePath: string;
+  packagePath: string;
+}) {
   state = getInitialState();
-  let project = new Project({ tsConfigFilePath: "../tsconfig.json" });
-  const pkgPath = path.resolve("../packages/schema");
+  let project = new Project({
+    tsConfigFilePath,
+  });
+  const pkgPath = path.resolve(packagePath);
   const entrypoints = await resolvePreconstructEntrypoints(pkgPath);
   for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
     const sourceFile = project.getSourceFileOrThrow(filepath);
