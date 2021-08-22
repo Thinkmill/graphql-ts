@@ -5,13 +5,14 @@ import { Tooltip, Stack } from "@chakra-ui/react";
 import { TypeParam, SerializedType } from "../extract/utils";
 import hashString from "@emotion/hash";
 import { DocsContext, useDocsContext } from "../lib/DocsContext";
-import { colors, groupExports, splitDocs } from "../lib/utils";
-import { Markdown } from "../components/markdown";
+import { colors, groupExports } from "../lib/utils";
+
 import {
   SymbolName,
   SymbolReference,
   AddNameToScope,
 } from "../components/symbol-references";
+import { Docs } from "../components/docs";
 import { Navigation } from "../components/navigation";
 import { Contents, Header, NavigationContainer } from "../components/layout";
 import { codeFont, themeClass } from "../lib/theme.css";
@@ -556,25 +557,6 @@ export default function Index(
         </div>
       </div>
     </DocsContext.Provider>
-  );
-}
-
-function Docs({ content }: { content: string | undefined }) {
-  if (!content) return null;
-
-  const { first, rest } = splitDocs(content);
-
-  if (!rest) {
-    return <Markdown content={first} />;
-  }
-  return (
-    <details>
-      <summary css={{ display: "block" }}>
-        <li css={{ marginLeft: -16, marginBottom: -24 }} />
-        <Markdown content={first} />
-      </summary>
-      <Markdown content={rest} />
-    </details>
   );
 }
 
