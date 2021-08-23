@@ -1,4 +1,4 @@
-import * as tsgqlSchema from "@graphql-ts/schema";
+import * as graphqltsSchema from "@graphql-ts/schema";
 export * from "@graphql-ts/schema/api-without-context";
 export {
   field,
@@ -11,31 +11,31 @@ export {
 
 export type Context = unknown;
 
-export type NullableType = tsgqlSchema.NullableType<Context>;
-export type Type = tsgqlSchema.Type<Context>;
-export type NullableOutputType = tsgqlSchema.NullableOutputType<Context>;
-export type OutputType = tsgqlSchema.OutputType<Context>;
+export type NullableType = graphqltsSchema.NullableType<Context>;
+export type Type = graphqltsSchema.Type<Context>;
+export type NullableOutputType = graphqltsSchema.NullableOutputType<Context>;
+export type OutputType = graphqltsSchema.OutputType<Context>;
 export type Field<
   RootVal,
-  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
+  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType,
   Key extends string
-> = tsgqlSchema.Field<RootVal, Args, TType, Key, Context>;
+> = graphqltsSchema.Field<RootVal, Args, TType, Key, Context>;
 export type FieldResolver<
   RootVal,
-  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
+  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType
-> = tsgqlSchema.FieldResolver<RootVal, Args, TType, Context>;
-export type ObjectType<RootVal> = tsgqlSchema.ObjectType<RootVal, Context>;
-export type UnionType<RootVal> = tsgqlSchema.UnionType<RootVal, Context>;
+> = graphqltsSchema.FieldResolver<RootVal, Args, TType, Context>;
+export type ObjectType<RootVal> = graphqltsSchema.ObjectType<RootVal, Context>;
+export type UnionType<RootVal> = graphqltsSchema.UnionType<RootVal, Context>;
 export type InterfaceType<
   RootVal,
   Fields extends Record<
     string,
-    tsgqlSchema.InterfaceField<any, OutputType, Context>
+    graphqltsSchema.InterfaceField<any, OutputType, Context>
   >
-> = tsgqlSchema.InterfaceType<RootVal, Fields, Context>;
+> = graphqltsSchema.InterfaceType<RootVal, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, tsgqlSchema.Arg<tsgqlSchema.InputType>>,
+  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType
-> = tsgqlSchema.InterfaceField<Args, TType, Context>;
+> = graphqltsSchema.InterfaceField<Args, TType, Context>;

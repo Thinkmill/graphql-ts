@@ -1,9 +1,9 @@
-import { bindSchemaAPIToContext } from "../output";
+import { bindGraphQLSchemaAPIToContext } from "../output";
 
-const __schema = bindSchemaAPIToContext();
+const __graphql = bindGraphQLSchemaAPIToContext();
 
-export const { field, fields, interfaceField, object, union } = __schema;
+export const { field, fields, interfaceField, object, union } = __graphql;
 
-const interfaceType = __schema.interface;
+const interfaceType = __graphql.interface;
 
 export { interfaceType as interface };

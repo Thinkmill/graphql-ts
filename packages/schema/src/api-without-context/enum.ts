@@ -5,12 +5,12 @@ import {
 
 /**
  * An individual enum value in an {@link EnumType enum type} created using
- * {@link enumType `schema.enum`}. You can use the
- * {@link enumValues `schema.enumValues`} shorthand to create enum values more easily.
+ * {@link enumType `graphql.enum`}. You can use the
+ * {@link enumValues `graphql.enumValues`} shorthand to create enum values more easily.
  *
  * Note the value property/generic here represents the deserialized form of the
  * enum. It does not indicate the name of the enum value that is visible in the
- * GraphQL schema. The value can be anything, not necessarily a string. Usually
+ * GraphQL graphql. The value can be anything, not necessarily a string. Usually
  * though, it will be a string which is equal to the key where the value is used.
  */
 export type EnumValue<Value> = {
@@ -21,12 +21,12 @@ export type EnumValue<Value> = {
 
 /**
  * A GraphQL enum type which wraps an underlying graphql-js
- * {@link GraphQLEnumType}. This should be created with {@link enumType `schema.enum`}.
+ * {@link GraphQLEnumType}. This should be created with {@link enumType `graphql.enum`}.
  *
  * ```ts
- * const MyEnum = schema.enum({
+ * const MyEnum = graphql.enum({
  *   name: "MyEnum",
- *   values: schema.enumValues(["a", "b"]),
+ *   values: graphql.enumValues(["a", "b"]),
  * });
  * // ==
  * graphql`
@@ -46,21 +46,21 @@ export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
 
 /**
  * A shorthand to easily create {@link EnumValue enum values} to pass to
- * {@link enumType `schema.enum`}.
+ * {@link enumType `graphql.enum`}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
- * variant, you should pass values directly to `schema.enum` without using
- * `schema.enumValues`.
+ * variant, you should pass values directly to `graphql.enum` without using
+ * `graphql.enumValues`.
  *
  * ```ts
- * const MyEnum = schema.enum({
+ * const MyEnum = graphql.enum({
  *   name: "MyEnum",
- *   values: schema.enumValues(["a", "b"]),
+ *   values: graphql.enumValues(["a", "b"]),
  * });
  * ```
  *
  * ```ts
- * const values = schema.enumValues(["a", "b"]);
+ * const values = graphql.enumValues(["a", "b"]);
  *
  * assertDeepEqual(values, {
  *   a: { value: "a" },
@@ -78,9 +78,9 @@ export function enumValues<Values extends readonly string[]>(
  * Creates an {@link EnumType enum type} with a number of {@link EnumValue enum values}.
  *
  * ```ts
- * const MyEnum = schema.enum({
+ * const MyEnum = graphql.enum({
  *   name: "MyEnum",
- *   values: schema.enumValues(["a", "b"]),
+ *   values: graphql.enumValues(["a", "b"]),
  * });
  * // ==
  * graphql`
@@ -92,7 +92,7 @@ export function enumValues<Values extends readonly string[]>(
  * ```
  *
  * ```ts
- * const MyEnum = schema.enum({
+ * const MyEnum = graphql.enum({
  *   name: "MyEnum",
  *   description: "My enum does things",
  *   values: {

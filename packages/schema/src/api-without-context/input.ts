@@ -99,15 +99,15 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
   };
 
 /**
- * A GraphQL argument. These should be created with {@link arg `schema.arg`}
+ * A GraphQL argument. These should be created with {@link arg `graphql.arg`}
  *
  * Args can can be used as arguments on output fields:
  *
  * ```ts
- * schema.field({
- *   type: schema.String,
+ * graphql.field({
+ *   type: graphql.String,
  *   args: {
- *     something: schema.arg({ type: schema.String }),
+ *     something: graphql.arg({ type: graphql.String }),
  *   },
  *   resolve(rootVal, { something }) {
  *     return something || somethingElse;
@@ -120,10 +120,10 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  * Or as fields on input objects:
  *
  * ```ts
- * schema.inputObject({
+ * graphql.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: schema.arg({ type: schema.String }),
+ *     something: graphql.arg({ type: graphql.String }),
  *   },
  * });
  * // ==
@@ -137,10 +137,10 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  * When the type of an arg is {@link NonNullType non-null}, the value will always exist.
  *
  * ```ts
- * schema.field({
- *   type: schema.String,
+ * graphql.field({
+ *   type: graphql.String,
  *   args: {
- *     something: schema.arg({ type: schema.nonNull(schema.String) }),
+ *     something: graphql.arg({ type: graphql.nonNull(graphql.String) }),
  *   },
  *   resolve(rootVal, { something }) {
  *     // `something` will always be a string
@@ -168,10 +168,10 @@ export type Arg<
  * Args can can be used as arguments on output fields:
  *
  * ```ts
- * schema.field({
- *   type: schema.String,
+ * graphql.field({
+ *   type: graphql.String,
  *   args: {
- *     something: schema.arg({ type: schema.String }),
+ *     something: graphql.arg({ type: graphql.String }),
  *   },
  *   resolve(rootVal, { something }) {
  *     return something || somethingElse;
@@ -184,10 +184,10 @@ export type Arg<
  * Or as fields on input objects:
  *
  * ```ts
- * const Something = schema.inputObject({
+ * const Something = graphql.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: schema.arg({ type: schema.String }),
+ *     something: graphql.arg({ type: graphql.String }),
  *   },
  * });
  * // ==
@@ -211,7 +211,7 @@ export function arg<
     : { defaultValue: DefaultValue })
 ): Arg<Type, DefaultValue extends undefined ? false : true> {
   if (!arg.type) {
-    throw new Error("A type must be passed to schema.arg()");
+    throw new Error("A type must be passed to graphql.arg()");
   }
   return arg as any;
 }
@@ -220,10 +220,10 @@ export function arg<
  * Creates an {@link InputObjectType}
  *
  * ```ts
- * const Something = schema.inputObject({
+ * const Something = graphql.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: schema.arg({ type: schema.String }),
+ *     something: graphql.arg({ type: graphql.String }),
  *   },
  * });
  * // ==
@@ -240,13 +240,13 @@ export function arg<
  * in the type because of TypeScript's limits with circularity.
  *
  * ```ts
- * type SomethingInputType = schema.InputObjectType<{
- *   something: schema.Arg<SomethingInputType>;
+ * type SomethingInputType = graphql.InputObjectType<{
+ *   something: graphql.Arg<SomethingInputType>;
  * }>;
- * const Something: SomethingInputType = schema.inputObject({
+ * const Something: SomethingInputType = graphql.inputObject({
  *   name: "Something",
  *   fields: () => ({
- *     something: schema.arg({ type: Something }),
+ *     something: graphql.arg({ type: Something }),
  *   }),
  * });
  * ```
@@ -257,18 +257,18 @@ export function arg<
  *
  * ```ts
  * const nonCircularFields = {
- *   thing: schema.arg({ type: schema.String }),
+ *   thing: graphql.arg({ type: graphql.String }),
  * };
- * type SomethingInputType = schema.InputObjectType<
+ * type SomethingInputType = graphql.InputObjectType<
  *   typeof nonCircularFields & {
- *     something: schema.Arg<SomethingInputType>;
+ *     something: graphql.Arg<SomethingInputType>;
  *   }
  * >;
- * const Something: SomethingInputType = schema.inputObject({
+ * const Something: SomethingInputType = graphql.inputObject({
  *   name: "Something",
  *   fields: () => ({
  *     ...nonCircularFields,
- *     something: schema.arg({ type: Something }),
+ *     something: graphql.arg({ type: Something }),
  *   }),
  * });
  * ```

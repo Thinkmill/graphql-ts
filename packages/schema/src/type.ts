@@ -17,7 +17,7 @@ import { list, nonNull } from "./api-without-context/list-and-non-null";
  *
  * You generally won't need this because you'll likely want a nullable
  * {@link NullableInputType input} or {@link NullableOutputType output} type but
- * there are some uses cases for it like {@link nonNull `schema.nonNull`}.
+ * there are some uses cases for it like {@link nonNull `graphql.nonNull`}.
  *
  * See also:
  *
@@ -36,7 +36,7 @@ export type NullableType<Context> =
  *
  * You generally won't need this because you'll likely want an
  * {@link InputType input} or {@link InputType output} type but there are some
- * uses cases for it like {@link list `schema.list`}.
+ * uses cases for it like {@link list `graphql.list`}.
  *
  * See also:
  *

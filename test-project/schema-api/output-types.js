@@ -1,1 +1,1 @@
-export * from "./packages/schema/types-with-context";
+export * from "@graphql-ts/schema/api-with-context";

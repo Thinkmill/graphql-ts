@@ -1,5 +1,5 @@
-import { SchemaAPIWithContext } from "../output";
+import { GraphQLSchemaAPIWithContext } from "../output";
 
-declare const __schema: SchemaAPIWithContext<unknown>;
+declare const __graphql: GraphQLSchemaAPIWithContext<unknown>;
 
-export = __schema;
+export = __graphql;

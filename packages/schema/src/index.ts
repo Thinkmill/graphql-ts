@@ -1,19 +1,18 @@
 /**
  * `@graphql-ts/schema` is a thin wrapper around
- * [GraphQL.js](https://github.com/graphql/graphql-js) providing type-safety
- * for constructing GraphQL Schemas while avoiding
- * type-generation and [declaration
+ * [GraphQL.js](https://github.com/graphql/graphql-js) providing type-safety for
+ * constructing GraphQL Schemas while avoiding type-generation and [declaration
  * merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html).
  *
  * ```ts
- * import { schema } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql } from "graphql";
+ * import { graphql } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
  *
- * const Query = schema.object()({
+ * const Query = graphql.object()({
  *   name: "Query",
  *   fields: {
- *     hello: schema.field({
- *       type: schema.String,
+ *     hello: graphql.field({
+ *       type: graphql.String,
  *       resolve() {
  *         return "Hello!";
  *       },
@@ -21,17 +20,17 @@
  *   },
  * });
  *
- * const graphQLSchema = new GraphQLSchema({
+ * const schema = new GraphQLSchema({
  *   query: Query.graphQLType,
  * });
  *
- * graphql({
+ * runGraphQL({
  *   source: `
  *     query {
  *       hello
  *     }
  *   `,
- *   schema: graphQLSchema,
+ *   schema,
  * }).then((result) => {
  *   console.log(result);
  * });
@@ -39,8 +38,8 @@
  *
  * @module
  */
-export * as schema from "./schema-api";
-export { bindSchemaAPIToContext } from "./output";
+export * as graphql from "./schema-api";
+export { bindGraphQLSchemaAPIToContext } from "./output";
 export type {
   Field,
   FieldFunc,
@@ -57,7 +56,7 @@ export type {
   ObjectType,
   ObjectTypeFunc,
   OutputType,
-  SchemaAPIWithContext,
+  GraphQLSchemaAPIWithContext,
   UnionType,
   UnionTypeFunc,
 } from "./output";

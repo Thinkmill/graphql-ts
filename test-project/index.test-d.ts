@@ -1,57 +1,57 @@
 import {
-  schema,
-  bindSchemaAPIToContext,
+  graphql,
+  bindGraphQLSchemaAPIToContext,
   Arg,
   InferValueFromInputType,
   InputObjectType,
   ScalarType,
   InferValueFromOutputType,
 } from "@graphql-ts/schema";
-import * as schemaWithContext from "./schema-api";
+import * as graphqlWithContext from "./schema-api";
 
 // this isn't really right
 function expectType<T>(type: T) {}
 
-schemaWithContext.arg({
-  type: schemaWithContext.Boolean,
+graphqlWithContext.arg({
+  type: graphqlWithContext.Boolean,
 });
 
-const someEnum = schema.enum({
+const someEnum = graphql.enum({
   name: "SomeEnum",
-  values: schema.enumValues(["a", "b"]),
+  values: graphql.enumValues(["a", "b"]),
 });
 
-const enumArg = schema.arg({
+const enumArg = graphql.arg({
   type: someEnum,
 });
 
-const Something = schema.inputObject({
+const Something = graphql.inputObject({
   name: "Something",
   fields: {
-    nullableString: schema.arg({ type: schema.String }),
-    nullableStringWithDefaultValue: schema.arg({
-      type: schema.String,
+    nullableString: graphql.arg({ type: graphql.String }),
+    nullableStringWithDefaultValue: graphql.arg({
+      type: graphql.String,
       defaultValue: "something",
     }),
-    nonNullableString: schema.arg({
-      type: schema.nonNull(schema.String),
+    nonNullableString: graphql.arg({
+      type: graphql.nonNull(graphql.String),
     }),
-    nonNullableStringWithDefaultValue: schema.arg({
-      type: schema.nonNull(schema.String),
+    nonNullableStringWithDefaultValue: graphql.arg({
+      type: graphql.nonNull(graphql.String),
       defaultValue: "something",
     }),
     enum: enumArg,
   },
 });
 
-type CircularInputType = schema.InputObjectType<{
-  circular: schema.Arg<CircularInputType>;
+type CircularInputType = graphql.InputObjectType<{
+  circular: graphql.Arg<CircularInputType>;
 }>;
 
-const Circular: CircularInputType = schema.inputObject({
+const Circular: CircularInputType = graphql.inputObject({
   name: "Circular",
   fields: () => ({
-    circular: schema.arg({ type: Circular }),
+    circular: graphql.arg({ type: Circular }),
   }),
 });
 
@@ -71,14 +71,14 @@ const Circular: CircularInputType = schema.inputObject({
 
 {
   // should be unknown
-  type a = schema.InferValueFromOutputType<schema.OutputType>;
+  type a = graphql.InferValueFromOutputType<graphql.OutputType>;
 }
 {
   // should be unknown
-  type a = schema.InferValueFromInputType<schema.InputType>;
-  type b = schema.InferValueFromArg<schema.Arg<schema.InputType>>;
+  type a = graphql.InferValueFromInputType<graphql.InputType>;
+  type b = graphql.InferValueFromArg<graphql.Arg<graphql.InputType>>;
   // should be { readonly a: unknown }
-  type c = schema.InferValueFromArgs<{ a: schema.Arg<schema.InputType> }>;
+  type c = graphql.InferValueFromArgs<{ a: graphql.Arg<graphql.InputType> }>;
 }
 
 {
@@ -87,11 +87,11 @@ const Circular: CircularInputType = schema.inputObject({
     recursive: Arg<RecursiveInput>;
   }>;
 
-  const Recursive: RecursiveInput = schema.inputObject({
+  const Recursive: RecursiveInput = graphql.inputObject({
     name: "Recursive",
     fields: () => ({
-      nullableString: schema.arg({ type: schema.String }),
-      recursive: schema.arg({ type: Recursive }),
+      nullableString: graphql.arg({ type: graphql.String }),
+      recursive: graphql.arg({ type: Recursive }),
     }),
   });
 
@@ -109,7 +109,7 @@ const Circular: CircularInputType = schema.inputObject({
 
 {
   const nonRecursiveFields = {
-    nullableString: schema.arg({ type: schema.String }),
+    nullableString: graphql.arg({ type: graphql.String }),
   };
 
   type RecursiveInput = InputObjectType<
@@ -118,11 +118,11 @@ const Circular: CircularInputType = schema.inputObject({
     }
   >;
 
-  const Recursive: RecursiveInput = schema.inputObject({
+  const Recursive: RecursiveInput = graphql.inputObject({
     name: "Recursive",
     fields: () => ({
       ...nonRecursiveFields,
-      recursive: schema.arg({ type: Recursive }),
+      recursive: graphql.arg({ type: Recursive }),
     }),
   });
 
@@ -141,48 +141,48 @@ const Circular: CircularInputType = schema.inputObject({
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
 export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof schema.String>;
-}> = schema.inputObject({
+  nullableString: Arg<typeof graphql.String>;
+}> = graphql.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
-    nullableString: schema.arg({ type: schema.String }),
-    another: schema.arg({ type: schema.String }),
+    nullableString: graphql.arg({ type: graphql.String }),
+    another: graphql.arg({ type: graphql.String }),
   }),
 });
 
-schema.object<{ id: string } | { id: "str" }>()({
+graphql.object<{ id: string } | { id: "str" }>()({
   name: "Node",
   fields: {
-    id: schema.field({
-      type: schema.nonNull(schema.ID),
+    id: graphql.field({
+      type: graphql.nonNull(graphql.ID),
     }),
   },
 });
 
-schema.object<{ id: string } | { id: boolean }>()({
+graphql.object<{ id: string } | { id: boolean }>()({
   name: "Node",
   fields: {
     // @ts-expect-error
-    id: schema.field({
-      type: schema.nonNull(schema.ID),
+    id: graphql.field({
+      type: graphql.nonNull(graphql.ID),
     }),
   },
 });
 
 {
-  const schema = {
-    ...schemaWithContext,
-    ...bindSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
+  const graphql = {
+    ...graphqlWithContext,
+    ...bindGraphQLSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
   };
 
-  const SomeOutput = schema.object<{ thing: boolean }>()({
+  const SomeOutput = graphql.object<{ thing: boolean }>()({
     name: "Something",
     fields: {
-      thing: schema.field({ type: schema.nonNull(schema.Boolean) }),
+      thing: graphql.field({ type: graphql.nonNull(graphql.Boolean) }),
     },
   });
 
-  const nonNullSomeOutput = schema.nonNull(SomeOutput);
+  const nonNullSomeOutput = graphql.nonNull(SomeOutput);
 
   type OutputTypeWithNull = InferValueFromOutputType<typeof SomeOutput>;
 
@@ -195,7 +195,7 @@ schema.object<{ id: string } | { id: boolean }>()({
 
   expectType<OutputTypeWithoutNull>({ thing: true });
 
-  schema.field({
+  graphql.field({
     type: SomeOutput,
     resolve() {
       if (Math.random() > 0.5) {
@@ -205,8 +205,8 @@ schema.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  schema.field({
-    type: schema.nonNull(schema.list(nonNullSomeOutput)),
+  graphql.field({
+    type: graphql.nonNull(graphql.list(nonNullSomeOutput)),
     resolve() {
       return [{ thing: false }];
     },
@@ -214,20 +214,20 @@ schema.object<{ id: string } | { id: boolean }>()({
 
   type FieldIdentifier = { listKey: string; fieldPath: string };
 
-  schema.fields<{ path: string; listKey: string }>()({
-    thing: schema.field({
+  graphql.fields<{ path: string; listKey: string }>()({
+    thing: graphql.field({
       resolve(rootVal) {
         return { fieldPath: rootVal.path, listKey: rootVal.listKey };
       },
-      type: schema.nonNull(
-        schema.object<FieldIdentifier>()({
+      type: graphql.nonNull(
+        graphql.object<FieldIdentifier>()({
           name: "KeystoneAdminUIFieldMetaListView",
           fields: {
-            fieldMode: schema.field({
-              type: schema.nonNull(
-                schema.enum({
+            fieldMode: graphql.field({
+              type: graphql.nonNull(
+                graphql.enum({
                   name: "KeystoneAdminUIFieldMetaListViewFieldMode",
-                  values: schema.enumValues(["read", "hidden"]),
+                  values: graphql.enumValues(["read", "hidden"]),
                 })
               ),
               async resolve(rootVal, args, context) {
@@ -241,11 +241,11 @@ schema.object<{ id: string } | { id: boolean }>()({
   });
 }
 
-// schema.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
+// graphql.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
 //   name: "Node",
 //   fields: {
-//     id: schema.field({
-//       type: schema.nonNull(schema.ID),
+//     id: graphql.field({
+//       type: graphql.nonNull(graphql.ID),
 //       // args: {},
 //       resolve({}, {}) {
 //         return true;
@@ -255,22 +255,22 @@ schema.object<{ id: string } | { id: boolean }>()({
 // });
 
 {
-  const sharedFields = schema.fields<{ something: string }>()({
-    something: schema.field({
-      type: schema.nonNull(schema.String),
+  const sharedFields = graphql.fields<{ something: string }>()({
+    something: graphql.field({
+      type: graphql.nonNull(graphql.String),
     }),
   });
 
-  const sharedFieldsWithUnkownRootVal = schema.fields()({
-    other: schema.field({
-      type: schema.nonNull(schema.String),
+  const sharedFieldsWithUnkownRootVal = graphql.fields()({
+    other: graphql.field({
+      type: graphql.nonNull(graphql.String),
       resolve() {
         return "";
       },
     }),
   });
 
-  schema.object<{ something: string; other: string }>()({
+  graphql.object<{ something: string; other: string }>()({
     name: "",
     fields: {
       ...sharedFields,
@@ -278,12 +278,12 @@ schema.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  schema.object<{ other: string }>()({
+  graphql.object<{ other: string }>()({
     name: "",
     fields: sharedFieldsWithUnkownRootVal,
   });
 
-  schema.object<{ other: string }>()({
+  graphql.object<{ other: string }>()({
     name: "",
     // @ts-expect-error
     fields: sharedFields,
@@ -291,17 +291,18 @@ schema.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA = bindSchemaAPIToContext<{ something: boolean }>();
+  const typesWithContextA =
+    bindGraphQLSchemaAPIToContext<{ something: boolean }>();
 
   const typesWithContextB =
-    bindSchemaAPIToContext<{ something: boolean; other: string }>();
+    bindGraphQLSchemaAPIToContext<{ something: boolean; other: string }>();
 
   {
     typesWithContextB.object<{ thing: string }>()({
       name: "",
       fields: {
         thing: typesWithContextA.field({
-          type: schema.String,
+          type: graphql.String,
         }),
       },
     });
@@ -310,7 +311,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       fields: {
         // @ts-expect-error
         thing: typesWithContextB.field({
-          type: schema.String,
+          type: graphql.String,
         }),
       },
     });
@@ -321,7 +322,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       name: "Something",
       fields: {
         a: typesWithContextA.field({
-          type: schema.String,
+          type: graphql.String,
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
             return "";
@@ -358,7 +359,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: schema.list(fromBWithA),
+          type: graphql.list(fromBWithA),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -370,7 +371,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: schema.list(schema.list(fromBWithA)),
+          type: graphql.list(graphql.list(fromBWithA)),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -382,7 +383,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: schema.nonNull(fromBWithA),
+          type: graphql.nonNull(fromBWithA),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -394,7 +395,7 @@ schema.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: schema.list(schema.nonNull(fromBWithA)),
+          type: graphql.list(graphql.nonNull(fromBWithA)),
           resolve(rootVal, args, context) {
             expectType<{ something: boolean }>(context);
           },
@@ -405,78 +406,78 @@ schema.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const nonNullThing = schema.nonNull(schema.String);
-  schema.nonNull(
+  const nonNullThing = graphql.nonNull(graphql.String);
+  graphql.nonNull(
     // @ts-expect-error
     nonNullThing
   );
 }
 
 {
-  const Node = schema.interface()({
+  const Node = graphql.interface()({
     name: "Node",
     fields: {
-      id: schema.interfaceField({ type: schema.ID }),
+      id: graphql.interfaceField({ type: graphql.ID }),
     },
   });
 
-  schema.object<{ id: string }>()({
+  graphql.object<{ id: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
-    fields: { id: schema.field({ type: schema.ID }) },
+    fields: { id: graphql.field({ type: graphql.ID }) },
   });
 
-  schema.object<{ thing: string }>()({
+  graphql.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {},
   });
 
-  schema.object<{ thing: string }>()({
+  graphql.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {
-      thing: schema.field({ type: schema.ID }),
+      thing: graphql.field({ type: graphql.ID }),
     },
   });
-  schema.object<{ id: number }>()({
+  graphql.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: schema.field({ type: schema.Int }),
+      id: graphql.field({ type: graphql.Int }),
     },
   });
-  schema.object<{ id: number }>()({
+  graphql.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: schema.field({ type: schema.ID }),
+      id: graphql.field({ type: graphql.ID }),
     },
   });
 
   {
-    const NodeAnother = schema.interface()({
+    const NodeAnother = graphql.interface()({
       name: "Node",
       fields: {
-        id: schema.interfaceField({ type: schema.Int }),
+        id: graphql.interfaceField({ type: graphql.Int }),
       },
     });
 
-    schema.object<{ id: string }>()({
+    graphql.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, NodeAnother],
       fields: {
         // @ts-expect-error
-        id: schema.field({ type: schema.ID }),
+        id: graphql.field({ type: graphql.ID }),
       },
     });
   }
 
-  schema.interface()({
+  graphql.interface()({
     name: "Node",
     interfaces: [Node],
     // @ts-expect-error
@@ -484,34 +485,34 @@ schema.object<{ id: string } | { id: boolean }>()({
   });
 
   {
-    const Other = schema.interface()({
+    const Other = graphql.interface()({
       name: "Node",
-      fields: { something: schema.interfaceField({ type: schema.Int }) },
+      fields: { something: graphql.interfaceField({ type: graphql.Int }) },
     });
-    schema.object<{ id: string; something: number }>()({
+    graphql.object<{ id: string; something: number }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       fields: {
-        id: schema.field({ type: schema.ID }),
-        something: schema.field({ type: schema.Int }),
+        id: graphql.field({ type: graphql.ID }),
+        something: graphql.field({ type: graphql.Int }),
       },
     });
-    schema.object<{ id: string }>()({
+    graphql.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       // @ts-expect-error
       fields: {
-        id: schema.field({ type: schema.ID }),
+        id: graphql.field({ type: graphql.ID }),
       },
     });
   }
 }
 
-schema.object()({
+graphql.object()({
   name: "Something",
   fields: {
-    id: schema.field({
-      type: schema.ID,
+    id: graphql.field({
+      type: graphql.ID,
 
       resolve(rootVal, args) {
         // @ts-expect-error
@@ -529,9 +530,9 @@ schema.object()({
 
   const SUPPORTED_IMAGE_EXTENSIONS = ["jpg", "png", "webp", "gif"] as const;
 
-  const ImageExtensionEnum = schema.enum({
+  const ImageExtensionEnum = graphql.enum({
     name: "ImageExtension",
-    values: schema.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
+    values: graphql.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
   });
 
   type ImageData = {
@@ -542,20 +543,20 @@ schema.object()({
     width: number;
     height: number;
   };
-  const imageOutputFields = schema.fields<ImageData>()({
-    id: schema.field({ type: schema.nonNull(schema.ID) }),
-    filesize: schema.field({ type: schema.nonNull(schema.Int) }),
-    height: schema.field({ type: schema.nonNull(schema.Int) }),
-    width: schema.field({ type: schema.nonNull(schema.Int) }),
-    extension: schema.field({ type: schema.nonNull(ImageExtensionEnum) }),
-    ref: schema.field({
-      type: schema.nonNull(schema.String),
+  const imageOutputFields = graphql.fields<ImageData>()({
+    id: graphql.field({ type: graphql.nonNull(graphql.ID) }),
+    filesize: graphql.field({ type: graphql.nonNull(graphql.Int) }),
+    height: graphql.field({ type: graphql.nonNull(graphql.Int) }),
+    width: graphql.field({ type: graphql.nonNull(graphql.Int) }),
+    extension: graphql.field({ type: graphql.nonNull(ImageExtensionEnum) }),
+    ref: graphql.field({
+      type: graphql.nonNull(graphql.String),
       resolve(data) {
         return "";
       },
     }),
-    src: schema.field({
-      type: schema.nonNull(schema.String),
+    src: graphql.field({
+      type: graphql.nonNull(graphql.String),
       args: {},
       resolve(data, {}, context) {
         return "";
@@ -563,36 +564,36 @@ schema.object()({
     }),
   });
 
-  const ImageFieldOutput = schema.interface()({
+  const ImageFieldOutput = graphql.interface()({
     name: "ImageFieldOutput",
     fields: imageOutputFields,
   });
 
-  const LocalImageFieldOutput = schema.object<ImageData>()({
+  const LocalImageFieldOutput = graphql.object<ImageData>()({
     name: "LocalImageFieldOutput",
     interfaces: [ImageFieldOutput],
     fields: imageOutputFields,
   });
 }
 
-schema.fields<{ thing: Promise<string>[] }>()({
-  thing: schema.field({
-    type: schema.list(schema.String),
+graphql.fields<{ thing: Promise<string>[] }>()({
+  thing: graphql.field({
+    type: graphql.list(graphql.String),
   }),
 });
 
-schema.fields()({
-  thing: schema.field({
-    type: schema.list(schema.String),
+graphql.fields()({
+  thing: graphql.field({
+    type: graphql.list(graphql.String),
     resolve() {
       return [Promise.resolve("")];
     },
   }),
 });
 
-schema.fields<{ thing: Promise<string> }>()({
-  thing: schema.field({
-    type: schema.String,
+graphql.fields<{ thing: Promise<string> }>()({
+  thing: graphql.field({
+    type: graphql.String,
   }),
 });
 
@@ -600,56 +601,56 @@ schema.fields<{ thing: Promise<string> }>()({
 // since the type annotation can influence the return type and we don't want that here
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
   });
 
-  const _assert: schema.Arg<typeof schema.String, false> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, false> = arg;
 }
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     defaultValue: undefined,
   });
 
-  const _assert: schema.Arg<typeof schema.String, false> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, false> = arg;
 }
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     defaultValue: "",
   });
 
-  const _assert: schema.Arg<typeof schema.String, true> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     defaultValue: null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, true> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     defaultValue: null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, true> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     defaultValue: Math.random() > 0.5 ? "" : null,
   });
 
-  const _assert: schema.Arg<typeof schema.String, true> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
@@ -665,17 +666,17 @@ schema.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     ...x,
   });
 
-  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, false> = arg;
+  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, true> = arg;
-  const _assert3: (x: schema.Arg<typeof schema.String, boolean>) => void = (
+  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert3: (x: graphql.Arg<typeof graphql.String, boolean>) => void = (
     x: typeof arg
   ) => {};
 }
@@ -691,16 +692,16 @@ schema.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     ...x,
   });
 
-  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, false> = arg;
+  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, true> = arg;
+  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
@@ -714,172 +715,172 @@ schema.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     ...x,
   });
-  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, false> = arg;
+  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, true> = arg;
+  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
 {
   const thing: { defaultValue: undefined } | { defaultValue: string } =
     Math.random() > 0.5 ? { defaultValue: undefined } : { defaultValue: "" };
-  const arg = schema.arg({
-    type: schema.String,
+  const arg = graphql.arg({
+    type: graphql.String,
     ...thing,
   });
 
-  const _assert: schema.Arg<typeof schema.String, boolean> = arg;
+  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
   // @ts-expect-error
-  const _assert1: schema.Arg<typeof schema.String, false> = arg;
+  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
   // @ts-expect-error
-  const _assert2: schema.Arg<typeof schema.String, true> = arg;
+  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
 }
 
-schema.arg({
-  type: schema.String,
+graphql.arg({
+  type: graphql.String,
   // @ts-expect-error
   defaultValue: 1,
 });
 
-schema.arg({
-  type: schema.String,
+graphql.arg({
+  type: graphql.String,
   // @ts-expect-error
   bad: true,
 });
 
-schema.object<{ thing: (args: { a: string }) => string }>()({
+graphql.object<{ thing: (args: { a: string }) => string }>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: schema.field({
-      type: schema.String,
-      args: { a: schema.arg({ type: schema.nonNull(schema.Int) }) },
+    thing: graphql.field({
+      type: graphql.String,
+      args: { a: graphql.arg({ type: graphql.nonNull(graphql.Int) }) },
     }),
   },
 });
 
-schema.object<{ thing: (args: { a: string }) => string }>()({
+graphql.object<{ thing: (args: { a: string }) => string }>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
-      args: { a: schema.arg({ type: schema.nonNull(schema.String) }) },
+    thing: graphql.field({
+      type: graphql.String,
+      args: { a: graphql.arg({ type: graphql.nonNull(graphql.String) }) },
     }),
   },
 });
 
-schema.object<{ thing: () => string }>()({
+graphql.object<{ thing: () => string }>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
-      args: { a: schema.arg({ type: schema.nonNull(schema.String) }) },
+    thing: graphql.field({
+      type: graphql.String,
+      args: { a: graphql.arg({ type: graphql.nonNull(graphql.String) }) },
     }),
   },
 });
 
-schema.object<{ thing: () => Promise<string> }>()({
+graphql.object<{ thing: () => Promise<string> }>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
     }),
   },
 });
 
 {
   // @ts-expect-error
-  const thing1: schema.NullableInputType = schema.list(
-    schema.object()({
+  const thing1: graphql.NullableInputType = graphql.list(
+    graphql.object()({
       name: "something",
       fields: {},
     })
   );
   // @ts-expect-error
-  const thing2: schema.NullableInputType = schema.nonNull(
-    schema.object()({
+  const thing2: graphql.NullableInputType = graphql.nonNull(
+    graphql.object()({
       name: "something",
       fields: {},
     })
   );
   // @ts-expect-error
-  const thing3: schema.InputType = schema.nonNull(
-    schema.object()({
+  const thing3: graphql.InputType = graphql.nonNull(
+    graphql.object()({
       name: "something",
       fields: {},
     })
   );
 }
 
-schema.object<{}>()({
+graphql.object<{}>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
     }),
   },
 });
 
-schema.object<{ thing?: string }>()({
+graphql.object<{ thing?: string }>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
     }),
   },
 });
 
-schema.object<{ thing?: boolean }>()({
-  name: "Thing",
-  fields: {
-    // @ts-expect-error
-    thing: schema.field({
-      type: schema.String,
-    }),
-  },
-});
-
-schema.object<{}>()({
+graphql.object<{ thing?: boolean }>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
     }),
   },
 });
 
-schema.object<{ thing?: undefined }>()({
+graphql.object<{}>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
+    // @ts-expect-error
+    thing: graphql.field({
+      type: graphql.String,
     }),
   },
 });
 
-schema.object()({
+graphql.object<{ thing?: undefined }>()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
+    }),
+  },
+});
+
+graphql.object()({
+  name: "Thing",
+  fields: {
+    thing: graphql.field({
+      type: graphql.String,
       // @ts-expect-error
       resolve() {},
     }),
   },
 });
 
-schema.object()({
+graphql.object()({
   name: "Thing",
   fields: {
-    thing: schema.field({
-      type: schema.String,
+    thing: graphql.field({
+      type: graphql.String,
       resolve() {
         return undefined;
       },
@@ -887,10 +888,10 @@ schema.object()({
   },
 });
 
-schema.object<any>()({
+graphql.object<any>()({
   name: "Thing",
   fields: {
-    thing: schema.field({ type: schema.String }),
+    thing: graphql.field({ type: graphql.String }),
   },
 });
 
@@ -903,30 +904,30 @@ schema.object<any>()({
     filesize: number;
   };
 
-  const fileFields = schema.fields<FileData>()({
-    filename: schema.field({ type: schema.nonNull(schema.String) }),
-    filesize: schema.field({ type: schema.nonNull(schema.Int) }),
-    ref: schema.field({
-      type: schema.nonNull(schema.String),
+  const fileFields = graphql.fields<FileData>()({
+    filename: graphql.field({ type: graphql.nonNull(graphql.String) }),
+    filesize: graphql.field({ type: graphql.nonNull(graphql.Int) }),
+    ref: graphql.field({
+      type: graphql.nonNull(graphql.String),
       resolve(data) {
         return "";
       },
     }),
-    src: schema.field({
-      type: schema.nonNull(schema.String),
+    src: graphql.field({
+      type: graphql.nonNull(graphql.String),
       resolve(data, args, context) {
         return "";
       },
     }),
   });
 
-  const FileFieldOutput = schema.interface<FileData>()({
+  const FileFieldOutput = graphql.interface<FileData>()({
     name: "FileFieldOutput",
     fields: fileFields,
     resolveType: () => "LocalFileFieldOutput",
   });
 
-  schema.field({
+  graphql.field({
     type: FileFieldOutput,
     resolve() {
       return undefined as any as FileData;

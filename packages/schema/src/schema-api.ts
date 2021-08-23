@@ -1,18 +1,18 @@
 /**
- * The `schema` export is the primary entrypoint into `@graphql-ts/schema` that
+ * The `graphql` export is the primary entrypoint into `@graphql-ts/schema` that
  * lets you compose GraphQL types into a GraphQL Schema
  *
  * A simple schema with only a query type looks like this.
  *
  * ```ts
- * import { schema } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql } from "graphql";
+ * import { graphql } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
  *
- * const Query = schema.object()({
+ * const Query = graphql.object()({
  *   name: "Query",
  *   fields: {
- *     hello: schema.field({
- *       type: schema.String,
+ *     hello: graphql.field({
+ *       type: graphql.String,
  *       resolve() {
  *         return "Hello!";
  *       },
@@ -20,17 +20,17 @@
  *   },
  * });
  *
- * const graphQLSchema = new GraphQLSchema({
+ * const schema = new GraphQLSchema({
  *   query: Query.graphQLType,
  * });
  *
- * graphql({
+ * runGraphQL({
  *   source: `
  *     query {
  *       hello
  *     }
  *   `,
- *   schema: graphQLSchema,
+ *   schema,
  * }).then((result) => {
  *   console.log(result);
  * });
@@ -41,8 +41,8 @@
  * You can also create a more advanced schema with other object types, args and mutations.
  *
  * ```ts
- * import { schema } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql } from "graphql";
+ * import { graphql } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
  * import { deepEqual } from "assert";
  *
  * type TodoItem = {
@@ -51,18 +51,18 @@
  *
  * const todos: TodoItem[] = [];
  *
- * const Todo = schema.object<TodoItem>({
+ * const Todo = graphql.object<TodoItem>({
  *   name: "Todo",
  *   fields: {
- *     title: schema.field({ type: schema.String }),
+ *     title: graphql.field({ type: graphql.String }),
  *   },
  * });
  *
- * const Query = schema.object()({
+ * const Query = graphql.object()({
  *   name: "Query",
  *   fields: {
- *     todos: schema.field({
- *       type: schema.list(Todo),
+ *     todos: graphql.field({
+ *       type: graphql.list(Todo),
  *       resolve() {
  *         return todos;
  *       },
@@ -70,12 +70,12 @@
  *   },
  * });
  *
- * const Mutation = schema.object()({
+ * const Mutation = graphql.object()({
  *   name: "Mutation",
  *   fields: {
- *     createTodo: schema.field({
+ *     createTodo: graphql.field({
  *       args: {
- *         title: schema.arg({ type: schema.String }),
+ *         title: graphql.arg({ type: graphql.String }),
  *       },
  *       type: Todo,
  *       resolve(rootVal, { title }) {
@@ -87,13 +87,13 @@
  *   },
  * });
  *
- * const graphQLSchema = new GraphQLSchema({
+ * const schema = new GraphQLSchema({
  *   query: Query.graphQLType,
  *   mutation: Mutation.graphQLType,
  * });
  *
  * (async () => {
- *   const result = await graphql({
+ *   const result = await runGraphQL({
  *     source: `
  *       query {
  *         todos {
@@ -101,11 +101,11 @@
  *         }
  *       }
  *     `,
- *     schema: graphQLSchema,
+ *     schema,
  *   });
  *   deepEqual(result, { data: { todos: [] } });
  *
- *   const result = await graphql({
+ *   const result = await runGraphQL({
  *     source: `
  *       mutation {
  *         createTodo(title: "Try @graphql-ts/schema") {
@@ -113,13 +113,13 @@
  *         }
  *       }
  *     `,
- *     schema: graphQLSchema,
+ *     schema,
  *   });
  *   deepEqual(result, {
  *     data: { createTodo: { title: "Try @graphql-ts/schema" } },
  *   });
  *
- *   const result = await graphql({
+ *   const result = await runGraphQL({
  *     source: `
  *       query {
  *         todos {
@@ -127,7 +127,7 @@
  *         }
  *       }
  *     `,
- *     schema: graphQLSchema,
+ *     schema,
  *   });
  *   deepEqual(result, {
  *     data: { todos: [{ title: "Try @graphql-ts/schema" }] },
@@ -137,14 +137,14 @@
  *
  * For information on how to construct other types like input objects, unions,
  * interfaces and enums and more detailed information, see the documentation in
- * the `schema` export below.
+ * the `graphql` export below.
  *
  * When using it, you're going to want to create your own version of it bound to
  * your specific `Context` type.
  *
  * @module
  */
-import * as graphqltsSchema from ".";
+import * as graphql from ".";
 export { field, object } from "./api-with-context";
 export {
   arg,
@@ -178,7 +178,7 @@ export type {
 export { scalar } from "./api-without-context";
 
 /**
- * The particular `Context` type for this `schema` export that is provided to
+ * The particular `Context` type for this `graphql` export that is provided to
  * field resolvers.
  *
  * Below, there are many types exported which are similar to the types with the
@@ -188,35 +188,35 @@ export { scalar } from "./api-without-context";
  */
 export type Context = unknown;
 
-export type NullableType = graphqltsSchema.NullableType<Context>;
-export type Type = graphqltsSchema.Type<Context>;
-export type NullableOutputType = graphqltsSchema.NullableOutputType<Context>;
-export type OutputType = graphqltsSchema.OutputType<Context>;
+export type NullableType = graphql.NullableType<Context>;
+export type Type = graphql.Type<Context>;
+export type NullableOutputType = graphql.NullableOutputType<Context>;
+export type OutputType = graphql.OutputType<Context>;
 export type Field<
   RootVal,
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+  Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType,
   Key extends string
-> = graphqltsSchema.Field<RootVal, Args, TType, Key, Context>;
+> = graphql.Field<RootVal, Args, TType, Key, Context>;
 export type FieldResolver<
   RootVal,
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+  Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType
-> = graphqltsSchema.FieldResolver<RootVal, Args, TType, Context>;
-export type ObjectType<RootVal> = graphqltsSchema.ObjectType<RootVal, Context>;
-export type UnionType<RootVal> = graphqltsSchema.UnionType<RootVal, Context>;
+> = graphql.FieldResolver<RootVal, Args, TType, Context>;
+export type ObjectType<RootVal> = graphql.ObjectType<RootVal, Context>;
+export type UnionType<RootVal> = graphql.UnionType<RootVal, Context>;
 export type InterfaceType<
   RootVal,
   Fields extends Record<
     string,
-    graphqltsSchema.InterfaceField<
-      Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+    graphql.InterfaceField<
+      Record<string, graphql.Arg<graphql.InputType>>,
       OutputType,
       Context
     >
   >
-> = graphqltsSchema.InterfaceType<RootVal, Fields, Context>;
+> = graphql.InterfaceType<RootVal, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+  Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType
-> = graphqltsSchema.InterfaceField<Args, TType, Context>;
+> = graphql.InterfaceField<Args, TType, Context>;
