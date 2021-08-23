@@ -10,7 +10,7 @@ import {
  *
  * Note the value property/generic here represents the deserialized form of the
  * enum. It does not indicate the name of the enum value that is visible in the
- * GraphQL graphql. The value can be anything, not necessarily a string. Usually
+ * GraphQL schema. The value can be anything, not necessarily a string. Usually
  * though, it will be a string which is equal to the key where the value is used.
  */
 export type EnumValue<Value> = {
