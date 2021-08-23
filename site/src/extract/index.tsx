@@ -236,7 +236,8 @@ function resolveSymbolQueue() {
       const jsDocs: JSDoc[] = [];
       decl.forEachChild((node) => {
         if (!!(node.compilerNode as any).jsDoc) {
-          const nodes: any[] | undefined = (node.compilerNode as any).jsDoc;
+          const nodes: ts.JSDoc[] | undefined = (node.compilerNode as any)
+            .jsDoc;
           const jsdocs: JSDoc[] =
             nodes?.map((n) => (node as any)._getNodeFromCompilerNode(n)) ?? [];
           for (const doc of jsdocs) {

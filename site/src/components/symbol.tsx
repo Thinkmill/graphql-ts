@@ -1,5 +1,6 @@
-import { Tooltip, Stack } from "@chakra-ui/react";
+import { Tooltip } from "@chakra-ui/react";
 import hashString from "@emotion/hash";
+import { Fragment } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
@@ -107,10 +108,17 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
 
     return (
       <div className={styles.rootSymbolContainer}>
+        {isExported ? (
+          <Docs content={rootSymbol.docs} />
+        ) : (
+          <Fragment>
+            <h2 className={styles.moduleHeading}>{rootSymbol.name}</h2>
+            <Docs content={rootSymbol.docs} />
+          </Fragment>
+        )}
         <details open>
           {isExported ? (
             <summary css={{ display: "block" }}>
-              <Docs content={rootSymbol.docs} />
               <div className={styles.innerExportsHeading}>
                 <span css={{ color: colors.keyword }}>export * as </span>
                 <SymbolName name={rootSymbol.name} fullName={fullName} />
@@ -120,8 +128,6 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
             </summary>
           ) : (
             <summary css={{ display: "block" }}>
-              <h2 className={styles.moduleHeading}>{rootSymbol.name}</h2>
-              <Docs content={rootSymbol.docs} />
               <div className={styles.innerExportsHeading}>
                 <span css={{ color: colors.keyword }}>module </span>
                 <a

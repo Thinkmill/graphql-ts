@@ -128,12 +128,12 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
             return (
               <div key={i} style={{ marginLeft: 32 }}>
                 <span className={codeFont}>
-                  [key<span style={{ color: colors.colon }}>:</span>
+                  [key<span style={{ color: colors.colon }}>: </span>
                 </span>
                 <Type type={prop.key} />
                 <span className={codeFont}>]</span>
                 <span className={codeFont} style={{ color: colors.colon }}>
-                  :
+                  :{" "}
                 </span>
                 <Type type={prop.value} />
                 <span className={codeFont}>;</span>
