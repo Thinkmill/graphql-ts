@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import hashString from "@emotion/hash";
 
-import { getInfo } from "../extract/index";
 import { DocsContext } from "../lib/DocsContext";
 
 import { RenderRootSymbol } from "../components/symbol";

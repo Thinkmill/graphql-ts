@@ -66,21 +66,21 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
         <span>
-          <span className={codeFont} style={{ color: colors.keyword }}>
+          <span className={codeFont} css={{ color: colors.keyword }}>
             {isExported ? "export " : ""}function{" "}
           </span>
           <SymbolName name={rootSymbol.name} fullName={fullName} />
           <TypeParams params={rootSymbol.typeParams} />
-          <span className={codeFont} style={{ color: colors.bracket }}>
+          <span className={codeFont} css={{ color: colors.bracket }}>
             (
           </span>
           {rootSymbol.parameters.map((param, i) => {
             return (
               <span key={i}>
-                <span className={codeFont} style={{ color: colors.parameter }}>
+                <span className={codeFont} css={{ color: colors.parameter }}>
                   {param.name}
                 </span>
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   :{" "}
                 </span>
                 <Type type={param.type} />
@@ -90,7 +90,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
               </span>
             );
           })}
-          <span className={codeFont} style={{ color: colors.bracket }}>
+          <span className={codeFont} css={{ color: colors.bracket }}>
             )
           </span>
           <span className={codeFont}>: </span>
@@ -261,16 +261,16 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
         <span>
-          <span className={codeFont} style={{ color: colors.keyword }}>
+          <span className={codeFont} css={{ color: colors.keyword }}>
             {isExported ? "export " : ""}
             {rootSymbol.variableKind}{" "}
           </span>
           <SymbolName name={rootSymbol.name} fullName={fullName} />
-          <span className={codeFont} style={{ color: colors.colon }}>
+          <span className={codeFont} css={{ color: colors.colon }}>
             :{" "}
           </span>
           <Type type={rootSymbol.type} />
-          <span className={codeFont} style={{ color: colors.bracket }}>
+          <span className={codeFont} css={{ color: colors.bracket }}>
             {" = "}
           </span>
           <span className={codeFont}>...</span>
@@ -295,7 +295,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     <div className={styles.rootSymbolContainer}>
       <Docs content={rootSymbol.docs} />
       <span>
-        <span className={codeFont} style={{ color: colors.keyword }}>
+        <span className={codeFont} css={{ color: colors.keyword }}>
           {isExported ? "export " : ""}
           type{" "}
         </span>

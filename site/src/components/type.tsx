@@ -10,7 +10,7 @@ import { Docs } from "./docs";
 export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
     return (
-      <span className={codeFont} style={{ color: "#2c8093" }}>
+      <span className={codeFont} css={{ color: "#2c8093" }}>
         {type.value}
       </span>
     );
@@ -27,7 +27,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
                 <span key={i}>
                   <Type type={param} />
                   {i === type.typeArguments.length - 1 ? null : (
-                    <span className={codeFont} style={{ color: colors.comma }}>
+                    <span className={codeFont} css={{ color: colors.comma }}>
                       ,{" "}
                     </span>
                   )}
@@ -44,12 +44,12 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         {type.readonly ? (
-          <span className={codeFont} style={{ color: colors.keyword }}>
+          <span className={codeFont} css={{ color: colors.keyword }}>
             readonly{" "}
           </span>
         ) : null}
         <Type type={type.inner} />
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           []
         </span>
       </span>
@@ -57,7 +57,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "type-parameter") {
     return (
-      <span className={codeFont} style={{ color: colors.parameter }}>
+      <span className={codeFont} css={{ color: colors.parameter }}>
         {type.name}
       </span>
     );
@@ -70,7 +70,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
             <span key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   {" | "}
                 </span>
               )}
@@ -88,7 +88,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
             <span key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   {" & "}
                 </span>
               )}
@@ -108,15 +108,15 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         {type.members.map((prop, i) => {
           if (prop.kind === "prop") {
             return (
-              <div key={i} style={{ marginLeft: 16 }}>
+              <div key={i} css={{ marginLeft: 16 }}>
                 <Docs content={prop.docs} />
                 {prop.readonly ? (
-                  <span className={codeFont} style={{ color: colors.keyword }}>
+                  <span className={codeFont} css={{ color: colors.keyword }}>
                     readonly{" "}
                   </span>
                 ) : null}
                 <span className={codeFont}>{prop.name}</span>
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   {prop.optional ? "?: " : ": "}
                 </span>
                 <Type type={prop.type} />
@@ -126,13 +126,13 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           }
           if (prop.kind === "index") {
             return (
-              <div key={i} style={{ marginLeft: 32 }}>
+              <div key={i} css={{ marginLeft: 32 }}>
                 <span className={codeFont}>
-                  [key<span style={{ color: colors.colon }}>: </span>
+                  [key<span css={{ color: colors.colon }}>: </span>
                 </span>
                 <Type type={prop.key} />
                 <span className={codeFont}>]</span>
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   :{" "}
                 </span>
                 <Type type={prop.value} />
@@ -142,16 +142,16 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           }
           if (prop.kind === "unknown") {
             return (
-              <div key={i} style={{ marginLeft: 32 }}>
+              <div className={codeFont} key={i} css={{ marginLeft: 32 }}>
                 {prop.content}
               </div>
             );
           }
           return (
-            <div key={i} style={{ marginLeft: 32 }}>
+            <div key={i} css={{ marginLeft: 32 }}>
               <Docs content={prop.docs} />
               <span className={codeFont}>{prop.name}</span>
-              <span className={codeFont} style={{ color: colors.colon }}>
+              <span className={codeFont} css={{ color: colors.colon }}>
                 :{" "}
               </span>
               <Type type={prop.returnType} />
@@ -167,18 +167,18 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         {type.readonly && (
-          <span className={codeFont} style={{ color: colors.keyword }}>
+          <span className={codeFont} css={{ color: colors.keyword }}>
             readonly{" "}
           </span>
         )}
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           [
         </span>
         {type.elements.map((element, i) => {
           return (
             <span key={i}>
               {(element.kind === "rest" || element.kind === "variadic") && (
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   ...
                 </span>
               )}
@@ -187,19 +187,19 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
                 <span className={codeFont}>?</span>
               )}
               {element.kind === "rest" && (
-                <span className={codeFont} style={{ color: colors.bracket }}>
+                <span className={codeFont} css={{ color: colors.bracket }}>
                   []
                 </span>
               )}
               {i !== type.elements.length - 1 && (
-                <span className={codeFont} style={{ color: colors.comma }}>
+                <span className={codeFont} css={{ color: colors.comma }}>
                   ,{" "}
                 </span>
               )}
             </span>
           );
         })}
-        <span style={{ color: colors.bracket }}>]</span>
+        <span css={{ color: colors.bracket }}>]</span>
       </span>
     );
   }
@@ -207,11 +207,11 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         <Type type={type.object} />
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           [
         </span>
         <Type type={type.index} />
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           ]
         </span>
       </span>
@@ -221,17 +221,17 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <span>
         <Type type={type.checkType} />
-        <span className={codeFont} style={{ color: colors.keyword }}>
+        <span className={codeFont} css={{ color: colors.keyword }}>
           {" "}
           extends{" "}
         </span>
         <Type type={type.extendsType} />
-        <span className={codeFont} style={{ color: colors.colon }}>
+        <span className={codeFont} css={{ color: colors.colon }}>
           {" "}
           ?{" "}
         </span>
         <Type type={type.trueType} />
-        <span className={codeFont} style={{ color: colors.colon }}>
+        <span className={codeFont} css={{ color: colors.colon }}>
           {" "}
           :{" "}
         </span>
@@ -241,14 +241,14 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "string-literal") {
     return (
-      <span className={codeFont} style={{ color: colors.string }}>
+      <span className={codeFont} css={{ color: colors.string }}>
         "{type.value}"
       </span>
     );
   }
   if (type.kind === "numeric-literal" || type.kind === "bigint-literal") {
     return (
-      <span className={codeFont} style={{ color: colors.string }}>
+      <span className={codeFont} css={{ color: colors.string }}>
         {type.value}
       </span>
     );
@@ -257,31 +257,31 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     return (
       <Fragment>
         <TypeParams params={type.typeParams} />
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           (
         </span>
         {type.parameters.map((param, i) => {
           return (
             <Fragment key={i}>
-              <span className={codeFont} style={{ color: colors.parameter }}>
+              <span className={codeFont} css={{ color: colors.parameter }}>
                 {param.name}
               </span>
-              <span className={codeFont} style={{ color: colors.colon }}>
+              <span className={codeFont} css={{ color: colors.colon }}>
                 :{" "}
               </span>
               <Type type={param.type} />
               {i !== type.parameters.length - 1 && (
-                <span className={codeFont} style={{ color: colors.comma }}>
+                <span className={codeFont} css={{ color: colors.comma }}>
                   ,{" "}
                 </span>
               )}
             </Fragment>
           );
         })}
-        <span className={codeFont} style={{ color: colors.bracket }}>
+        <span className={codeFont} css={{ color: colors.bracket }}>
           )
         </span>
-        <span className={codeFont} style={{ color: colors.keyword }}>
+        <span className={codeFont} css={{ color: colors.keyword }}>
           {" => "}
         </span>
         <Type type={type.returnType} />
@@ -291,8 +291,8 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "infer") {
     return (
       <span className={codeFont}>
-        <span style={{ color: colors.keyword }}>infer </span>
-        <span style={{ color: colors.parameter }}>{type.name}</span>
+        <span css={{ color: colors.keyword }}>infer </span>
+        <span css={{ color: colors.parameter }}>{type.name}</span>
       </span>
     );
   }
@@ -301,13 +301,13 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       <span>
         <span className={codeFont}>{"{ "}</span>
         <br />
-        <span style={{ paddingLeft: 32 }}>
+        <span css={{ paddingLeft: 32 }}>
           <span className={codeFont}>
-            [<span style={{ color: colors.parameter }}>{type.param.name} </span>
-            <span style={{ color: colors.keyword }}>in</span>{" "}
+            [<span css={{ color: colors.parameter }}>{type.param.name} </span>
+            <span css={{ color: colors.keyword }}>in</span>{" "}
           </span>
           <Type type={type.param.constraint} />]
-          <span className={codeFont} style={{ color: colors.colon }}>
+          <span className={codeFont} css={{ color: colors.colon }}>
             :{" "}
           </span>
           <Type type={type.type} />
@@ -322,7 +322,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "keyof") {
     return (
       <Fragment>
-        <span className={codeFont} style={{ color: colors.keyword }}>
+        <span className={codeFont} css={{ color: colors.keyword }}>
           keyof{" "}
         </span>
         <Type type={type.value} />
@@ -339,7 +339,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     );
   }
   return (
-    <span className={codeFont} style={{ color: "red" }}>
+    <span className={codeFont} css={{ color: "red" }}>
       {type.value}
     </span>
   );
@@ -349,16 +349,16 @@ export function TypeParams({ params }: { params: TypeParam[] }) {
   if (!params.length) return null;
   return (
     <Fragment>
-      <span style={{ color: colors.bracket }}>{"<"}</span>
+      <span css={{ color: colors.bracket }}>{"<"}</span>
       {params.map((param, i) => {
         return (
           <Fragment key={i}>
-            <span className={codeFont} style={{ color: colors.parameter }}>
+            <span className={codeFont} css={{ color: colors.parameter }}>
               {param.name}
             </span>
             {param.constraint && (
               <Fragment>
-                <span className={codeFont} style={{ color: colors.keyword }}>
+                <span className={codeFont} css={{ color: colors.keyword }}>
                   {" "}
                   extends{" "}
                 </span>
@@ -368,21 +368,21 @@ export function TypeParams({ params }: { params: TypeParam[] }) {
             {param.default && (
               <Fragment>
                 {" "}
-                <span className={codeFont} style={{ color: colors.colon }}>
+                <span className={codeFont} css={{ color: colors.colon }}>
                   =
                 </span>{" "}
                 <Type type={param.default} />
               </Fragment>
             )}
             {i === params.length - 1 ? null : (
-              <span className={codeFont} style={{ color: colors.comma }}>
+              <span className={codeFont} css={{ color: colors.comma }}>
                 ,{" "}
               </span>
             )}
           </Fragment>
         );
       })}
-      <span style={{ color: colors.bracket }}>{">"}</span>
+      <span css={{ color: colors.bracket }}>{">"}</span>
     </Fragment>
   );
 }

@@ -83,6 +83,9 @@ async function resolvePreconstructEntrypoints(
 }
 
 export function collectSymbol(symbol: Symbol) {
+  if (symbol.getDeclarations().length === 0) {
+    return;
+  }
   const decl = symbol.getDeclarations()[0];
   if (
     !decl.getSourceFile().getFilePath().includes(path.join(state.pkgDir, "src"))
@@ -117,25 +120,10 @@ export type DocInfo = {
   };
 };
 
-export async function getInfo({
-  tsConfigFilePath,
-  packagePath,
-}: {
-  tsConfigFilePath: string;
-  packagePath: string;
-}) {
+export function getDocsInfo(rootSymbols: Map<Symbol, string>) {
   state = getInitialState();
-  let project = new Project({
-    tsConfigFilePath,
-  });
-  const pkgPath = path.resolve(packagePath);
-  const entrypoints = await resolvePreconstructEntrypoints(pkgPath);
-  for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
-    const sourceFile = project.getSourceFileOrThrow(filepath);
-    const symbol = sourceFile.getSymbolOrThrow();
-    state.rootSymbols.set(symbol, entrypointName);
-    state.symbolsQueue.add(symbol);
-  }
+  state.rootSymbols = rootSymbols;
+  state.symbolsQueue = new Set(rootSymbols.keys());
 
   resolveSymbolQueue();
 
@@ -179,6 +167,27 @@ export async function getInfo({
       })
     ),
   };
+}
+
+export async function getInfo({
+  tsConfigFilePath,
+  packagePath,
+}: {
+  tsConfigFilePath: string;
+  packagePath: string;
+}) {
+  let project = new Project({
+    tsConfigFilePath,
+  });
+  const pkgPath = path.resolve(packagePath);
+  const entrypoints = await resolvePreconstructEntrypoints(pkgPath);
+  const rootSymbols = new Map<Symbol, string>();
+  for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
+    const sourceFile = project.getSourceFileOrThrow(filepath);
+    const symbol = sourceFile.getSymbolOrThrow();
+    rootSymbols.set(symbol, entrypointName);
+  }
+  return getDocsInfo(rootSymbols);
 }
 
 function resolveSymbolQueue() {

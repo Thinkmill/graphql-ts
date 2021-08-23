@@ -217,6 +217,9 @@ export function assert(
 }
 
 export function getSymbolIdentifier(symbol: Symbol) {
+  if (symbol.getFullyQualifiedName() === "unknown") {
+    return "unknown";
+  }
   const decls = symbol.getDeclarations();
   assert(decls.length >= 1, "expected exactly one declaration");
 

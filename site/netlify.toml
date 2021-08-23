@@ -1,5 +1,5 @@
 [build]
-command = "cd .. && npm i -g pnpm@6.11.5 && pnpm i --store-dir=site/node_modules/.pnpm-store && git clone https://github.com/keystonejs/keystone && cd keystone && yarn && cd ../site && pnpm run build"
+command = "cd .. && npm i -g pnpm@6.11.5 yarn && pnpm i --store-dir=site/node_modules/.pnpm-store && git clone https://github.com/keystonejs/keystone && cd keystone && yarn && cd ../site && pnpm run build"
 publish = "out"
 
 [build.environment]

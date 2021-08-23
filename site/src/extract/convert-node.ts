@@ -15,7 +15,15 @@ import { collectSymbol } from ".";
 
 export function convertTypeNode(node: TypeNode): SerializedType {
   if (TypeNode.isTypeReferenceNode(node)) {
-    let symbol = node.getTypeName().getSymbolOrThrow();
+    let symbol = node.getTypeName().getSymbol();
+    if (!symbol) {
+      return {
+        kind: "reference",
+        fullName: "unknown",
+        name: node.getTypeName().getText(),
+        typeArguments: node.getTypeArguments().map((x) => convertTypeNode(x)),
+      };
+    }
     const _type = symbol.getDeclaredType();
     if (_type.isTypeParameter()) {
       return {
@@ -41,11 +49,15 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     }
     symbol = symbol.getAliasedSymbol() || symbol;
     collectSymbol(symbol);
+    let name = symbol.getName();
+    if (symbol.getFullyQualifiedName() === "unknown") {
+      name = node.getTypeName().getText();
+    }
 
     return {
       kind: "reference",
       fullName: getSymbolIdentifier(symbol),
-      name: symbol.getName(),
+      name,
       typeArguments: node.getTypeArguments().map((x) => convertTypeNode(x)),
     };
   }
