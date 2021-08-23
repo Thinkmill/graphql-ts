@@ -1,5 +1,15 @@
 # @graphql-ts/schema
 
+## 0.3.0
+
+### Minor Changes
+
+- [`6e9a2fb`](https://github.com/Thinkmill/graphql-ts/commit/6e9a2fb1b5dd2965bc9e2783dfddd8a2bacf88f6) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Renamed the following exports:
+
+  - `schema` → `graphql`
+  - `bindSchemaAPIToContext` → `bindGraphQLSchemaAPIToContext`
+  - `SchemaAPIWithContext` → `GraphQLSchemaAPIWithContext`
+
 ## 0.2.0
 
 ### Minor Changes
