@@ -1,4 +1,4 @@
-import { TypeNode, Type, Node, ts } from "ts-morph";
+import { TypeNode, Type, Node, ts, EntityName } from "ts-morph";
 import {
   SerializedType,
   getParameters,
@@ -12,54 +12,68 @@ import {
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
 
-export function convertTypeNode(node: TypeNode): SerializedType {
-  if (TypeNode.isTypeReferenceNode(node)) {
-    let symbol = node.getTypeName().getSymbol();
-    if (!symbol) {
-      return {
-        kind: "reference",
-        fullName: "unknown",
-        name: node.getTypeName().getText(),
-        typeArguments: node.getTypeArguments().map((x) => convertTypeNode(x)),
-      };
-    }
-    const _type = symbol.getDeclaredType();
-    if (_type.isTypeParameter()) {
-      return {
-        kind: "type-parameter",
-        name: symbol.getName(),
-      };
-    }
-
-    const type = _type as Type;
-    if (type.isArray()) {
-      return {
-        kind: "array",
-        readonly: false,
-        inner: convertTypeNode(node.getTypeArguments()[0]),
-      };
-    }
-    if (symbol.getFullyQualifiedName() === "ReadonlyArray") {
-      return {
-        kind: "array",
-        readonly: true,
-        inner: convertTypeNode(node.getTypeArguments()[0]),
-      };
-    }
-    symbol = symbol.getAliasedSymbol() || symbol;
-    collectSymbol(symbol);
-    let name = symbol.getName();
-    if (symbol.getFullyQualifiedName() === "unknown") {
-      name = node.getTypeName().getText();
-    }
-
+function handleReference(
+  typeArguments: TypeNode[],
+  typeName: EntityName
+): SerializedType {
+  let symbol = typeName.getSymbol();
+  if (!symbol) {
     return {
       kind: "reference",
-      fullName: getSymbolIdentifier(symbol),
-      name,
-      typeArguments: node.getTypeArguments().map((x) => convertTypeNode(x)),
+      fullName: "unknown",
+      name: typeName.getText(),
+      typeArguments: typeArguments.map((x) => convertTypeNode(x)),
     };
   }
+  const _type = symbol.getDeclaredType();
+  if (_type.isTypeParameter()) {
+    return {
+      kind: "type-parameter",
+      name: symbol.getName(),
+    };
+  }
+
+  const type = _type as Type;
+  if (type.isArray()) {
+    return {
+      kind: "array",
+      readonly: false,
+      inner: convertTypeNode(typeArguments[0]),
+    };
+  }
+  if (symbol.getFullyQualifiedName() === "ReadonlyArray") {
+    return {
+      kind: "array",
+      readonly: true,
+      inner: convertTypeNode(typeArguments[0]),
+    };
+  }
+  symbol = symbol.getAliasedSymbol() || symbol;
+  collectSymbol(symbol);
+  let name = symbol.getName();
+  if (symbol.getFullyQualifiedName() === "unknown") {
+    name = typeName.getText();
+  }
+
+  return {
+    kind: "reference",
+    fullName: getSymbolIdentifier(symbol),
+    name,
+    typeArguments: typeArguments.map((x) => convertTypeNode(x)),
+  };
+}
+
+export function convertTypeNode(node: TypeNode): SerializedType {
+  if (TypeNode.isTypeReferenceNode(node)) {
+    return handleReference(node.getTypeArguments(), node.getTypeName());
+  }
+  if (TypeNode.isExpressionWithTypeArguments(node)) {
+    return handleReference(
+      node.getTypeArguments(),
+      node.getExpression() as EntityName
+    );
+  }
+
   if (TypeNode.isAnyKeyword(node)) {
     return { kind: "intrinsic", value: "any" };
   }
@@ -250,6 +264,18 @@ export function convertTypeNode(node: TypeNode): SerializedType {
       };
     }
     assertNever(node.compilerNode.operator);
+  }
+
+  if (TypeNode.isImportTypeNode(node)) {
+    let qualifier = node.getQualifier();
+    if (qualifier) {
+      return handleReference(node.getTypeArguments(), qualifier);
+    }
+    return _convertType(node.getType(), 0);
+  }
+
+  if (TypeNode.isTypeOfExpression(node)) {
+    return _convertType(node.getType(), 0);
   }
 
   return { kind: "raw", value: node.getText() };

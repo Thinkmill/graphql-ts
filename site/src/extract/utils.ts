@@ -18,11 +18,17 @@ export type TypeParam = {
   default: SerializedType | null;
 };
 
+export type Parameter = {
+  name: string;
+  type: SerializedType;
+  optional: boolean;
+};
+
 export type SerializedSymbol =
   | {
       kind: "function";
       name: string;
-      parameters: { name: string; type: SerializedType }[];
+      parameters: Parameter[];
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
@@ -82,7 +88,7 @@ export type ObjectMember =
       kind: "method";
       name: string;
       optional: boolean;
-      parameters: { name: string; type: SerializedType }[];
+      parameters: Parameter[];
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
@@ -127,7 +133,7 @@ export type SerializedType =
     }
   | {
       kind: "signature";
-      parameters: { name: string; type: SerializedType }[];
+      parameters: Parameter[];
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
@@ -200,12 +206,13 @@ export function getObjectMembers(
   });
 }
 
-export function getParameters(node: ParameteredNode) {
+export function getParameters(node: ParameteredNode): Parameter[] {
   return node.getParameters().map((x) => {
     const typeNode = x.getTypeNode();
     return {
       name: x.getName(),
       type: typeNode ? convertTypeNode(typeNode) : _convertType(x.getType(), 0),
+      optional: x.hasQuestionToken(),
     };
   });
 }

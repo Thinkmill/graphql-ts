@@ -1,6 +1,7 @@
-import { Project, ModuleResolutionKind, ts } from "ts-morph";
+import { Project, ModuleResolutionKind, ts, Symbol } from "ts-morph";
 import decompress from "decompress";
 import fetch from "node-fetch";
+import path from "path";
 import packageJson from "package-json";
 import { getDocsInfo } from ".";
 
@@ -23,28 +24,51 @@ export async function getPackage(pkgName: string, version = "latest") {
   });
   const fileSystem = project.getFileSystem();
   const pkgPath = `/node_modules/${pkgName}`;
+  const packageJsons = ["package.json"];
   for (const file of files) {
     file.path = file.path.replace(/^package\//, "");
     if (file.type === "directory") {
       fileSystem.mkdirSync(`${pkgPath}/${file.path}`);
     } else {
+      if (file.path.endsWith("/package.json")) {
+        packageJsons.push(file.path);
+      }
       fileSystem.writeFileSync(
         `${pkgPath}/${file.path}`,
         file.data.toString("utf8")
       );
     }
   }
-  const resolved = ts.resolveModuleName(
-    pkgName,
-    "/index.js",
-    project.getCompilerOptions(),
-    project.getModuleResolutionHost()
-  ).resolvedModule?.resolvedFileName;
-  if (!resolved) throw new Error("could not resolve entrypoint");
-  project.createSourceFile("/index.ts", `import '${pkgName}'`).saveSync();
+  const entrypoints = new Map<string, string>();
+  for (const x of packageJsons) {
+    const entrypoint = path.join(pkgName, x.replace(/\/?package\.json$/, ""));
+    const resolved = ts.resolveModuleName(
+      entrypoint,
+      "/index.js",
+      project.getCompilerOptions(),
+      project.getModuleResolutionHost()
+    ).resolvedModule?.resolvedFileName;
+    if (!resolved) continue;
+    entrypoints.set(entrypoint, resolved);
+  }
+
+  project
+    .createSourceFile(
+      "/index.ts",
+      [...entrypoints.keys()]
+        .map((x) => `import ${JSON.stringify(x)};`)
+        .join("\n")
+    )
+    .saveSync();
   project.resolveSourceFileDependencies();
-  const sourceFile = project.getSourceFile(resolved);
-  if (!sourceFile) throw new Error("could not find source file");
-  const sourceFileSymbol = sourceFile.getSymbolOrThrow();
-  return getDocsInfo(new Map([[sourceFileSymbol, pkgName]]));
+  const rootSymbols = new Map<Symbol, string>();
+  for (const [entrypoint, resolved] of entrypoints) {
+    const sourceFile = project.getSourceFile(resolved);
+    const sourceFileSymbol = sourceFile?.getSymbol();
+    if (sourceFileSymbol) {
+      rootSymbols.set(sourceFileSymbol, entrypoint);
+    }
+  }
+
+  return getDocsInfo(rootSymbols);
 }

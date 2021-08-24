@@ -12,7 +12,7 @@ import {
   SymbolReference,
   AddNameToScope,
 } from "./symbol-references";
-import { Type, TypeParams } from "./type";
+import { Params, Type, TypeParams } from "./type";
 
 import * as styles from "./symbol.css";
 
@@ -61,7 +61,6 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     };
   }
   if (rootSymbol.kind === "function") {
-    const x = rootSymbol;
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
@@ -71,29 +70,10 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
           </span>
           <SymbolName name={rootSymbol.name} fullName={fullName} />
           <TypeParams params={rootSymbol.typeParams} />
-          <span className={codeFont} css={{ color: colors.bracket }}>
-            (
+          <Params params={rootSymbol.parameters} />
+          <span className={codeFont} css={{ color: colors.colon }}>
+            :{" "}
           </span>
-          {rootSymbol.parameters.map((param, i) => {
-            return (
-              <span key={i}>
-                <span className={codeFont} css={{ color: colors.parameter }}>
-                  {param.name}
-                </span>
-                <span className={codeFont} css={{ color: colors.colon }}>
-                  :{" "}
-                </span>
-                <Type type={param.type} />
-                {x.parameters.length - 1 !== i && (
-                  <span className={codeFont}>, </span>
-                )}
-              </span>
-            );
-          })}
-          <span className={codeFont} css={{ color: colors.bracket }}>
-            )
-          </span>
-          <span className={codeFont}>: </span>
           <Type type={rootSymbol.returnType} />
         </span>
       </div>

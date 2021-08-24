@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { TypeParam, SerializedType } from "../extract/utils";
+import { TypeParam, SerializedType, Parameter } from "../extract/utils";
 import { codeFont } from "../lib/theme.css";
 import { colors } from "../lib/utils";
 
@@ -126,7 +126,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           }
           if (prop.kind === "index") {
             return (
-              <div key={i} css={{ marginLeft: 32 }}>
+              <div key={i} css={{ marginLeft: 16 }}>
                 <span className={codeFont}>
                   [key<span css={{ color: colors.colon }}>: </span>
                 </span>
@@ -142,15 +142,17 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           }
           if (prop.kind === "unknown") {
             return (
-              <div className={codeFont} key={i} css={{ marginLeft: 32 }}>
+              <div className={codeFont} key={i} css={{ marginLeft: 16 }}>
                 {prop.content}
               </div>
             );
           }
           return (
-            <div key={i} css={{ marginLeft: 32 }}>
+            <div key={i} css={{ marginLeft: 16 }}>
               <Docs content={prop.docs} />
               <span className={codeFont}>{prop.name}</span>
+              <TypeParams params={prop.typeParams} />
+              <Params params={prop.parameters} />
               <span className={codeFont} css={{ color: colors.colon }}>
                 :{" "}
               </span>
@@ -382,6 +384,37 @@ export function TypeParams({ params }: { params: TypeParam[] }) {
         );
       })}
       <span css={{ color: colors.bracket }}>{">"}</span>
+    </Fragment>
+  );
+}
+
+export function Params({ params }: { params: Parameter[] }) {
+  return (
+    <Fragment>
+      <span className={codeFont} css={{ color: colors.bracket }}>
+        {"("}
+      </span>
+      {params.map((param, i) => {
+        return (
+          <Fragment key={i}>
+            <span className={codeFont} css={{ color: colors.parameter }}>
+              {param.name}
+            </span>
+            <span className={codeFont} css={{ color: colors.colon }}>
+              {": "}
+            </span>
+            <Type type={param.type} />
+            {i === params.length - 1 ? null : (
+              <span className={codeFont} css={{ color: colors.comma }}>
+                ,{" "}
+              </span>
+            )}
+          </Fragment>
+        );
+      })}
+      <span className={codeFont} css={{ color: colors.bracket }}>
+        {")"}
+      </span>
     </Fragment>
   );
 }

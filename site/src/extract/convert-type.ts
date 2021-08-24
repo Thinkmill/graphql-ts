@@ -5,8 +5,11 @@ import {
   PropertySignature,
   MethodSignature,
   PropertyAssignment,
+  ShorthandPropertyAssignment,
+  MethodDeclaration,
 } from "ts-morph";
 import { collectSymbol } from ".";
+import { convertTypeNode } from "./convert-node";
 import {
   assert,
   getDocs,
@@ -209,9 +212,13 @@ export function _convertType(type: Type, depth: number): SerializedType {
       docs: "",
       parameters: signature.getParameters().map((param) => {
         let decl = param.getValueDeclarationOrThrow() as ParameterDeclaration;
+        const typeNode = decl.getTypeNode();
         return {
           name: param.getName(),
-          type: convertType(decl.getType()),
+          type: typeNode
+            ? convertTypeNode(typeNode)
+            : convertType(decl.getType()),
+          optional: decl.hasQuestionToken(),
         };
       }),
       typeParams: signature.getTypeParameters().map((typeParam) => {
@@ -257,7 +264,11 @@ export function _convertType(type: Type, depth: number): SerializedType {
             type,
           };
         }
-        if (decl instanceof MethodSignature) {
+
+        if (
+          decl instanceof MethodSignature ||
+          decl instanceof MethodDeclaration
+        ) {
           return {
             kind: "method",
             name: prop.getName(),
@@ -268,7 +279,10 @@ export function _convertType(type: Type, depth: number): SerializedType {
             returnType: convertType(decl.getReturnType()),
           };
         }
-        if (decl instanceof PropertyAssignment) {
+        if (
+          decl instanceof PropertyAssignment ||
+          decl instanceof ShorthandPropertyAssignment
+        ) {
           let type = convertType(decl.getType());
           const isOptional = decl.hasQuestionToken();
           if (isOptional && type.kind === "union") {
@@ -291,6 +305,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
             type,
           };
         }
+        debugger;
         return { kind: "unknown", content: decl.getText() };
       });
     const stringIndexType = type.getStringIndexType();
