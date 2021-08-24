@@ -367,10 +367,9 @@ export function TypeParams({ params }: { params: TypeParam[] }) {
             )}
             {param.default && (
               <Fragment>
-                {" "}
                 <span className={codeFont} css={{ color: colors.colon }}>
-                  =
-                </span>{" "}
+                  {" = "}
+                </span>
                 <Type type={param.default} />
               </Fragment>
             )}

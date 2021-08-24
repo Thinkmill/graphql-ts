@@ -1,14 +1,13 @@
 import { TypeNode, Type, Node, ts } from "ts-morph";
 import {
   SerializedType,
-  ObjectMember,
-  getDocs,
   getParameters,
   getTypeParameters,
   TupleElement,
   fakeAssert,
   assertNever,
   getSymbolIdentifier,
+  getObjectMembers,
 } from "./utils";
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
@@ -163,55 +162,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   if (TypeNode.isTypeLiteralNode(node)) {
     return {
       kind: "object",
-      members: node.getMembers().flatMap((member): ObjectMember => {
-        if (Node.isIndexSignatureDeclaration(member)) {
-          member.getKeyTypeNode();
-          return {
-            kind: "index",
-            key: convertTypeNode(member.getKeyTypeNode()),
-            value: convertTypeNode(member.getReturnTypeNodeOrThrow()),
-          };
-        }
-        if (Node.isPropertySignature(member)) {
-          return {
-            kind: "prop",
-            name: member.getName(),
-            docs: getDocs(member),
-            optional: member.hasQuestionToken(),
-            readonly: member.isReadonly(),
-            type: convertTypeNode(member.getTypeNodeOrThrow()),
-          };
-        }
-        if (Node.isMethodSignature(member)) {
-          const returnTypeNode = member.getReturnTypeNode();
-          return {
-            kind: "method",
-            name: member.getName(),
-            optional: member.hasQuestionToken(),
-            parameters: getParameters(member),
-            typeParams: getTypeParameters(member),
-            docs: getDocs(member),
-            returnType: returnTypeNode
-              ? convertTypeNode(returnTypeNode)
-              : _convertType(member.getReturnType(), 0),
-          };
-        }
-        if (Node.isCallSignatureDeclaration(member)) {
-          const returnTypeNode = member.getReturnTypeNode();
-          return {
-            kind: "method",
-            name: "",
-            optional: false,
-            parameters: getParameters(member),
-            typeParams: getTypeParameters(member),
-            docs: getDocs(member),
-            returnType: returnTypeNode
-              ? convertTypeNode(returnTypeNode)
-              : _convertType(member.getReturnType(), 0),
-          };
-        }
-        throw new Error("unhandled object member");
-      }),
+      members: getObjectMembers(node),
     };
   }
 

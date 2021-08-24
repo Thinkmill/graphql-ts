@@ -291,6 +291,50 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
 
+  if (rootSymbol.kind === "interface") {
+    const interfaceSymbol = rootSymbol;
+    return (
+      <div className={styles.rootSymbolContainer}>
+        <Docs content={rootSymbol.docs} />
+        <span>
+          <span className={codeFont} css={{ color: colors.keyword }}>
+            {isExported ? "export " : ""}
+            interface{" "}
+          </span>
+          <AddNameToScope name={rootSymbol.name}>
+            <SymbolName name={rootSymbol.name} fullName={fullName} />
+            <TypeParams params={rootSymbol.typeParams} />
+            {!!rootSymbol.extends.length && (
+              <span>
+                <span className={codeFont} css={{ color: colors.keyword }}>
+                  {" "}
+                  extends{" "}
+                </span>
+                {rootSymbol.extends.map((param, i) => {
+                  return (
+                    <span key={i}>
+                      <Type type={param} />
+                      {i === interfaceSymbol.extends.length - 1 ? null : (
+                        <span
+                          className={codeFont}
+                          css={{ color: colors.comma }}
+                        >
+                          ,
+                        </span>
+                      )}
+                      <span className={codeFont}> </span>
+                    </span>
+                  );
+                })}
+              </span>
+            )}
+            <Type type={{ kind: "object", members: rootSymbol.members }} />
+          </AddNameToScope>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.rootSymbolContainer}>
       <Docs content={rootSymbol.docs} />

@@ -14,9 +14,7 @@ export async function getPackage(pkgName: string, version = "latest") {
     useInMemoryFileSystem: true,
   });
 
-  const pkg = await packageJson(pkgName, {
-    version,
-  });
+  const pkg = await packageJson(pkgName, { version });
   const tarballURL: string = (pkg as any).dist.tarball;
   const tarballBuffer = await fetch(tarballURL).then((res) => res.buffer());
   const files = await decompress(tarballBuffer, {

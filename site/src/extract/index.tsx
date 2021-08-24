@@ -1,7 +1,6 @@
 import {
   FunctionDeclaration,
   Project,
-  SymbolFlags,
   ts,
   TypeAliasDeclaration,
   Symbol,
@@ -10,6 +9,7 @@ import {
   VariableDeclaration,
   JSDoc,
   Node,
+  InterfaceDeclaration,
   ArrowFunction,
 } from "ts-morph";
 import path from "path";
@@ -25,23 +25,24 @@ import {
   getTypeParameters,
   getDocsFromJSDocNodes,
   getSymbolIdentifier,
+  getObjectMembers,
 } from "./utils";
 
 // cache bust 1
 
-function symbolFlagsToString(flags: SymbolFlags) {
-  return Object.keys(ts.SymbolFlags).filter(
-    // @ts-ignore
-    (flagName) => flags & ts.SymbolFlags[flagName]
-  );
-}
+// function symbolFlagsToString(flags: ts.SymbolFlags) {
+//   return Object.keys(ts.SymbolFlags).filter(
+//     // @ts-ignore
+//     (flagName) => flags & ts.SymbolFlags[flagName]
+//   );
+// }
 
-function typeFlagsToString(type: ts.Type) {
-  return Object.keys(ts.TypeFlags).filter(
-    // @ts-ignore
-    (flagName) => type.flags & ts.TypeFlags[flagName]
-  );
-}
+// function typeFlagsToString(type: ts.Type) {
+//   return Object.keys(ts.TypeFlags).filter(
+//     // @ts-ignore
+//     (flagName) => type.flags & ts.TypeFlags[flagName]
+//   );
+// }
 
 function getInitialState() {
   return {
@@ -300,6 +301,15 @@ function resolveSymbolQueue() {
         type: typeNode
           ? convertTypeNode(typeNode)
           : _convertType(decl.getType(), 0),
+      });
+    } else if (decl instanceof InterfaceDeclaration) {
+      state.publicSymbols.set(symbol, {
+        kind: "interface",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        typeParams: getTypeParameters(decl),
+        extends: decl.getExtends().map((x) => convertTypeNode(x)),
+        members: getObjectMembers(decl),
       });
     } else {
       let docs = Node.isJSDocableNode(decl) ? getDocs(decl) : "";

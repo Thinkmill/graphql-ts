@@ -5,6 +5,8 @@ import {
   JSDoc,
   ts,
   Symbol,
+  TypeElementMemberedNode,
+  Node,
 } from "ts-morph";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
@@ -50,6 +52,14 @@ export type SerializedSymbol =
       name: string;
       docs: string;
       content: string;
+    }
+  | {
+      kind: "interface";
+      name: string;
+      docs: string;
+      typeParams: TypeParam[];
+      extends: SerializedType[];
+      members: ObjectMember[];
     };
 
 export type TupleElement = {
@@ -136,6 +146,60 @@ export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
   });
 }
 
+export function getObjectMembers(
+  node: TypeElementMemberedNode
+): ObjectMember[] {
+  return node.getMembers().map((member) => {
+    if (Node.isIndexSignatureDeclaration(member)) {
+      member.getKeyTypeNode();
+      return {
+        kind: "index",
+        key: convertTypeNode(member.getKeyTypeNode()),
+        value: convertTypeNode(member.getReturnTypeNodeOrThrow()),
+      };
+    }
+    if (Node.isPropertySignature(member)) {
+      return {
+        kind: "prop",
+        name: member.getName(),
+        docs: getDocs(member),
+        optional: member.hasQuestionToken(),
+        readonly: member.isReadonly(),
+        type: convertTypeNode(member.getTypeNodeOrThrow()),
+      };
+    }
+    if (Node.isMethodSignature(member)) {
+      const returnTypeNode = member.getReturnTypeNode();
+      return {
+        kind: "method",
+        name: member.getName(),
+        optional: member.hasQuestionToken(),
+        parameters: getParameters(member),
+        typeParams: getTypeParameters(member),
+        docs: getDocs(member),
+        returnType: returnTypeNode
+          ? convertTypeNode(returnTypeNode)
+          : _convertType(member.getReturnType(), 0),
+      };
+    }
+    if (Node.isCallSignatureDeclaration(member)) {
+      const returnTypeNode = member.getReturnTypeNode();
+      return {
+        kind: "method",
+        name: "",
+        optional: false,
+        parameters: getParameters(member),
+        typeParams: getTypeParameters(member),
+        docs: getDocs(member),
+        returnType: returnTypeNode
+          ? convertTypeNode(returnTypeNode)
+          : _convertType(member.getReturnType(), 0),
+      };
+    }
+    throw new Error("unhandled object member");
+  });
+}
+
 export function getParameters(node: ParameteredNode) {
   return node.getParameters().map((x) => {
     const typeNode = x.getTypeNode();
@@ -203,7 +267,7 @@ export function fakeAssert<T>(val: any): asserts val is T {}
 
 export function assertNever(arg: never): never {
   debugger;
-  throw new Error("unexpected call to assertNever");
+  throw new Error(`unexpected call to assertNever: ${arg}`);
 }
 
 export function assert(
