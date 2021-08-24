@@ -3,7 +3,6 @@ import { SerializedSymbol } from "../extract/utils";
 
 export type DocsContextType = {
   symbols: Record<string, SerializedSymbol>;
-  hashesToFullNames: Record<string, string>;
   references: Record<string, string[]>;
   canonicalExportLocations: Record<
     string,

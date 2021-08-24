@@ -128,11 +128,6 @@ export function Root(props: import("../extract").DocInfo) {
     <DocsContext.Provider
       value={{
         symbols: props.accessibleSymbols,
-        hashesToFullNames: Object.fromEntries(
-          Object.keys(props.accessibleSymbols).map((fullName) => {
-            return ["a" + hashString(fullName), fullName];
-          })
-        ),
         references: props.symbolReferences,
         canonicalExportLocations: props.canonicalExportLocations,
         symbolsForInnerBit,
