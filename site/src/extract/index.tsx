@@ -131,6 +131,7 @@ export function getDocsInfo(rootSymbols: Map<Symbol, string>, pkgDir: string) {
   state.symbolsQueue = new Set(rootSymbols.keys());
   state.pkgDir = pkgDir;
 
+  console.log(state.pkgDir);
   resolveSymbolQueue();
 
   return {
@@ -193,7 +194,7 @@ export async function getInfo({
     const symbol = sourceFile.getSymbolOrThrow();
     rootSymbols.set(symbol, entrypointName);
   }
-  return getDocsInfo(rootSymbols, packagePath);
+  return getDocsInfo(rootSymbols, pkgPath);
 }
 
 function resolveSymbolQueue() {

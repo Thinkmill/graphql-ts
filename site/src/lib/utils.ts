@@ -52,16 +52,18 @@ export function groupExports(
           SerializedSymbol,
           { kind: "module" }
         >;
-        const potentialExport = Object.entries(prevSymbol.exports).find(
-          ([, symbolId]) => symbolId === exportedSymbol
-        );
-        if (potentialExport) {
-          prev.exports.push({
-            localName: exportName,
-            sourceName: potentialExport[0],
-            fullName: exportedSymbol,
-          });
-          continue;
+        if (prevSymbol) {
+          const potentialExport = Object.entries(prevSymbol.exports).find(
+            ([, symbolId]) => symbolId === exportedSymbol
+          );
+          if (potentialExport) {
+            prev.exports.push({
+              localName: exportName,
+              sourceName: potentialExport[0],
+              fullName: exportedSymbol,
+            });
+            continue;
+          }
         }
       }
       transformedExports.push({
