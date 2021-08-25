@@ -299,15 +299,15 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                           className={codeFont}
                           css={{ color: colors.comma }}
                         >
-                          ,
+                          {", "}
                         </span>
                       )}
-                      <span className={codeFont}> </span>
                     </span>
                   );
                 })}
               </span>
             )}
+            <span className={codeFont}> </span>
             <Type type={{ kind: "object", members: rootSymbol.members }} />
           </AddNameToScope>
         </span>

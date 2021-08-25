@@ -106,6 +106,11 @@ export type SerializedType =
       name: string;
       typeArguments: SerializedType[];
     }
+  | {
+      kind: "typeof";
+      fullName: string;
+      name: string;
+    }
   | { kind: "array"; readonly: boolean; inner: SerializedType }
   | { kind: "type-parameter"; name: string }
   | { kind: "union"; types: SerializedType[] }

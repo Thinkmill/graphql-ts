@@ -89,7 +89,11 @@ export function collectSymbol(symbol: Symbol) {
   }
   const decl = symbol.getDeclarations()[0];
   if (
-    !decl.getSourceFile().getFilePath().includes(path.join(state.pkgDir, "src"))
+    !decl.getSourceFile().getFilePath().includes(state.pkgDir) ||
+    decl
+      .getSourceFile()
+      .getFilePath()
+      .includes(path.join(state.pkgDir, "node_modules"))
   ) {
     return;
   }
@@ -121,10 +125,11 @@ export type DocInfo = {
   };
 };
 
-export function getDocsInfo(rootSymbols: Map<Symbol, string>) {
+export function getDocsInfo(rootSymbols: Map<Symbol, string>, pkgDir: string) {
   state = getInitialState();
   state.rootSymbols = rootSymbols;
   state.symbolsQueue = new Set(rootSymbols.keys());
+  state.pkgDir = pkgDir;
 
   resolveSymbolQueue();
 
@@ -188,7 +193,7 @@ export async function getInfo({
     const symbol = sourceFile.getSymbolOrThrow();
     rootSymbols.set(symbol, entrypointName);
   }
-  return getDocsInfo(rootSymbols);
+  return getDocsInfo(rootSymbols, packagePath);
 }
 
 function resolveSymbolQueue() {

@@ -340,6 +340,16 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
+  if (type.kind === "typeof") {
+    return (
+      <Fragment>
+        <span className={codeFont} css={{ color: colors.keyword }}>
+          typeof{" "}
+        </span>
+        <SymbolReference fullName={type.fullName} name={type.name} />
+      </Fragment>
+    );
+  }
   return (
     <span className={codeFont} css={{ color: "red" }}>
       {type.value}

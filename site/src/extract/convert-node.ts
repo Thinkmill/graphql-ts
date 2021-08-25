@@ -1,4 +1,11 @@
-import { TypeNode, Type, Node, ts, EntityName } from "ts-morph";
+import {
+  TypeNode,
+  Type,
+  Node,
+  ts,
+  EntityName,
+  CompilerNodeToWrappedType,
+} from "ts-morph";
 import {
   SerializedType,
   getParameters,
@@ -11,6 +18,13 @@ import {
 } from "./utils";
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
+
+function wrapInTsMorphNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
+  someNode: Node,
+  compilerNode: LocalCompilerNodeType
+): CompilerNodeToWrappedType<LocalCompilerNodeType> {
+  return (someNode as any)._getNodeFromCompilerNode(compilerNode);
+}
 
 function handleReference(
   typeArguments: TypeNode[],
@@ -274,8 +288,19 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     return _convertType(node.getType(), 0);
   }
 
-  if (TypeNode.isTypeOfExpression(node)) {
-    return _convertType(node.getType(), 0);
+  if (node.compilerNode.kind === ts.SyntaxKind.TypeQuery) {
+    fakeAssert<TypeNode<ts.TypeQueryNode>>(node);
+    const entityName = wrapInTsMorphNode(node, node.compilerNode.exprName);
+    let symbol = entityName.getSymbol();
+    if (symbol) {
+      symbol = symbol.getAliasedSymbol() || symbol;
+
+      return {
+        kind: "typeof",
+        fullName: getSymbolIdentifier(symbol),
+        name: symbol.getName(),
+      };
+    }
   }
 
   return { kind: "raw", value: node.getText() };
