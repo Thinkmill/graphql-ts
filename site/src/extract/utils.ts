@@ -360,3 +360,106 @@ export function getSymbolIdentifier(symbol: Symbol) {
       .join("-")
   );
 }
+
+export function getSymbolsForInnerBitsAndGoodIdentifiers(
+  accessibleSymbols: Record<string, SerializedSymbol>,
+  packageName: string,
+  canonicalExportLocations: Record<
+    string,
+    { exportName: string; fileSymbolName: string }
+  >,
+  symbolReferences: Record<string, string[]>,
+  _rootSymbols: string[]
+) {
+  const rootSymbols = new Set(_rootSymbols);
+  const unexportedToExportedRef = new Map<string, string>();
+  const unexportedToUnexportedRef = new Map<string, string>();
+
+  for (const [symbolFullName, symbols] of Object.entries(symbolReferences)) {
+    if (
+      !canonicalExportLocations[symbolFullName] &&
+      accessibleSymbols[symbolFullName]
+    ) {
+      const firstExportedSymbol = symbols.find(
+        (x) => canonicalExportLocations[x] !== undefined
+      );
+      if (firstExportedSymbol) {
+        unexportedToExportedRef.set(symbolFullName, firstExportedSymbol);
+      } else {
+        unexportedToUnexportedRef.set(symbolFullName, symbols[0]);
+      }
+    }
+  }
+
+  while (unexportedToUnexportedRef.size) {
+    for (const [
+      unexportedSymbol,
+      unexportedReferencedLocation,
+    ] of unexportedToUnexportedRef) {
+      if (unexportedToExportedRef.has(unexportedReferencedLocation)) {
+        unexportedToUnexportedRef.delete(unexportedSymbol);
+        unexportedToExportedRef.set(
+          unexportedSymbol,
+          unexportedToExportedRef.get(unexportedReferencedLocation)!
+        );
+      }
+      if (unexportedToUnexportedRef.has(unexportedReferencedLocation)) {
+        unexportedToUnexportedRef.set(
+          unexportedSymbol,
+          unexportedToUnexportedRef.get(unexportedReferencedLocation)!
+        );
+      }
+    }
+  }
+  const symbolsForInnerBit = new Map<string, string[]>();
+
+  for (const [unexported, exported] of unexportedToExportedRef) {
+    if (!symbolsForInnerBit.has(exported)) {
+      symbolsForInnerBit.set(exported, []);
+    }
+    symbolsForInnerBit.get(exported)!.push(unexported);
+  }
+
+  const goodIdentifiers: Record<string, string> = {};
+
+  const findIdentifier = (symbol: string): string => {
+    if (rootSymbols.has(symbol)) {
+      const name = accessibleSymbols[symbol].name;
+      if (name === packageName) {
+        return "/";
+      }
+      return name.replace(packageName, "");
+    }
+    const canon = canonicalExportLocations[symbol];
+    assert(!!canon);
+    const { exportName, fileSymbolName } = canon;
+    return `${findIdentifier(fileSymbolName)}.${exportName}`;
+  };
+
+  for (const [symbolId, symbol] of Object.entries(accessibleSymbols)) {
+    if (rootSymbols.has(symbolId)) {
+      goodIdentifiers[symbolId] = symbol.name;
+    } else if (canonicalExportLocations[symbolId]) {
+      goodIdentifiers[symbolId] = findIdentifier(symbolId);
+    } else {
+      const exportedSymbol = unexportedToExportedRef.get(symbolId)!;
+      assert(exportedSymbol !== undefined);
+      const symbolsShownInUnexportedBit =
+        symbolsForInnerBit.get(exportedSymbol)!;
+      const innerThings = symbolsShownInUnexportedBit.filter(
+        (x) => accessibleSymbols[x].name === symbol.name
+      );
+      const identifier = `${findIdentifier(exportedSymbol)}.${symbol.name}`;
+      if (innerThings.length === 1) {
+        goodIdentifiers[symbolId] = identifier;
+      } else {
+        const index = innerThings.indexOf(symbolId);
+        goodIdentifiers[symbolId] = `${identifier}-${index}`;
+      }
+    }
+  }
+  return {
+    goodIdentifiers,
+    symbolsForInnerBit: Object.fromEntries(symbolsForInnerBit),
+  };
+}

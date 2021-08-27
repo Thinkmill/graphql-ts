@@ -31,6 +31,7 @@ import {
   getSymbolIdentifier,
   getObjectMembers,
   ClassMember,
+  getSymbolsForInnerBitsAndGoodIdentifiers,
 } from "./utils";
 
 // cache bust 1
@@ -132,6 +133,8 @@ export type DocInfo = {
       fileSymbolName: string;
     };
   };
+  goodIdentifiers: Record<string, string>;
+  symbolsForInnerBit: Record<string, string[]>;
 };
 
 export function getDocsInfo(
@@ -146,7 +149,7 @@ export function getDocsInfo(
 
   resolveSymbolQueue();
 
-  return {
+  const baseInfo = {
     packageName,
     rootSymbols: [...state.rootSymbols.keys()].map((symbol) =>
       getSymbolIdentifier(symbol)
@@ -185,6 +188,17 @@ export function getDocsInfo(
           },
         ];
       })
+    ),
+  };
+
+  return {
+    ...baseInfo,
+    ...getSymbolsForInnerBitsAndGoodIdentifiers(
+      baseInfo.accessibleSymbols,
+      baseInfo.packageName,
+      baseInfo.canonicalExportLocations,
+      baseInfo.symbolReferences,
+      baseInfo.rootSymbols
     ),
   };
 }
