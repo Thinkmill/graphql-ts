@@ -2,14 +2,13 @@ import { useState, ReactNode } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
 import { SymbolReference } from "./symbol-references";
-import { colors, groupExports } from "../lib/utils";
+import { groupExports } from "../lib/utils";
 
 import ChevronDown from "./icons/chevron-down";
 import ChevronRight from "./icons/chevron-right";
 import Minus from "./icons/minus";
 
 import * as styles from "./navigation.css";
-import { codeFont } from "../lib/theme.css";
 import { nonRootSymbolReference } from "./symbol-references.css";
 
 function Expandable({

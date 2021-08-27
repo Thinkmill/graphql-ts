@@ -241,6 +241,10 @@ export const [themeClass, tokens] = createTheme({
   color: colors,
 });
 
+export const rootStyles = style({
+  fontFamily: tokens.font.body,
+});
+
 /** Our codeFont stack as a style for easy use */
 
 export const codeFont = style({

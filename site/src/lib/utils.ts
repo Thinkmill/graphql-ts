@@ -82,16 +82,6 @@ export function groupExports(
   return transformedExports;
 }
 
-export const colors = {
-  parameter: "#111111",
-  symbol: "#4876d6",
-  keyword: "#994cc3",
-  bracket: "#403f53",
-  colon: "#0c969b",
-  comma: "#5f7e97",
-  string: "#c96765",
-};
-
 export function splitDocs(docs: string): {
   first: string;
   rest: string | undefined;

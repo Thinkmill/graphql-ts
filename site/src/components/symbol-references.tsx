@@ -1,11 +1,11 @@
 import { createContext, useContext, ReactNode, useMemo } from "react";
-import { Tooltip } from "@chakra-ui/react";
 import { SymbolId, useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
-import { colors, splitDocs } from "../lib/utils";
+import { splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
 import { Syntax } from "./syntax";
 import * as styles from "./symbol-references.css";
+import { Tooltip } from "./tooltip";
 
 const NamesInScopeContext = createContext<Map<string, SymbolId>>(new Map());
 
@@ -80,14 +80,7 @@ export function SymbolReference({
     );
   }
   if (fullName === undefined || !symbols[fullName]) {
-    return (
-      <Tooltip
-        hasArrow
-        label="This symbol is defined outside of this package so it isn't included in this documentation"
-      >
-        <span className={styles.unknownExternalReference}>{name}</span>
-      </Tooltip>
-    );
+    return <span className={styles.unknownExternalReference}>{name}</span>;
   }
 
   const symbol = symbols[fullName];
@@ -95,32 +88,28 @@ export function SymbolReference({
 
   const isRootSymbol = rootSymbols.has(fullName);
 
-  let inner = (
-    <a
-      className={
-        isRootSymbol
-          ? styles.rootSymbolReference
-          : styles.nonRootSymbolReference
-      }
-      href={`#${goodIdentifiers[fullName]}`}
-    >
-      {isRootSymbol ? JSON.stringify(name) : name}
-    </a>
-  );
+  const props = {
+    className: isRootSymbol
+      ? styles.rootSymbolReference
+      : styles.nonRootSymbolReference,
 
-  if (firstDocsBit) {
-    inner = (
-      <Tooltip
-        label={
-          <span className={styles.tooltipMarkdownContent}>
-            <Markdown content={firstDocsBit} />
-          </span>
-        }
-      >
-        {inner}
-      </Tooltip>
-    );
-  }
+    href: `#${goodIdentifiers[fullName]}`,
+    children: isRootSymbol ? JSON.stringify(name) : name,
+  };
+
+  let inner = firstDocsBit ? (
+    <Tooltip
+      tooltip={
+        <span className={styles.tooltipMarkdownContent}>
+          <Markdown content={firstDocsBit} />
+        </span>
+      }
+    >
+      {({ triggerProps }) => <a {...triggerProps} {...props} />}
+    </Tooltip>
+  ) : (
+    <a {...props} />
+  );
 
   if (
     namesInScope.has(name) &&

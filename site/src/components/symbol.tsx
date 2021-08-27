@@ -1,4 +1,3 @@
-import { Tooltip } from "@chakra-ui/react";
 import { Fragment } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
@@ -153,11 +152,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                     )}
                     {innerBits && (
                       <details className={styles.referencesContainer}>
-                        <summary>
-                          <Tooltip label="The symbols below were referenced in the symbol above (and potentially elsewhere) but are not exported publicly">
-                            Unexported symbols referenced here
-                          </Tooltip>
-                        </summary>
+                        <summary>Unexported symbols referenced here</summary>
                         {innerBits.map((thing) => {
                           return (
                             <div key={thing}>

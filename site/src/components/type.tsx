@@ -2,7 +2,6 @@ import React, { Fragment } from "react";
 
 import { TypeParam, SerializedType, Parameter } from "../extract/utils";
 import { codeFont } from "../lib/theme.css";
-import { colors } from "../lib/utils";
 
 import { SymbolReference } from "./symbol-references";
 import { Docs } from "./docs";
