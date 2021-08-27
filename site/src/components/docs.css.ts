@@ -8,6 +8,18 @@ export const docs = style({
   marginBottom: 16,
 });
 
+export const details = composeStyles(
+  docs,
+  style({
+    selectors: {
+      "&[open]": {
+        position: "relative",
+        paddingBottom: 32,
+      },
+    },
+  })
+);
+
 const expandLink = style({
   display: "flex",
   cursor: "pointer",
@@ -22,6 +34,11 @@ export const expandLinkOpen = composeStyles(
   expandLink,
   style({
     color: tokens.color.emerald500,
+    selectors: {
+      "details[open] > summary > &": {
+        display: "none",
+      },
+    },
   })
 );
 
@@ -29,6 +46,13 @@ export const expandLinkClose = composeStyles(
   expandLink,
   style({
     color: tokens.color.emerald700,
+    position: "absolute",
+    bottom: -12,
+    selectors: {
+      ":not(details[open]) > summary > &": {
+        display: "none",
+      },
+    },
   })
 );
 
