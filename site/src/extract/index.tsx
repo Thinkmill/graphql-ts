@@ -11,6 +11,10 @@ import {
   Node,
   InterfaceDeclaration,
   ArrowFunction,
+  ClassDeclaration,
+  MethodDeclaration,
+  ConstructorDeclaration,
+  PropertyDeclaration,
 } from "ts-morph";
 import path from "path";
 import fs from "fs/promises";
@@ -26,6 +30,7 @@ import {
   getDocsFromJSDocNodes,
   getSymbolIdentifier,
   getObjectMembers,
+  ClassMember,
 } from "./utils";
 
 // cache bust 1
@@ -60,7 +65,7 @@ let state = getInitialState();
 
 async function resolvePreconstructEntrypoints(
   pkgPath: string
-): Promise<Record<string, string>> {
+): Promise<{ entrypoints: Record<string, string>; packageName: string }> {
   const pkgJson = JSON.parse(
     await fs.readFile(pkgPath + "/package.json", "utf8")
   );
@@ -72,15 +77,18 @@ async function resolvePreconstructEntrypoints(
     cwd: path.join(pkgPath, "src"),
     onlyFiles: true,
   });
-  return Object.fromEntries(
-    files.map((entrypoint) => {
-      const filepath = path.join(pkgPath, "src", entrypoint);
-      const entrypointPart = entrypoint.replace(/\/?(index)?\.[jt]sx?/, "");
-      const entrypointName =
-        pkgJson.name + (entrypointPart === "" ? "" : "/" + entrypointPart);
-      return [filepath, entrypointName];
-    })
-  );
+  return {
+    packageName: pkgJson.name,
+    entrypoints: Object.fromEntries(
+      files.map((entrypoint) => {
+        const filepath = path.join(pkgPath, "src", entrypoint);
+        const entrypointPart = entrypoint.replace(/\/?(index)?\.[jt]sx?/, "");
+        const entrypointName =
+          pkgJson.name + (entrypointPart === "" ? "" : "/" + entrypointPart);
+        return [filepath, entrypointName];
+      })
+    ),
+  };
 }
 
 export function collectSymbol(symbol: Symbol) {
@@ -110,6 +118,7 @@ export function collectSymbol(symbol: Symbol) {
 }
 
 export type DocInfo = {
+  packageName: string;
   rootSymbols: string[];
   accessibleSymbols: {
     [k: string]: SerializedSymbol;
@@ -125,16 +134,20 @@ export type DocInfo = {
   };
 };
 
-export function getDocsInfo(rootSymbols: Map<Symbol, string>, pkgDir: string) {
+export function getDocsInfo(
+  rootSymbols: Map<Symbol, string>,
+  pkgDir: string,
+  packageName: string
+): DocInfo {
   state = getInitialState();
   state.rootSymbols = rootSymbols;
   state.symbolsQueue = new Set(rootSymbols.keys());
   state.pkgDir = pkgDir;
 
-  console.log(state.pkgDir);
   resolveSymbolQueue();
 
   return {
+    packageName,
     rootSymbols: [...state.rootSymbols.keys()].map((symbol) =>
       getSymbolIdentifier(symbol)
     ),
@@ -187,14 +200,16 @@ export async function getInfo({
     tsConfigFilePath,
   });
   const pkgPath = path.resolve(packagePath);
-  const entrypoints = await resolvePreconstructEntrypoints(pkgPath);
+  const { entrypoints, packageName } = await resolvePreconstructEntrypoints(
+    pkgPath
+  );
   const rootSymbols = new Map<Symbol, string>();
   for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
     const sourceFile = project.getSourceFileOrThrow(filepath);
     const symbol = sourceFile.getSymbolOrThrow();
     rootSymbols.set(symbol, entrypointName);
   }
-  return getDocsInfo(rootSymbols, pkgPath);
+  return getDocsInfo(rootSymbols, pkgPath, packageName);
 }
 
 function resolveSymbolQueue() {
@@ -244,6 +259,9 @@ function resolveSymbolQueue() {
         exportedDeclarations,
       ] of decl.getExportedDeclarations()) {
         const decl = exportedDeclarations[0];
+        if (!decl) {
+          continue;
+        }
         const innerSymbol = decl.getSymbolOrThrow();
         state.exportedSymbols.add(innerSymbol);
         collectSymbol(innerSymbol);
@@ -252,10 +270,10 @@ function resolveSymbolQueue() {
       const jsDocs: JSDoc[] = [];
       decl.forEachChild((node) => {
         if (!!(node.compilerNode as any).jsDoc) {
-          const nodes: ts.JSDoc[] | undefined = (node.compilerNode as any)
-            .jsDoc;
-          const jsdocs: JSDoc[] =
-            nodes?.map((n) => (node as any)._getNodeFromCompilerNode(n)) ?? [];
+          const nodes: ts.JSDoc[] = (node.compilerNode as any).jsDoc ?? [];
+          const jsdocs: JSDoc[] = nodes.map((n) =>
+            (node as any)._getNodeFromCompilerNode(n)
+          );
           for (const doc of jsdocs) {
             if (doc.getTags().some((tag) => tag.getTagName() === "module")) {
               jsDocs.push(doc);
@@ -316,6 +334,71 @@ function resolveSymbolQueue() {
         typeParams: getTypeParameters(decl),
         extends: decl.getExtends().map((x) => convertTypeNode(x)),
         members: getObjectMembers(decl),
+      });
+    } else if (decl instanceof ClassDeclaration) {
+      const extendsNode = decl.getExtends();
+      state.publicSymbols.set(symbol, {
+        kind: "class",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        typeParams: getTypeParameters(decl),
+        extends: extendsNode ? convertTypeNode(extendsNode) : null,
+        implements: decl.getImplements().map((x) => convertTypeNode(x)),
+        hasPrivateMembers: decl
+          .getMembers()
+          .some((member) => member.hasModifier("private")),
+        constructors: decl.getConstructors().map((x) => {
+          return {
+            docs: getDocs(x),
+            parameters: getParameters(x),
+            typeParams: getTypeParameters(x),
+          };
+        }),
+        members: decl.getMembers().flatMap((member): ClassMember[] => {
+          if (
+            member.hasModifier("private") ||
+            member instanceof ConstructorDeclaration
+          ) {
+            return [];
+          }
+          // TODO: show protected
+          // (and have a tooltip explaining what protected does)
+          if (member instanceof MethodDeclaration) {
+            const returnTypeNode = member.getReturnTypeNode();
+            return [
+              {
+                kind: "method",
+                docs: getDocs(member),
+                name: member.getName(),
+                optional: member.hasQuestionToken(),
+                parameters: getParameters(member),
+                returnType: returnTypeNode
+                  ? convertTypeNode(returnTypeNode)
+                  : _convertType(member.getReturnType(), 0),
+                static: member.isStatic(),
+                typeParams: getTypeParameters(member),
+              },
+            ];
+          }
+          if (member instanceof PropertyDeclaration) {
+            const typeNode = member.getTypeNode();
+
+            return [
+              {
+                kind: "prop",
+                docs: getDocs(member),
+                name: member.getName(),
+                optional: member.hasQuestionToken(),
+                type: typeNode
+                  ? convertTypeNode(typeNode)
+                  : _convertType(member.getType(), 0),
+                static: member.isStatic(),
+                readonly: member.isReadonly(),
+              },
+            ];
+          }
+          return [{ kind: "unknown", content: member.getText() }];
+        }),
       });
     } else {
       let docs = Node.isJSDocableNode(decl) ? getDocs(decl) : "";

@@ -2,10 +2,8 @@ import { ReactNode } from "react";
 
 import * as styles from "./layout.css";
 
-export function Header() {
-  return (
-    <h1 className={styles.header}>@graphql-ts/schema API Documentation</h1>
-  );
+export function Header({ packageName }: { packageName: string }) {
+  return <h1 className={styles.header}>{packageName} API Documentation</h1>;
 }
 
 export function PageContainer({ children }: { children: ReactNode }) {

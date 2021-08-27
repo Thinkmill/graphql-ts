@@ -23,6 +23,9 @@ function collectImportableSymbolsFromSourceFile(
     //   );
     // }
     const decl = decls[0];
+    if (!decl) {
+      continue;
+    }
     const symbol = decl.getSymbolOrThrow();
 
     if (!state.has(symbol)) {

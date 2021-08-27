@@ -1,4 +1,3 @@
-import hashString from "@emotion/hash";
 import { useState, ReactNode } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
@@ -79,7 +78,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
                   <a
                     className={codeFont}
                     css={{ color: colors.symbol }}
-                    href={"#a" + hashString(rootSymbolName) + `re-exports-${i}`}
+                    href={`#${docContext.goodIdentifiers[rootSymbolName]}-re-exports-${i}`}
                   >
                     {group.exports.length} Re-exports
                   </a>

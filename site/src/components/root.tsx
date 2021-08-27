@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import hashString from "@emotion/hash";
 
 import { DocsContext } from "../lib/DocsContext";
 
@@ -31,7 +30,10 @@ export function Root(props: import("../extract").DocInfo) {
   for (const [symbolFullName, symbols] of Object.entries(
     props.symbolReferences
   )) {
-    if (!props.canonicalExportLocations[symbolFullName]) {
+    if (
+      !props.canonicalExportLocations[symbolFullName] &&
+      props.accessibleSymbols[symbolFullName]
+    ) {
       const firstExportedSymbol = symbols.find(
         (x) => props.canonicalExportLocations[x] !== undefined
       );
@@ -77,7 +79,11 @@ export function Root(props: import("../extract").DocInfo) {
 
   const findIdentifier = (symbol: string): string => {
     if (rootSymbols.has(symbol)) {
-      return props.accessibleSymbols[symbol].name;
+      const name = props.accessibleSymbols[symbol].name;
+      if (name === props.packageName) {
+        return "/";
+      }
+      return name.replace(props.packageName, "");
     }
     const canon = props.canonicalExportLocations[symbol];
     assert(!!canon);
@@ -136,7 +142,7 @@ export function Root(props: import("../extract").DocInfo) {
       }}
     >
       <div className={themeClass}>
-        <Header />
+        <Header packageName={props.packageName} />
         <PageContainer>
           <NavigationContainer>
             {props.rootSymbols.map((rootSymbol) => (

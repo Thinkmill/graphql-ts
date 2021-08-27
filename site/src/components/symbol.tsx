@@ -1,5 +1,4 @@
 import { Tooltip } from "@chakra-ui/react";
-import hashString from "@emotion/hash";
 import { Fragment } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
@@ -15,6 +14,7 @@ import {
 import { Params, Type, TypeParams } from "./type";
 
 import * as styles from "./symbol.css";
+import { ClassMember, Parameter, TypeParam } from "../extract/utils";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
   const { goodIdentifiers } = useDocsContext();
@@ -36,10 +36,10 @@ function ExportedFrom({ fullName }: { fullName: string }) {
   const { exportName, fileSymbolName } =
     docContext.canonicalExportLocations[fullName];
   return (
-    <span>
+    <Fragment>
       <ExportedFrom fullName={fileSymbolName} />.
       <SymbolReference fullName={fullName} name={exportName} />
-    </span>
+    </Fragment>
   );
 }
 
@@ -64,7 +64,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
-        <span>
+        <Fragment>
           <span className={codeFont} css={{ color: colors.keyword }}>
             {isExported ? "export " : ""}function{" "}
           </span>
@@ -75,7 +75,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
             :{" "}
           </span>
           <Type type={rootSymbol.returnType} />
-        </span>
+        </Fragment>
       </div>
     );
   }
@@ -180,7 +180,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
               return (
                 <div
                   key={i}
-                  id={"a" + hashString(fullName) + `re-exports-${i}`}
+                  id={goodIdentifiers[fullName] + `-re-exports-${i}`}
                   className={codeFont}
                   css={{
                     ":target": { backgroundColor: "#ffff54ba" },
@@ -211,7 +211,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                           <span css={{ color: colors.keyword }}>as</span>{" "}
                           <SymbolReference
                             fullName={x.fullName}
-                            name={x.sourceName}
+                            name={x.localName}
                           />
                           ,
                         </div>
@@ -240,7 +240,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
-        <span>
+        <Fragment>
           <span className={codeFont} css={{ color: colors.keyword }}>
             {isExported ? "export " : ""}
             {rootSymbol.variableKind}{" "}
@@ -254,7 +254,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
             {" = "}
           </span>
           <span className={codeFont}>...</span>
-        </span>
+        </Fragment>
       </div>
     );
   }
@@ -276,23 +276,23 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
-        <span>
+        <Fragment>
           <span className={codeFont} css={{ color: colors.keyword }}>
             {isExported ? "export " : ""}
             interface{" "}
           </span>
-          <AddNameToScope name={rootSymbol.name}>
+          <AddNameToScope name={rootSymbol.name} fullName={fullName}>
             <SymbolName name={rootSymbol.name} fullName={fullName} />
             <TypeParams params={rootSymbol.typeParams} />
             {!!rootSymbol.extends.length && (
-              <span>
+              <Fragment>
                 <span className={codeFont} css={{ color: colors.keyword }}>
                   {" "}
                   extends{" "}
                 </span>
                 {rootSymbol.extends.map((param, i) => {
                   return (
-                    <span key={i}>
+                    <Fragment key={i}>
                       <Type type={param} />
                       {i === interfaceSymbol.extends.length - 1 ? null : (
                         <span
@@ -302,15 +302,71 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                           {", "}
                         </span>
                       )}
-                    </span>
+                    </Fragment>
                   );
                 })}
-              </span>
+              </Fragment>
             )}
             <span className={codeFont}> </span>
             <Type type={{ kind: "object", members: rootSymbol.members }} />
           </AddNameToScope>
-        </span>
+        </Fragment>
+      </div>
+    );
+  }
+
+  if (rootSymbol.kind === "class") {
+    const classSymbol = rootSymbol;
+    return (
+      <div className={styles.rootSymbolContainer}>
+        <Docs content={rootSymbol.docs} />
+        <Fragment>
+          <span className={codeFont} css={{ color: colors.keyword }}>
+            {isExported ? "export " : ""}
+            class{" "}
+          </span>
+          <AddNameToScope name={rootSymbol.name} fullName={fullName}>
+            <SymbolName name={rootSymbol.name} fullName={fullName} />
+            <TypeParams params={rootSymbol.typeParams} />
+            {!!classSymbol.extends && (
+              <Fragment>
+                <span className={codeFont} css={{ color: colors.keyword }}>
+                  {" "}
+                  extends{" "}
+                </span>
+                <Type type={classSymbol.extends} />
+              </Fragment>
+            )}
+            {!!rootSymbol.implements.length && (
+              <Fragment>
+                <span className={codeFont} css={{ color: colors.keyword }}>
+                  {" "}
+                  implements{" "}
+                </span>
+                {rootSymbol.implements.map((param, i) => {
+                  return (
+                    <Fragment key={i}>
+                      <Type type={param} />
+                      {i === classSymbol.implements.length - 1 ? null : (
+                        <span
+                          className={codeFont}
+                          css={{ color: colors.comma }}
+                        >
+                          {", "}
+                        </span>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </Fragment>
+            )}
+            <span className={codeFont}> </span>
+            <ClassMembers
+              constructors={rootSymbol.constructors}
+              members={rootSymbol.members}
+            />
+          </AddNameToScope>
+        </Fragment>
       </div>
     );
   }
@@ -318,18 +374,108 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
   return (
     <div className={styles.rootSymbolContainer}>
       <Docs content={rootSymbol.docs} />
-      <span>
+      <Fragment>
         <span className={codeFont} css={{ color: colors.keyword }}>
           {isExported ? "export " : ""}
           type{" "}
         </span>
-        <AddNameToScope name={rootSymbol.name}>
+        <AddNameToScope name={rootSymbol.name} fullName={fullName}>
           <SymbolName name={rootSymbol.name} fullName={fullName} />
           <TypeParams params={rootSymbol.typeParams} />
           <span className={codeFont}> = </span>
           <Type type={rootSymbol.type} />
         </AddNameToScope>
-      </span>
+      </Fragment>
     </div>
+  );
+}
+
+function ClassMembers({
+  members,
+  constructors,
+}: {
+  constructors: {
+    parameters: Parameter[];
+    docs: string;
+    typeParams: TypeParam[];
+  }[];
+  members: ClassMember[];
+}) {
+  if (members.length === 0 && constructors.length === 0) {
+    return <span className={codeFont}>{"{}"}</span>;
+  }
+  return (
+    <Fragment>
+      <span className={codeFont}>{"{ "}</span>
+      {constructors.map((constructor, i) => {
+        return (
+          <div key={i} css={{ marginLeft: 16 }}>
+            <Docs content={constructor.docs} />
+            <span className={codeFont} css={{ color: colors.keyword }}>
+              constructor
+            </span>
+            <TypeParams params={constructor.typeParams} />
+            <Params params={constructor.parameters} />
+          </div>
+        );
+      })}
+      {members.map((prop, i) => {
+        if (prop.kind === "prop") {
+          return (
+            <div key={i} css={{ marginLeft: 16 }}>
+              <Docs content={prop.docs} />
+              {prop.readonly ? (
+                <span className={codeFont} css={{ color: colors.keyword }}>
+                  readonly{" "}
+                </span>
+              ) : null}
+              <span className={codeFont}>{prop.name}</span>
+              <span className={codeFont} css={{ color: colors.colon }}>
+                {prop.optional ? "?: " : ": "}
+              </span>
+              <Type type={prop.type} />
+              <span className={codeFont}>;</span>
+            </div>
+          );
+        }
+        if (prop.kind === "index") {
+          return (
+            <div key={i} css={{ marginLeft: 16 }}>
+              <span className={codeFont}>
+                [key<span css={{ color: colors.colon }}>: </span>
+              </span>
+              <Type type={prop.key} />
+              <span className={codeFont}>]</span>
+              <span className={codeFont} css={{ color: colors.colon }}>
+                :{" "}
+              </span>
+              <Type type={prop.value} />
+              <span className={codeFont}>;</span>
+            </div>
+          );
+        }
+        if (prop.kind === "unknown") {
+          return (
+            <div className={codeFont} key={i} css={{ marginLeft: 16 }}>
+              {prop.content}
+            </div>
+          );
+        }
+        return (
+          <div key={i} css={{ marginLeft: 16 }}>
+            <Docs content={prop.docs} />
+            <span className={codeFont}>{prop.name}</span>
+            <TypeParams params={prop.typeParams} />
+            <Params params={prop.parameters} />
+            <span className={codeFont} css={{ color: colors.colon }}>
+              :{" "}
+            </span>
+            <Type type={prop.returnType} />
+            <span className={codeFont}>;</span>
+          </div>
+        );
+      })}
+      <span className={codeFont}>{" }"}</span>
+    </Fragment>
   );
 }

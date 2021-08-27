@@ -17,32 +17,32 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "reference") {
     return (
-      <span>
+      <Fragment>
         <SymbolReference name={type.name} fullName={type.fullName} />
         {!!type.typeArguments.length && (
-          <span>
+          <Fragment>
             <span className={codeFont}>{"<"}</span>
             {type.typeArguments.map((param, i) => {
               return (
-                <span key={i}>
+                <Fragment key={i}>
                   <Type type={param} />
                   {i === type.typeArguments.length - 1 ? null : (
                     <span className={codeFont} css={{ color: colors.comma }}>
                       ,{" "}
                     </span>
                   )}
-                </span>
+                </Fragment>
               );
             })}
             <span className={codeFont}>{">"}</span>
-          </span>
+          </Fragment>
         )}
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "array") {
     return (
-      <span>
+      <Fragment>
         {type.readonly ? (
           <span className={codeFont} css={{ color: colors.keyword }}>
             readonly{" "}
@@ -52,7 +52,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         <span className={codeFont} css={{ color: colors.bracket }}>
           []
         </span>
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "type-parameter") {
@@ -64,38 +64,38 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "union") {
     return (
-      <span>
+      <Fragment>
         {type.types.map((innerType, i) => {
           return (
-            <span key={i}>
+            <Fragment key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
                 <span className={codeFont} css={{ color: colors.colon }}>
                   {" | "}
                 </span>
               )}
-            </span>
+            </Fragment>
           );
         })}
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "intersection") {
     return (
-      <span>
+      <Fragment>
         {type.types.map((innerType, i) => {
           return (
-            <span key={i}>
+            <Fragment key={i}>
               <Type type={innerType} />
               {i !== type.types.length - 1 && (
                 <span className={codeFont} css={{ color: colors.colon }}>
                   {" & "}
                 </span>
               )}
-            </span>
+            </Fragment>
           );
         })}
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "object") {
@@ -103,7 +103,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       return <span className={codeFont}>{"{}"}</span>;
     }
     return (
-      <span>
+      <Fragment>
         <span className={codeFont}>{"{ "}</span>
         {type.members.map((prop, i) => {
           if (prop.kind === "prop") {
@@ -162,12 +162,12 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           );
         })}
         <span className={codeFont}>{" }"}</span>
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "tuple") {
     return (
-      <span>
+      <Fragment>
         {type.readonly && (
           <span className={codeFont} css={{ color: colors.keyword }}>
             readonly{" "}
@@ -178,7 +178,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         </span>
         {type.elements.map((element, i) => {
           return (
-            <span key={i}>
+            <Fragment key={i}>
               {(element.kind === "rest" || element.kind === "variadic") && (
                 <span className={codeFont} css={{ color: colors.colon }}>
                   ...
@@ -198,16 +198,16 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
                   ,{" "}
                 </span>
               )}
-            </span>
+            </Fragment>
           );
         })}
         <span css={{ color: colors.bracket }}>]</span>
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "indexed-access") {
     return (
-      <span>
+      <Fragment>
         <Type type={type.object} />
         <span className={codeFont} css={{ color: colors.bracket }}>
           [
@@ -216,12 +216,12 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         <span className={codeFont} css={{ color: colors.bracket }}>
           ]
         </span>
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "conditional") {
     return (
-      <span>
+      <Fragment>
         <Type type={type.checkType} />
         <span className={codeFont} css={{ color: colors.keyword }}>
           {" "}
@@ -238,7 +238,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           :{" "}
         </span>
         <Type type={type.falseType} />
-      </span>
+      </Fragment>
     );
   }
   if (type.kind === "string-literal") {
@@ -300,10 +300,9 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   }
   if (type.kind === "mapped") {
     return (
-      <span>
+      <Fragment>
         <span className={codeFont}>{"{ "}</span>
-        <br />
-        <span css={{ paddingLeft: 32 }}>
+        <div css={{ paddingLeft: 32 }}>
           <span className={codeFont}>
             [<span css={{ color: colors.parameter }}>{type.param.name} </span>
             <span css={{ color: colors.keyword }}>in</span>{" "}
@@ -314,10 +313,9 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           </span>
           <Type type={type.type} />
           <span className={codeFont}>;</span>
-          <br />
-        </span>
+        </div>
         <span className={codeFont}>{" }"}</span>
-      </span>
+      </Fragment>
     );
   }
 
@@ -347,6 +345,22 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           typeof{" "}
         </span>
         <SymbolReference fullName={type.fullName} name={type.name} />
+      </Fragment>
+    );
+  }
+  if (type.kind === "type-predicate") {
+    return (
+      <Fragment>
+        {type.asserts && (
+          <span className={codeFont} css={{ color: colors.keyword }}>
+            asserts{" "}
+          </span>
+        )}
+        <span className={codeFont}>{type.param}</span>
+        <span className={codeFont} css={{ color: colors.keyword }}>
+          {" is "}
+        </span>
+        <Type type={type.type} />
       </Fragment>
     );
   }
@@ -411,7 +425,7 @@ export function Params({ params }: { params: Parameter[] }) {
               {param.name}
             </span>
             <span className={codeFont} css={{ color: colors.colon }}>
-              {": "}
+              {param.optional ? "?: " : ": "}
             </span>
             <Type type={param.type} />
             {i === params.length - 1 ? null : (

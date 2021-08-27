@@ -70,5 +70,5 @@ export async function getPackage(pkgName: string, version = "latest") {
     }
   }
 
-  return getDocsInfo(rootSymbols, `/node_modules/${pkgName}`);
+  return getDocsInfo(rootSymbols, `/node_modules/${pkgName}`, pkgName);
 }

@@ -66,6 +66,52 @@ export type SerializedSymbol =
       typeParams: TypeParam[];
       extends: SerializedType[];
       members: ObjectMember[];
+    }
+  | {
+      kind: "class";
+      name: string;
+      docs: string;
+      hasPrivateMembers: boolean;
+      typeParams: TypeParam[];
+      extends: SerializedType | null;
+      implements: SerializedType[];
+      constructors: {
+        parameters: Parameter[];
+        docs: string;
+        typeParams: TypeParam[];
+      }[];
+      members: ClassMember[];
+    };
+
+export type ClassMember =
+  | {
+      kind: "index";
+      static: boolean;
+      key: SerializedType;
+      value: SerializedType;
+    }
+  | {
+      kind: "prop";
+      static: boolean;
+      name: string;
+      docs: string;
+      optional: boolean;
+      readonly: boolean;
+      type: SerializedType;
+    }
+  | {
+      kind: "method";
+      static: boolean;
+      name: string;
+      optional: boolean;
+      parameters: Parameter[];
+      docs: string;
+      typeParams: TypeParam[];
+      returnType: SerializedType;
+    }
+  | {
+      kind: "unknown";
+      content: string;
     };
 
 export type TupleElement = {
@@ -142,6 +188,12 @@ export type SerializedType =
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
+    }
+  | {
+      kind: "type-predicate";
+      asserts: boolean;
+      param: string;
+      type: SerializedType;
     }
   | { kind: "raw"; value: string };
 

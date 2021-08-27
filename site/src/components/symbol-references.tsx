@@ -1,11 +1,11 @@
 import { createContext, useContext, ReactNode, useMemo } from "react";
 import { Tooltip } from "@chakra-ui/react";
-import { useDocsContext } from "../lib/DocsContext";
+import { SymbolId, useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
 import { colors, splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
 
-const NamesInScopeContext = createContext<Set<string>>(new Set());
+const NamesInScopeContext = createContext<Map<string, SymbolId>>(new Map());
 
 export function SymbolName({
   fullName,
@@ -43,14 +43,16 @@ const externalReferences = new Map(
 
 export function AddNameToScope({
   name,
+  fullName,
   children,
 }: {
   name: string;
+  fullName: string;
   children: ReactNode;
 }) {
   const namesInScope = useContext(NamesInScopeContext);
   const newNamesInScope = useMemo(
-    () => new Set([...namesInScope, name]),
+    () => new Map([...namesInScope, [name, fullName]]),
     [namesInScope, name]
   );
   return (

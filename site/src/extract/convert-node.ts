@@ -1,6 +1,5 @@
 import {
   TypeNode,
-  Type,
   Node,
   ts,
   EntityName,
@@ -47,8 +46,7 @@ function handleReference(
     };
   }
 
-  const type = _type as Type;
-  if (type.isArray()) {
+  if (symbol.getFullyQualifiedName() === "Array") {
     return {
       kind: "array",
       readonly: false,
@@ -301,6 +299,15 @@ export function convertTypeNode(node: TypeNode): SerializedType {
         name: symbol.getName(),
       };
     }
+  }
+
+  if (TypeNode.isTypePredicateNode(node)) {
+    return {
+      kind: "type-predicate",
+      asserts: node.hasAssertsModifier(),
+      param: node.getParameterNameNode().getText(),
+      type: convertTypeNode(node.getTypeNodeOrThrow()),
+    };
   }
 
   return { kind: "raw", value: node.getText() };
