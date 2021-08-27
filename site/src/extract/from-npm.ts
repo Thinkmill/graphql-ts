@@ -5,7 +5,7 @@ import path from "path";
 import packageJson from "package-json";
 import { getDocsInfo } from ".";
 
-export async function getPackage(pkgName: string, version = "latest") {
+export async function getPackage(pkgName: string, version: string) {
   let project = new Project({
     compilerOptions: {
       noEmit: true,
@@ -15,8 +15,8 @@ export async function getPackage(pkgName: string, version = "latest") {
     useInMemoryFileSystem: true,
   });
 
-  const pkg = await packageJson(pkgName, { version });
-  const tarballURL: string = (pkg as any).dist.tarball;
+  const pkg = await packageJson(pkgName, { allVersions: true });
+  const tarballURL: string = pkg.versions[version].dist.tarball;
   const tarballBuffer = await fetch(tarballURL).then((res) => res.buffer());
   const files = await decompress(tarballBuffer, {
     filter: (file) =>
@@ -70,5 +70,8 @@ export async function getPackage(pkgName: string, version = "latest") {
     }
   }
 
-  return getDocsInfo(rootSymbols, `/node_modules/${pkgName}`, pkgName);
+  return {
+    ...getDocsInfo(rootSymbols, `/node_modules/${pkgName}`, pkgName, version),
+    versions: Object.keys(pkg.versions).reverse(),
+  };
 }

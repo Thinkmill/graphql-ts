@@ -90,6 +90,7 @@ importers:
       react-dom: ^17.0.2
       react-markdown: 6.0.2
       react-popper-tooltip: 4.3.0
+      semver: 7.3.5
       ts-morph: ^11.0.3
       ts-node: ^9.1.1
       typescript: ^4.3.5
@@ -124,6 +125,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       react-markdown: 6.0.2_d94f33b06fdce27140dc5b0a474a21a8
       react-popper-tooltip: 4.3.0_react-dom@17.0.2+react@17.0.2
+      semver: 7.3.5
       ts-morph: 11.0.3
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5

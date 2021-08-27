@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { DocsContext } from "../lib/DocsContext";
 
@@ -12,6 +12,7 @@ import {
 } from "../components/layout";
 
 import { themeClass } from "../lib/theme.css";
+import { useRouter } from "next/router";
 
 function openParentDetails(element: HTMLElement) {
   if (element instanceof HTMLDetailsElement) {
@@ -23,6 +24,17 @@ function openParentDetails(element: HTMLElement) {
 }
 
 export function Root(props: import("../extract").DocInfo) {
+  const router = useRouter();
+  const [versionState, setVersionState] = useState({
+    fromCurrentProps: props.currentVersion,
+    current: props.currentVersion,
+  });
+  if (props.currentVersion !== versionState.fromCurrentProps) {
+    setVersionState({
+      current: props.currentVersion,
+      fromCurrentProps: props.currentVersion,
+    });
+  }
   useEffect(() => {
     let handler = () => {
       const hash = window.location.hash.replace("#", "");
@@ -54,6 +66,29 @@ export function Root(props: import("../extract").DocInfo) {
         <Header packageName={props.packageName} />
         <PageContainer>
           <NavigationContainer>
+            {props.versions && (
+              <select
+                onChange={(event) => {
+                  const newVersion = event.target.value;
+                  router.push(`/npm/${props.packageName}@${newVersion}`);
+                  setVersionState((x) => ({ ...x, current: newVersion }));
+                }}
+                value={versionState.current}
+                disabled={
+                  versionState.current !== versionState.fromCurrentProps
+                }
+              >
+                {props.versions.map((version) => (
+                  <option key={version} value={version}>
+                    {version}
+                  </option>
+                ))}
+              </select>
+            )}
+            {versionState.current !== versionState.fromCurrentProps && (
+              <span aria-label="Loading new version">⏳</span>
+            )}
+
             {props.rootSymbols.map((rootSymbol) => (
               <Navigation key={rootSymbol} rootSymbolName={rootSymbol} />
             ))}

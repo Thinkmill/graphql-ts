@@ -37,6 +37,7 @@
     "react-dom": "^17.0.2",
     "react-markdown": "6.0.2",
     "react-popper-tooltip": "4.3.0",
+    "semver": "7.3.5",
     "ts-morph": "^11.0.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5",

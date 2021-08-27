@@ -64,9 +64,11 @@ function getInitialState() {
 
 let state = getInitialState();
 
-async function resolvePreconstructEntrypoints(
-  pkgPath: string
-): Promise<{ entrypoints: Record<string, string>; packageName: string }> {
+async function resolvePreconstructEntrypoints(pkgPath: string): Promise<{
+  entrypoints: Record<string, string>;
+  packageName: string;
+  packageVersion: string;
+}> {
   const pkgJson = JSON.parse(
     await fs.readFile(pkgPath + "/package.json", "utf8")
   );
@@ -80,6 +82,7 @@ async function resolvePreconstructEntrypoints(
   });
   return {
     packageName: pkgJson.name,
+    packageVersion: pkgJson.version,
     entrypoints: Object.fromEntries(
       files.map((entrypoint) => {
         const filepath = path.join(pkgPath, "src", entrypoint);
@@ -135,12 +138,15 @@ export type DocInfo = {
   };
   goodIdentifiers: Record<string, string>;
   symbolsForInnerBit: Record<string, string[]>;
+  versions?: string[];
+  currentVersion: string;
 };
 
 export function getDocsInfo(
   rootSymbols: Map<Symbol, string>,
   pkgDir: string,
-  packageName: string
+  packageName: string,
+  currentVersion: string
 ): DocInfo {
   state = getInitialState();
   state.rootSymbols = rootSymbols;
@@ -151,6 +157,7 @@ export function getDocsInfo(
 
   const baseInfo = {
     packageName,
+    currentVersion,
     rootSymbols: [...state.rootSymbols.keys()].map((symbol) =>
       getSymbolIdentifier(symbol)
     ),
@@ -214,16 +221,15 @@ export async function getInfo({
     tsConfigFilePath,
   });
   const pkgPath = path.resolve(packagePath);
-  const { entrypoints, packageName } = await resolvePreconstructEntrypoints(
-    pkgPath
-  );
+  const { entrypoints, packageName, packageVersion } =
+    await resolvePreconstructEntrypoints(pkgPath);
   const rootSymbols = new Map<Symbol, string>();
   for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
     const sourceFile = project.getSourceFileOrThrow(filepath);
     const symbol = sourceFile.getSymbolOrThrow();
     rootSymbols.set(symbol, entrypointName);
   }
-  return getDocsInfo(rootSymbols, pkgPath, packageName);
+  return getDocsInfo(rootSymbols, pkgPath, packageName, packageVersion);
 }
 
 function resolveSymbolQueue() {
