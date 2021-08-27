@@ -10,6 +10,7 @@ import Minus from "./icons/minus";
 
 import * as styles from "./navigation.css";
 import { codeFont } from "../lib/theme.css";
+import { nonRootSymbolReference } from "./symbol-references.css";
 
 function Expandable({
   summary,
@@ -76,8 +77,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
               return (
                 <Item key={i}>
                   <a
-                    className={codeFont}
-                    css={{ color: colors.symbol }}
+                    className={nonRootSymbolReference}
                     href={`#${docContext.goodIdentifiers[rootSymbolName]}-re-exports-${i}`}
                   >
                     {group.exports.length} Re-exports

@@ -1,5 +1,5 @@
 import { composeStyles, style } from "@vanilla-extract/css";
-import { codeFont, tokens } from "../lib/theme.css";
+import { codeFont, syntaxColors, tokens } from "../lib/theme.css";
 
 export const moduleHeading = composeStyles(
   codeFont,
@@ -53,3 +53,20 @@ export const referenceItem = style({
   listStylePosition: "inside",
   listStyleType: "disc",
 });
+
+export const symbolAnchor = style({
+  display: "block",
+  height: 1,
+});
+
+export const targetBackground = style({
+  ":target": { backgroundColor: "#ffff54ba" },
+});
+
+export const moduleSpecifierLink = style({
+  color: syntaxColors.string,
+  ":hover": { textDecoration: "underline" },
+  ":target": { backgroundColor: "#ffff54ba" },
+});
+
+export const reexportTarget = composeStyles(targetBackground, codeFont);

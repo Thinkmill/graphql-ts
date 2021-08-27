@@ -19,7 +19,7 @@ export function Docs({ content }: { content: string | undefined }) {
   }
   return (
     <details className={styles.details}>
-      <summary css={{ display: "block" }}>
+      <summary className={styles.blockSummary}>
         <Markdown content={first} />
         <div className={styles.expandLinkOpen}>
           <ChevronDoubleDown className={styles.expandIcon} />

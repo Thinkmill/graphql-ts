@@ -4,6 +4,8 @@ import { SymbolId, useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
 import { colors, splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
+import { Syntax } from "./syntax";
+import * as styles from "./symbol-references.css";
 
 const NamesInScopeContext = createContext<Map<string, SymbolId>>(new Map());
 
@@ -18,12 +20,7 @@ export function SymbolName({
   return (
     <a
       id={goodIdentifiers[fullName]}
-      className={codeFont}
-      css={{
-        color: colors.symbol,
-        ":hover": { textDecoration: "underline" },
-        ":target": { backgroundColor: "#ffff54ba" },
-      }}
+      className={styles.symbolName}
       href={`#${goodIdentifiers[fullName]}`}
     >
       {name}
@@ -77,14 +74,7 @@ export function SymbolReference({
     : externalReferences.get(name);
   if (externalReference !== undefined) {
     return (
-      <a
-        className={codeFont}
-        css={{
-          color: colors.symbol,
-          ":hover": { textDecoration: "underline" },
-        }}
-        href={externalReference}
-      >
+      <a className={styles.nonRootSymbolReference} href={externalReference}>
         {name}
       </a>
     );
@@ -95,9 +85,7 @@ export function SymbolReference({
         hasArrow
         label="This symbol is defined outside of this package so it isn't included in this documentation"
       >
-        <span className={codeFont} css={{ color: "#f92672" }}>
-          {name}
-        </span>
+        <span className={styles.unknownExternalReference}>{name}</span>
       </Tooltip>
     );
   }
@@ -109,11 +97,11 @@ export function SymbolReference({
 
   let inner = (
     <a
-      className={codeFont}
-      css={{
-        color: isRootSymbol ? colors.string : colors.symbol,
-        ":hover": { textDecoration: "underline" },
-      }}
+      className={
+        isRootSymbol
+          ? styles.rootSymbolReference
+          : styles.nonRootSymbolReference
+      }
       href={`#${goodIdentifiers[fullName]}`}
     >
       {isRootSymbol ? JSON.stringify(name) : name}
@@ -124,14 +112,7 @@ export function SymbolReference({
     inner = (
       <Tooltip
         label={
-          <span
-            css={{
-              "& :last-child": { marginBottom: 0 },
-              "& *": {
-                color: "inherit !important",
-              },
-            }}
-          >
+          <span className={styles.tooltipMarkdownContent}>
             <Markdown content={firstDocsBit} />
           </span>
         }
@@ -148,19 +129,13 @@ export function SymbolReference({
     const canonicalExportLocation = canonicalExportLocations[fullName];
     return (
       <span className={codeFont}>
-        <span
-          css={{
-            color: colors.keyword,
-          }}
-        >
-          import
-        </span>
-        <span css={{ color: colors.bracket }}>(</span>
+        <Syntax kind="keyword">import</Syntax>
+        <Syntax kind="bracket">(</Syntax>
         <SymbolReference
           fullName={canonicalExportLocation.fileSymbolName}
           name={symbols[canonicalExportLocation.fileSymbolName].name}
         />
-        <span css={{ color: colors.bracket }}>)</span>.{inner}
+        <Syntax kind="bracket">)</Syntax>.{inner}
       </span>
     );
   }

@@ -8,6 +8,8 @@ export const docs = style({
   marginBottom: 16,
 });
 
+export const blockSummary = style({ display: "block" });
+
 export const details = composeStyles(
   docs,
   style({
