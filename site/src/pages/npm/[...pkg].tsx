@@ -10,6 +10,7 @@ import packageJson, { PackageNotFoundError } from "package-json";
 import { Root } from "../../components/root";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { resolveToPackageVersion } from "../../extract/utils";
 
 export default function Npm(
   props: InferGetStaticPropsType<typeof getStaticProps>
@@ -39,33 +40,9 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   try {
     if (!specifier || !semver.parse(specifier)) {
       const pkg = await packageJson(pkgName, { allVersions: true });
-      if (Object.prototype.hasOwnProperty.call(pkg["dist-tags"], specifier)) {
-        return {
-          props: {
-            kind: "redirect" as const,
-            to: `/npm/${pkgName}@${pkg["dist-tags"][specifier]}`,
-          },
-        };
-      }
-      if (semver.validRange(specifier)) {
-        const version = semver.maxSatisfying(
-          Object.keys(pkg.versions),
-          specifier
-        );
-        if (version) {
-          return {
-            props: {
-              kind: "redirect" as const,
-              to: `/npm/${pkgName}@${version}`,
-            },
-          };
-        }
-      }
+      const version = resolveToPackageVersion(pkg, specifier);
       return {
-        props: {
-          kind: "redirect" as const,
-          to: `/npm/${pkgName}@${pkg["dist-tags"].latest}`,
-        },
+        props: { kind: "redirect" as const, to: `/npm/${pkgName}@${version}` },
       };
     }
 

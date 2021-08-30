@@ -7,10 +7,14 @@ import {
   Symbol,
   TypeElementMemberedNode,
   Node,
+  Project,
 } from "ts-morph";
+import semver from "semver";
+import path from "path";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
 import hashString from "@emotion/hash";
+import { assert } from "../lib/assert";
 
 export type TypeParam = {
   name: string;
@@ -81,6 +85,19 @@ export type SerializedSymbol =
         typeParams: TypeParam[];
       }[];
       members: ClassMember[];
+    }
+  | {
+      kind: "enum";
+      const: boolean;
+      name: string;
+      docs: string;
+      members: string[];
+    }
+  | {
+      kind: "enum-member";
+      name: string;
+      docs: string;
+      value: string | number | null;
     };
 
 export type ClassMember =
@@ -193,9 +210,10 @@ export type SerializedType =
       kind: "type-predicate";
       asserts: boolean;
       param: string;
-      type: SerializedType;
+      /** This can be optional for `asserts condition` where `condition` is a param */
+      type?: SerializedType;
     }
-  | { kind: "raw"; value: string };
+  | { kind: "raw"; value: string; tsKind?: string };
 
 export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
   return node.getTypeParameters().map((typeParam) => {
@@ -327,35 +345,19 @@ export function getDocs(decl: JSDocableNode) {
   );
 }
 
-export function fakeAssert<T>(val: any): asserts val is T {}
-
-export function assertNever(arg: never): never {
-  debugger;
-  throw new Error(`unexpected call to assertNever: ${arg}`);
-}
-
-export function assert(
-  condition: boolean,
-  message = "failed assert"
-): asserts condition {
-  if (!condition) {
-    debugger;
-    throw new Error(message);
-  }
-}
-
 export function getSymbolIdentifier(symbol: Symbol) {
-  if (symbol.getFullyQualifiedName() === "unknown") {
-    return "unknown";
+  const fullName = symbol.getFullyQualifiedName();
+  if (fullName === "unknown" || fullName === "globalThis") {
+    return fullName;
   }
   const decls = symbol.getDeclarations();
-  assert(decls.length >= 1, "expected exactly one declaration");
+  assert(decls.length >= 1, "expected exactly at least one declaration");
 
   return hashString(
     decls
       .map((decl) => {
         const filepath = decl.getSourceFile().getFilePath();
-        return `${filepath}-${decl.getPos()}`;
+        return `${decl.getKindName()}-${filepath}-${decl.getPos()}-${decl.getEnd()}`;
       })
       .join("-")
   );
@@ -378,7 +380,8 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
   for (const [symbolFullName, symbols] of Object.entries(symbolReferences)) {
     if (
       !canonicalExportLocations[symbolFullName] &&
-      accessibleSymbols[symbolFullName]
+      accessibleSymbols[symbolFullName] &&
+      accessibleSymbols[symbolFullName].kind !== "enum-member"
     ) {
       const firstExportedSymbol = symbols.find(
         (x) => canonicalExportLocations[x] !== undefined
@@ -437,6 +440,7 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
   };
 
   for (const [symbolId, symbol] of Object.entries(accessibleSymbols)) {
+    if (symbol.kind == "enum-member") continue;
     if (rootSymbols.has(symbolId)) {
       goodIdentifiers[symbolId] = symbol.name;
     } else if (canonicalExportLocations[symbolId]) {
@@ -457,9 +461,69 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
         goodIdentifiers[symbolId] = `${identifier}-${index}`;
       }
     }
+    if (symbol.kind === "enum") {
+      for (const childSymbolId of symbol.members) {
+        goodIdentifiers[
+          childSymbolId
+        ] = `${goodIdentifiers[symbolId]}.${accessibleSymbols[childSymbolId].name}`;
+      }
+    }
   }
   return {
     goodIdentifiers,
     symbolsForInnerBit: Object.fromEntries(symbolsForInnerBit),
   };
+}
+
+export async function collectEntrypointsOfPackage(
+  project: Project,
+  pkgName: string,
+  pkgPath: string
+) {
+  const packageJsons = new Set([
+    `${pkgPath}/package.json`,
+    ...(await project
+      .getFileSystem()
+      .glob([
+        `${pkgPath}/**/package.json`,
+        `!${pkgPath}/node_modules/**/package.json`,
+      ])),
+  ]);
+  const entrypoints = new Map<string, string>();
+  for (const x of packageJsons) {
+    const entrypoint = path.join(
+      pkgName,
+      x.replace(pkgPath, "").replace(/\/?package\.json$/, "")
+    );
+    const resolved = ts.resolveModuleName(
+      entrypoint,
+      "/index.js",
+      project.getCompilerOptions(),
+      project.getModuleResolutionHost()
+    ).resolvedModule?.resolvedFileName;
+    if (!resolved) continue;
+    entrypoints.set(entrypoint, resolved);
+  }
+  return entrypoints;
+}
+
+export function resolveToPackageVersion(
+  pkg: import("package-json").AbbreviatedMetadata,
+  specifier: string | undefined
+): string {
+  if (specifier !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(pkg["dist-tags"], specifier)) {
+      return pkg["dist-tags"][specifier];
+    }
+    if (semver.validRange(specifier)) {
+      const version = semver.maxSatisfying(
+        Object.keys(pkg.versions),
+        specifier
+      );
+      if (version) {
+        return version;
+      }
+    }
+  }
+  return pkg["dist-tags"].latest;
 }

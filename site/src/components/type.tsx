@@ -234,7 +234,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         <Indent>
           <span className={codeFont}>
             [<Syntax kind="parameter">{type.param.name} </Syntax>
-            <Syntax kind="keyword">in</Syntax>{" "}
+            <Syntax kind="keyword">in </Syntax>
           </span>
           <Type type={type.param.constraint} />]<Syntax kind="colon">: </Syntax>
           <Type type={type.type} />
@@ -275,14 +275,19 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       <Fragment>
         {type.asserts && <Syntax kind="keyword">asserts </Syntax>}
         <span className={codeFont}>{type.param}</span>
-        <Syntax kind="keyword">{" is "}</Syntax>
-        <Type type={type.type} />
+        {type.type && (
+          <Fragment>
+            <Syntax kind="keyword">{" is "}</Syntax>
+            <Type type={type.type} />
+          </Fragment>
+        )}
       </Fragment>
     );
   }
   return (
     <span className={codeFont} style={{ color: "red" }}>
       {type.value}
+      {type.tsKind && ` ${type.tsKind}`}
     </span>
   );
 }

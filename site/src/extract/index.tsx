@@ -15,10 +15,9 @@ import {
   MethodDeclaration,
   ConstructorDeclaration,
   PropertyDeclaration,
+  EnumDeclaration,
 } from "ts-morph";
 import path from "path";
-import fs from "fs/promises";
-import fastGlob from "fast-glob";
 import { findCanonicalExportLocations } from "./exports";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
@@ -32,6 +31,7 @@ import {
   getObjectMembers,
   ClassMember,
   getSymbolsForInnerBitsAndGoodIdentifiers,
+  collectEntrypointsOfPackage,
 } from "./utils";
 
 // cache bust 1
@@ -58,42 +58,12 @@ function getInitialState() {
     symbolsToSymbolsWhichReferenceTheSymbol: new Map<Symbol, Set<Symbol>>(),
     currentlyVistedSymbol: undefined as Symbol | undefined,
     exportedSymbols: new Set<Symbol>(),
+    referencedExternalSymbols: new Set<Symbol>(),
     pkgDir: "",
   };
 }
 
 let state = getInitialState();
-
-async function resolvePreconstructEntrypoints(pkgPath: string): Promise<{
-  entrypoints: Record<string, string>;
-  packageName: string;
-  packageVersion: string;
-}> {
-  const pkgJson = JSON.parse(
-    await fs.readFile(pkgPath + "/package.json", "utf8")
-  );
-  const configEntrypoints = pkgJson?.preconstruct?.entrypoints || [
-    "index.{js,jsx,ts,tsx}",
-  ];
-
-  const files = await fastGlob(configEntrypoints, {
-    cwd: path.join(pkgPath, "src"),
-    onlyFiles: true,
-  });
-  return {
-    packageName: pkgJson.name,
-    packageVersion: pkgJson.version,
-    entrypoints: Object.fromEntries(
-      files.map((entrypoint) => {
-        const filepath = path.join(pkgPath, "src", entrypoint);
-        const entrypointPart = entrypoint.replace(/\/?(index)?\.[jt]sx?/, "");
-        const entrypointName =
-          pkgJson.name + (entrypointPart === "" ? "" : "/" + entrypointPart);
-        return [filepath, entrypointName];
-      })
-    ),
-  };
-}
 
 export function collectSymbol(symbol: Symbol) {
   if (symbol.getDeclarations().length === 0) {
@@ -107,6 +77,7 @@ export function collectSymbol(symbol: Symbol) {
       .getFilePath()
       .includes(path.join(state.pkgDir, "node_modules"))
   ) {
+    state.referencedExternalSymbols.add(symbol);
     return;
   }
   if (state.currentlyVistedSymbol) {
@@ -124,20 +95,14 @@ export function collectSymbol(symbol: Symbol) {
 export type DocInfo = {
   packageName: string;
   rootSymbols: string[];
-  accessibleSymbols: {
-    [k: string]: SerializedSymbol;
-  };
-  symbolReferences: {
-    [k: string]: string[];
-  };
+  accessibleSymbols: { [k: string]: SerializedSymbol };
+  symbolReferences: { [k: string]: string[] };
   canonicalExportLocations: {
-    [k: string]: {
-      exportName: string;
-      fileSymbolName: string;
-    };
+    [k: string]: { exportName: string; fileSymbolName: string };
   };
   goodIdentifiers: Record<string, string>;
   symbolsForInnerBit: Record<string, string[]>;
+  externalSymbols: Record<string, { pkg: string; version: string; id: string }>;
   versions?: string[];
   currentVersion: string;
 };
@@ -146,7 +111,11 @@ export function getDocsInfo(
   rootSymbols: Map<Symbol, string>,
   pkgDir: string,
   packageName: string,
-  currentVersion: string
+  currentVersion: string,
+  getExternalReference: (
+    symbolId: string
+  ) => { pkg: string; version: string; id: string } | undefined = () =>
+    undefined
 ): DocInfo {
   state = getInitialState();
   state.rootSymbols = rootSymbols;
@@ -198,6 +167,15 @@ export function getDocsInfo(
     ),
   };
 
+  const externalSymbols: DocInfo["externalSymbols"] = {};
+  for (const x of state.referencedExternalSymbols) {
+    const symbolId = getSymbolIdentifier(x);
+    const ref = getExternalReference(symbolId);
+    if (ref) {
+      externalSymbols[symbolId] = ref;
+    }
+  }
+
   return {
     ...baseInfo,
     ...getSymbolsForInnerBitsAndGoodIdentifiers(
@@ -207,6 +185,7 @@ export function getDocsInfo(
       baseInfo.symbolReferences,
       baseInfo.rootSymbols
     ),
+    externalSymbols,
   };
 }
 
@@ -221,15 +200,22 @@ export async function getInfo({
     tsConfigFilePath,
   });
   const pkgPath = path.resolve(packagePath);
-  const { entrypoints, packageName, packageVersion } =
-    await resolvePreconstructEntrypoints(pkgPath);
+  const pkgJson = JSON.parse(
+    await project.getFileSystem().readFile(`${pkgPath}/package.json`)
+  );
+
+  const entrypoints = await collectEntrypointsOfPackage(
+    project,
+    pkgJson.name,
+    pkgPath
+  );
   const rootSymbols = new Map<Symbol, string>();
   for (const [filepath, entrypointName] of Object.entries(entrypoints)) {
     const sourceFile = project.getSourceFileOrThrow(filepath);
     const symbol = sourceFile.getSymbolOrThrow();
     rootSymbols.set(symbol, entrypointName);
   }
-  return getDocsInfo(rootSymbols, pkgPath, packageName, packageVersion);
+  return getDocsInfo(rootSymbols, pkgPath, pkgJson.name, pkgJson.version);
 }
 
 function resolveSymbolQueue() {
@@ -418,6 +404,23 @@ function resolveSymbolQueue() {
             ];
           }
           return [{ kind: "unknown", content: member.getText() }];
+        }),
+      });
+    } else if (decl instanceof EnumDeclaration) {
+      state.publicSymbols.set(symbol, {
+        kind: "enum",
+        const: decl.isConstEnum(),
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        members: decl.getMembers().map((member) => {
+          const symbol = member.getSymbolOrThrow();
+          state.publicSymbols.set(symbol, {
+            kind: "enum-member",
+            name: member.getName(),
+            docs: getDocs(member),
+            value: member.getValue() ?? null,
+          });
+          return getSymbolIdentifier(symbol);
         }),
       });
     } else {

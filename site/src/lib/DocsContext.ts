@@ -13,6 +13,10 @@ export type DocsContextType = {
   symbolsForInnerBit: Map<SymbolId, SymbolId[]>;
   goodIdentifiers: Record<SymbolId, string>;
   rootSymbols: Set<SymbolId>;
+  externalSymbols: Record<
+    SymbolId,
+    { pkg: string; version: string; id: string }
+  >;
 };
 
 export const DocsContext = createContext<DocsContextType>(null as any);

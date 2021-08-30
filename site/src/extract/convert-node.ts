@@ -10,13 +10,12 @@ import {
   getParameters,
   getTypeParameters,
   TupleElement,
-  fakeAssert,
-  assertNever,
   getSymbolIdentifier,
   getObjectMembers,
 } from "./utils";
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
+import { fakeAssert, assert, assertNever } from "../lib/assert";
 
 function wrapInTsMorphNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
   someNode: Node,
@@ -263,11 +262,10 @@ export function convertTypeNode(node: TypeNode): SerializedType {
           readonly: true,
         };
       }
-      console.log(
-        "non-array thing with readonly keyword with kind:",
-        inner.kind
+      assert(
+        false,
+        `non-array thing with readonly keyword with kind: ${inner.kind}`
       );
-      return inner;
     }
     if (node.compilerNode.operator === ts.SyntaxKind.KeyOfKeyword) {
       return {
@@ -302,13 +300,17 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   }
 
   if (TypeNode.isTypePredicateNode(node)) {
+    const typeNode = node.getTypeNode();
     return {
       kind: "type-predicate",
       asserts: node.hasAssertsModifier(),
       param: node.getParameterNameNode().getText(),
-      type: convertTypeNode(node.getTypeNodeOrThrow()),
+      type: typeNode ? convertTypeNode(typeNode) : typeNode,
     };
   }
 
-  return { kind: "raw", value: node.getText() };
+  if (TypeNode.isThisTypeNode(node)) {
+    return { kind: "intrinsic", value: "this" };
+  }
+  return { kind: "raw", value: node.getText(), tsKind: node.getKindName() };
 }

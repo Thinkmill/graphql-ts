@@ -1,7 +1,7 @@
 import { splitDocs } from "../lib/utils";
 import { Markdown } from "./markdown";
-import ChevronDoubleDown from "./icons/chevron-double-down";
-import ChevronDoubleUp from "./icons/chevron-double-up";
+import { ChevronDoubleDown } from "./icons/chevron-double-down";
+import { ChevronDoubleUp } from "./icons/chevron-double-up";
 
 import * as styles from "./docs.css";
 

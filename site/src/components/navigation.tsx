@@ -1,12 +1,12 @@
-import { useState, ReactNode } from "react";
+import { ReactNode } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
 import { SymbolReference } from "./symbol-references";
 import { groupExports } from "../lib/utils";
 
-import ChevronDown from "./icons/chevron-down";
-import ChevronRight from "./icons/chevron-right";
-import Minus from "./icons/minus";
+import { ChevronDown } from "./icons/chevron-down";
+import { ChevronRight } from "./icons/chevron-right";
+import { Minus } from "./icons/minus";
 
 import * as styles from "./navigation.css";
 import { nonRootSymbolReference } from "./symbol-references.css";
@@ -18,22 +18,15 @@ function Expandable({
   summary: ReactNode;
   children: ReactNode;
 }) {
-  const [isOpen, setIsOpen] = useState(true);
-  const onClick = () => setIsOpen(!isOpen);
   return (
-    <div>
-      <div onClick={onClick} className={styles.expandableSummary}>
-        {isOpen ? (
-          <ChevronDown className={styles.expandableChevron} />
-        ) : (
-          <ChevronRight className={styles.expandableChevron} />
-        )}
+    <details open>
+      <summary className={styles.expandableSummary}>
+        <ChevronDown className={styles.expandableChevronClose} />
+        <ChevronRight className={styles.expandableChevronOpen} />
         {summary}
-      </div>
-      {isOpen ? (
-        <div className={styles.expandableContents}>{children}</div>
-      ) : null}
-    </div>
+      </summary>
+      <div className={styles.expandableContents}>{children}</div>
+    </details>
   );
 }
 
@@ -92,7 +85,6 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
             }
             return (
               <Item key={group.exportName}>
-                {" "}
                 <SymbolReference
                   fullName={group.fullName}
                   name={group.exportName}

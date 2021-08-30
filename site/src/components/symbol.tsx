@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
 import { groupExports } from "../lib/utils";
-
+import { assert } from "../lib/assert";
 import { Docs } from "./docs";
 import {
   SymbolName,
@@ -192,8 +192,8 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                           <SymbolReference
                             fullName={x.fullName}
                             name={x.sourceName}
-                          />{" "}
-                          <Syntax kind="keyword">as</Syntax>{" "}
+                          />
+                          <Syntax kind="keyword"> as </Syntax>
                           <SymbolReference
                             fullName={x.fullName}
                             name={x.localName}
@@ -330,6 +330,56 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       </div>
     );
   }
+
+  if (rootSymbol.kind === "enum") {
+    const enumSymbol = rootSymbol;
+    return (
+      <div className={styles.rootSymbolContainer}>
+        <Docs content={rootSymbol.docs} />
+        <Fragment>
+          <Syntax kind="keyword">
+            {isExported ? "export " : ""}
+            {rootSymbol.const ? "const " : ""}
+            enum{" "}
+          </Syntax>
+          <SymbolName name={rootSymbol.name} fullName={fullName} />
+          <Syntax kind="bracket">{" { "}</Syntax>
+          {rootSymbol.members.map((memberId, i) => {
+            const member = symbols[memberId];
+            assert(
+              member.kind === "enum-member",
+              "expected enum to only contain enum members"
+            );
+            return (
+              <Indent key={i}>
+                <Docs content={member.docs} />
+                <SymbolName name={member.name} fullName={memberId} />
+                {member.value !== null && (
+                  <Fragment>
+                    <Syntax kind="bracket">{" = "}</Syntax>
+                    <Syntax kind="string">
+                      {typeof member.value === "string"
+                        ? JSON.stringify(member.value)
+                        : member.value}
+                    </Syntax>
+                  </Fragment>
+                )}
+                {i === enumSymbol.members.length - 1 ? null : (
+                  <Syntax kind="comma">{", "}</Syntax>
+                )}
+              </Indent>
+            );
+          })}
+          <Syntax kind="bracket">{"}"}</Syntax>
+        </Fragment>
+      </div>
+    );
+  }
+
+  assert(
+    rootSymbol.kind !== "enum-member",
+    "unexpected enum member outside of enum declaration"
+  );
 
   return (
     <div className={styles.rootSymbolContainer}>

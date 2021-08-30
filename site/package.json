@@ -25,7 +25,6 @@
     "@vanilla-extract/css": "^1.2.3",
     "css-loader": "6.2.0",
     "decompress": "4.2.1",
-    "fast-glob": "3.2.7",
     "framer-motion": "^4.1.16",
     "graphql": "^15.5.0",
     "monaco-editor": "^0.24.0",
@@ -41,7 +40,8 @@
     "ts-morph": "^11.0.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5",
-    "vanilla-extract-plugin-nextjs": "^0.3.1"
+    "vanilla-extract-plugin-nextjs": "^0.3.1",
+    "webpack-bundle-analyzer": "^4.4.2"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/site"
 }

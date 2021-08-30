@@ -1,4 +1,10 @@
-import { createContext, useContext, ReactNode, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  AnchorHTMLAttributes,
+} from "react";
 import { SymbolId, useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
 import { splitDocs } from "../lib/utils";
@@ -66,12 +72,39 @@ export function SymbolReference({
   name: string;
   fullName: string;
 }) {
-  const { symbols, canonicalExportLocations, goodIdentifiers, rootSymbols } =
-    useDocsContext();
+  const {
+    symbols,
+    canonicalExportLocations,
+    goodIdentifiers,
+    rootSymbols,
+    externalSymbols,
+  } = useDocsContext();
   const namesInScope = useContext(NamesInScopeContext);
   const externalReference = symbols[fullName]
     ? undefined
     : externalReferences.get(name);
+  if (externalSymbols[fullName]) {
+    const external = externalSymbols[fullName];
+    return (
+      <span className={codeFont}>
+        <Syntax kind="keyword">import</Syntax>
+        <Syntax kind="bracket">(</Syntax>
+        <a
+          className={styles.rootSymbolReference}
+          href={`/npm/${external.pkg}@${external.version}`}
+        >
+          {JSON.stringify(external.pkg)}
+        </a>
+        <Syntax kind="bracket">)</Syntax>.
+        <a
+          className={styles.nonRootSymbolReference}
+          href={`/npm/${external.pkg}@${external.version}#${external.id}`}
+        >
+          {name}
+        </a>
+      </span>
+    );
+  }
   if (externalReference !== undefined) {
     return (
       <a className={styles.nonRootSymbolReference} href={externalReference}>
@@ -88,7 +121,7 @@ export function SymbolReference({
 
   const isRootSymbol = rootSymbols.has(fullName);
 
-  const props = {
+  const props: AnchorHTMLAttributes<HTMLAnchorElement> = {
     className: isRootSymbol
       ? styles.rootSymbolReference
       : styles.nonRootSymbolReference,
@@ -96,6 +129,9 @@ export function SymbolReference({
     href: `#${goodIdentifiers[fullName]}`,
     children: isRootSymbol ? JSON.stringify(name) : name,
   };
+  if (symbols[fullName].kind === "unknown") {
+    props.style = { color: "red" };
+  }
 
   let inner = firstDocsBit ? (
     <Tooltip
@@ -113,6 +149,7 @@ export function SymbolReference({
 
   if (
     namesInScope.has(name) &&
+    namesInScope.get(name) !== fullName &&
     canonicalExportLocations[fullName] !== undefined
   ) {
     const canonicalExportLocation = canonicalExportLocations[fullName];

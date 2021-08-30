@@ -60,6 +60,7 @@ export function Root(props: import("../extract").DocInfo) {
         symbolsForInnerBit: new Map(Object.entries(props.symbolsForInnerBit)),
         goodIdentifiers: props.goodIdentifiers,
         rootSymbols: new Set(props.rootSymbols),
+        externalSymbols: props.externalSymbols,
       }}
     >
       <div className={themeClass}>

@@ -301,12 +301,16 @@ globalStyle(
   `ol,
    ul`,
   {
-    listStyle: "none",
+    // listStyle: "none",
     margin: 0,
     padding: 0,
   }
 );
 
+globalStyle(`body`, {
+  margin: 0,
+  padding: 0,
+});
 /**
  * 1. Prevent padding and border from affecting element width.
  *

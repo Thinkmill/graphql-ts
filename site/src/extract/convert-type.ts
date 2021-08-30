@@ -9,9 +9,9 @@ import {
   MethodDeclaration,
 } from "ts-morph";
 import { collectSymbol } from ".";
+import { assert } from "../lib/assert";
 import { convertTypeNode } from "./convert-node";
 import {
-  assert,
   getDocs,
   getParameters,
   getTypeParameters,

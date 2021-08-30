@@ -1,6 +1,6 @@
 import { SVGAttributes } from "react";
 
-export default function Minus(props: SVGAttributes<SVGElement>) {
+export function Minus(props: SVGAttributes<SVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

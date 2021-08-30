@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { composeStyles, style } from "@vanilla-extract/css";
 import { tokens } from "../lib/theme.css";
 
 export const expandable = style({
@@ -18,7 +18,7 @@ export const expandableSummary = style({
   marginBottom: 8,
 });
 
-export const expandableChevron = style({
+const expandableChevron = style({
   cursor: "pointer",
   marginTop: 3,
   marginRight: 5,
@@ -26,6 +26,29 @@ export const expandableChevron = style({
   height: 20,
   color: tokens.color.gray400,
 });
+
+export const expandableChevronOpen = composeStyles(
+  expandableChevron,
+  style({
+    selectors: {
+      "details[open] > summary > &": {
+        display: "none",
+      },
+    },
+  })
+);
+
+export const expandableChevronClose = composeStyles(
+  expandableChevron,
+  style({
+    display: "none",
+    selectors: {
+      "details[open] > summary > &": {
+        display: "initial",
+      },
+    },
+  })
+);
 
 export const itemIcon = style({
   marginTop: 3,

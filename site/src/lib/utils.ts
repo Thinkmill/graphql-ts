@@ -86,7 +86,11 @@ export function splitDocs(docs: string): {
   first: string;
   rest: string | undefined;
 } {
-  const [, first, rest] = /(^[^]+?)\n\n([^]+)/.exec(docs) || ["", docs, ""];
+  const [, first, rest] = /(^[^]+?)\r?\n\r?\n([^]+)/.exec(docs) || [
+    "",
+    docs,
+    "",
+  ];
   return {
     first,
     rest: rest || undefined,
