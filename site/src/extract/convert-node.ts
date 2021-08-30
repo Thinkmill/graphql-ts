@@ -4,6 +4,7 @@ import {
   ts,
   EntityName,
   CompilerNodeToWrappedType,
+  TypeParameterDeclaration,
 } from "ts-morph";
 import {
   SerializedType,
@@ -37,22 +38,28 @@ function handleReference(
       typeArguments: typeArguments.map((x) => convertTypeNode(x)),
     };
   }
-  const _type = symbol.getDeclaredType();
-  if (_type.isTypeParameter()) {
+
+  if (symbol.getDeclarations()?.[0] instanceof TypeParameterDeclaration) {
     return {
       kind: "type-parameter",
       name: symbol.getName(),
     };
   }
 
-  if (symbol.getFullyQualifiedName() === "Array") {
+  if (
+    symbol.getName() === "Array" &&
+    symbol.getFullyQualifiedName() === "Array"
+  ) {
     return {
       kind: "array",
       readonly: false,
       inner: convertTypeNode(typeArguments[0]),
     };
   }
-  if (symbol.getFullyQualifiedName() === "ReadonlyArray") {
+  if (
+    symbol.getName() === "Array" &&
+    symbol.getFullyQualifiedName() === "ReadonlyArray"
+  ) {
     return {
       kind: "array",
       readonly: true,
@@ -61,14 +68,15 @@ function handleReference(
   }
   symbol = symbol.getAliasedSymbol() || symbol;
   collectSymbol(symbol);
+  const fullName = getSymbolIdentifier(symbol);
   let name = symbol.getName();
-  if (symbol.getFullyQualifiedName() === "unknown") {
+  if (fullName === "unknown") {
     name = typeName.getText();
   }
 
   return {
     kind: "reference",
-    fullName: getSymbolIdentifier(symbol),
+    fullName,
     name,
     typeArguments: typeArguments.map((x) => convertTypeNode(x)),
   };

@@ -5,12 +5,15 @@ import {
   InferGetStaticPropsType,
 } from "next";
 import * as semver from "semver";
-import packageJson, { PackageNotFoundError } from "package-json";
 
 import { Root } from "../../components/root";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { resolveToPackageVersion } from "../../extract/utils";
+import {
+  getPackageMetadata,
+  PackageNotFoundError,
+} from "../../extract/fetch-package-metadata";
 
 export default function Npm(
   props: InferGetStaticPropsType<typeof getStaticProps>
@@ -39,7 +42,7 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   const [, pkgName, specifier] = query.match(/^(@?[^@]+)(?:@(.+))?/)!;
   try {
     if (!specifier || !semver.parse(specifier)) {
-      const pkg = await packageJson(pkgName, { allVersions: true });
+      const pkg = await getPackageMetadata(pkgName);
       const version = resolveToPackageVersion(pkg, specifier);
       return {
         props: { kind: "redirect" as const, to: `/npm/${pkgName}@${version}` },

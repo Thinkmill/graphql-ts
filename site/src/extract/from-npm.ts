@@ -5,39 +5,121 @@ import {
   Symbol,
   SourceFile,
 } from "ts-morph";
-import decompress from "decompress";
 import fetch from "node-fetch";
-import packageJson from "package-json";
+import semver from "semver";
+import tar from "tar-stream";
+import gunzip from "gunzip-maybe";
+import getNpmTarballUrl from "get-npm-tarball-url";
 import { getDocsInfo } from ".";
 import { collectEntrypointsOfPackage, resolveToPackageVersion } from "./utils";
+import { assertNever } from "../lib/assert";
+import { getPackageMetadata } from "./fetch-package-metadata";
+
+async function handleTarballStream(tarballStream: NodeJS.ReadableStream) {
+  const extract = tarballStream.pipe(gunzip()).pipe(tar.extract());
+  const entries = new Map<
+    string,
+    { kind: "directory" } | { kind: "file"; content: string }
+  >();
+  extract.on("entry", (headers, stream, next) => {
+    if (headers.type === "directory") {
+      entries.set(headers.name, { kind: "directory" });
+      next();
+      stream.resume();
+      stream.on("end", next);
+      return;
+    }
+    if (headers.type !== "file" || !/\.(json|ts|tsx)$/.test(headers.name)) {
+      headers.size;
+      stream.resume();
+      stream.on("end", next);
+      return;
+    }
+
+    streamToString(stream)
+      .then((content) => {
+        entries.set(headers.name, { kind: "file", content });
+        next();
+      })
+      .catch((err) => (next as any)(err));
+  });
+
+  return new Promise<
+    Map<string, { kind: "directory" } | { kind: "file"; content: string }>
+  >((resolve, reject) => {
+    extract.on("finish", () => {
+      resolve(entries);
+    });
+    extract.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
+function streamToString(stream: NodeJS.ReadableStream) {
+  return new Promise<string>((resolve, reject) => {
+    let content = "";
+    stream
+      .on("error", reject)
+      .on("data", (chunk) => {
+        content += chunk.toString("utf8");
+      })
+      .on("end", () => resolve(content));
+  });
+}
+
+async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
+  let pkgPromise = getPackageMetadata(pkgName);
+  if (semver.valid(pkgSpecifier)) {
+    let tarballBufferPromise = fetch(
+      getNpmTarballUrl(pkgName, pkgSpecifier)
+    ).then((res) => res.body);
+    const results = await Promise.allSettled([
+      pkgPromise,
+      tarballBufferPromise,
+    ]);
+    if (results[0].status !== "fulfilled") {
+      throw results[0].reason;
+    }
+    if (results[1].status === "fulfilled") {
+      return {
+        versions: Object.keys(results[0].value.versions),
+        version: pkgSpecifier,
+        tarballStream: results[1].value,
+      };
+    }
+    pkgPromise = Promise.resolve(results[0].value);
+  }
+  const pkg = await pkgPromise;
+  const version = resolveToPackageVersion(pkg, pkgSpecifier);
+  const tarballURL: string = pkg.versions[version].dist.tarball;
+  const tarballStream = await fetch(tarballURL).then((res) => res.body);
+  return { tarballStream, version, versions: Object.keys(pkg.versions) };
+}
 
 async function addPackageToNodeModules(
   project: Project,
   pkgName: string,
   pkgSpecifier: string
 ) {
-  const pkg = await packageJson(pkgName, { allVersions: true });
-  const version = resolveToPackageVersion(pkg, pkgSpecifier);
-  const tarballURL: string = pkg.versions[version].dist.tarball;
-  const tarballBuffer = await fetch(tarballURL).then((res) => res.buffer());
-  const files = await decompress(tarballBuffer, {
-    filter: (file) =>
-      file.type === "directory" || /\.(json|ts|tsx)$/.test(file.path),
-  });
+  const { version, versions, tarballStream } = await getTarballAndVersions(
+    pkgName,
+    pkgSpecifier
+  );
+
   const fileSystem = project.getFileSystem();
   const pkgPath = `/node_modules/${pkgName}`;
-  for (const file of files) {
-    file.path = file.path.replace(/^package\//, "");
-    if (file.type === "directory") {
-      fileSystem.mkdirSync(`${pkgPath}/${file.path}`);
+  for (let [filepath, entry] of await handleTarballStream(tarballStream)) {
+    filepath = `${pkgPath}${filepath.replace(/^[^/]+\/?/, "/")}`;
+    if (entry.kind === "directory") {
+      fileSystem.mkdirSync(filepath);
+    } else if (entry.kind === "file") {
+      fileSystem.writeFileSync(filepath, entry.content);
     } else {
-      fileSystem.writeFileSync(
-        `${pkgPath}/${file.path}`,
-        file.data.toString("utf8")
-      );
+      assertNever(entry);
     }
   }
-  return { pkgPath, version, versions: pkg.versions };
+  return { pkgPath, version, versions };
 }
 
 export async function getPackage(pkgName: string, pkgSpecifier: string) {
@@ -122,8 +204,6 @@ export async function getPackage(pkgName: string, pkgSpecifier: string) {
     })
   );
 
-  project.resolveSourceFileDependencies();
-
   const rootSymbols = new Map<Symbol, string>();
   for (const [entrypoint, resolved] of entrypoints) {
     const sourceFile = project.getSourceFile(resolved);
@@ -137,7 +217,7 @@ export async function getPackage(pkgName: string, pkgSpecifier: string) {
     ...getDocsInfo(rootSymbols, pkgPath, pkgName, version, (symbolId) =>
       externalPackages.get(symbolId)
     ),
-    versions: Object.keys(versions).reverse(),
+    versions: [...versions].reverse(),
   };
 }
 

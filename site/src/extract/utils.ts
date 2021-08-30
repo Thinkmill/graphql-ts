@@ -346,12 +346,14 @@ export function getDocs(decl: JSDocableNode) {
 }
 
 export function getSymbolIdentifier(symbol: Symbol) {
-  const fullName = symbol.getFullyQualifiedName();
-  if (fullName === "unknown" || fullName === "globalThis") {
-    return fullName;
-  }
   const decls = symbol.getDeclarations();
-  assert(decls.length >= 1, "expected exactly at least one declaration");
+  if (decls.length === 0) {
+    const fullName = symbol.getFullyQualifiedName();
+    if (fullName === "unknown" || fullName === "globalThis") {
+      return fullName;
+    }
+    assert(decls.length >= 1, "expected exactly at least one declaration");
+  }
 
   return hashString(
     decls
@@ -490,6 +492,11 @@ export async function collectEntrypointsOfPackage(
       ])),
   ]);
   const entrypoints = new Map<string, string>();
+  const moduleResolutionCache = ts.createModuleResolutionCache(
+    project.getFileSystem().getCurrentDirectory(),
+    (x) => x,
+    project.getCompilerOptions()
+  );
   for (const x of packageJsons) {
     const entrypoint = path.join(
       pkgName,
@@ -499,7 +506,8 @@ export async function collectEntrypointsOfPackage(
       entrypoint,
       "/index.js",
       project.getCompilerOptions(),
-      project.getModuleResolutionHost()
+      project.getModuleResolutionHost(),
+      moduleResolutionCache
     ).resolvedModule?.resolvedFileName;
     if (!resolved) continue;
     entrypoints.set(entrypoint, resolved);
