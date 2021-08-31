@@ -11,9 +11,7 @@ import * as styles from "./type.css";
 
 export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
-    return (
-      <span className={`${codeFont} ${styles.intrinsic}`}>{type.value}</span>
-    );
+    return <span className={styles.intrinsic}>{type.value}</span>;
   }
   if (type.kind === "reference") {
     return (

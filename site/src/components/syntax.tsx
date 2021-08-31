@@ -1,4 +1,3 @@
-import { codeFont } from "../lib/theme.css";
 import { syntaxKinds } from "./syntax.css";
 
 export function Syntax({
@@ -8,5 +7,5 @@ export function Syntax({
   children: string | number | (string | number)[];
   kind: keyof typeof syntaxKinds;
 }) {
-  return <span className={`${syntaxKinds[kind]} ${codeFont}`}>{children}</span>;
+  return <span className={syntaxKinds[kind]}>{children}</span>;
 }

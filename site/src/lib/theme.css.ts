@@ -252,6 +252,11 @@ export const codeFont = style({
   fontVariantLigatures: "none",
 });
 
+export const codeFontStyleObj = {
+  fontFamily: tokens.font.code,
+  fontVariantLigatures: "none",
+};
+
 /** Thanks for the reset, @tailwindcss (everything below here) */
 
 globalStyle(`html`, {

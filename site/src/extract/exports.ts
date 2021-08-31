@@ -7,7 +7,6 @@ import {
   VariableDeclaration,
   ClassDeclaration,
   InterfaceDeclaration,
-  EnumDeclaration,
 } from "ts-morph";
 
 type ExportName = string;

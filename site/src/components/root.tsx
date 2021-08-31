@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { DocsContext } from "../lib/DocsContext";
 
@@ -56,7 +56,16 @@ export function Root(props: import("../extract").DocInfo) {
       value={{
         symbols: props.accessibleSymbols,
         references: props.symbolReferences,
-        canonicalExportLocations: props.canonicalExportLocations,
+        canonicalExportLocations: useMemo(
+          () =>
+            Object.fromEntries(
+              Object.entries(props.canonicalExportLocations).map(
+                ([key, [exportName, fileSymbolName]]) =>
+                  [key, { exportName, fileSymbolName }] as const
+              )
+            ),
+          [props.canonicalExportLocations]
+        ),
         symbolsForInnerBit: new Map(Object.entries(props.symbolsForInnerBit)),
         goodIdentifiers: props.goodIdentifiers,
         rootSymbols: new Set(props.rootSymbols),
@@ -64,6 +73,16 @@ export function Root(props: import("../extract").DocInfo) {
       }}
     >
       <div className={themeClass}>
+        <svg xmlns="http://www.w3.org/2000/svg" style={{ display: "none" }}>
+          <symbol id="minus-icon" viewBox="0 0 20 20">
+            <path
+              fill="currentColor"
+              fillRule="evenodd"
+              d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+              clipRule="evenodd"
+            />
+          </symbol>
+        </svg>
         <Header packageName={props.packageName} />
         <PageContainer>
           <NavigationContainer>
@@ -80,9 +99,7 @@ export function Root(props: import("../extract").DocInfo) {
                 }
               >
                 {props.versions.map((version) => (
-                  <option key={version} value={version}>
-                    {version}
-                  </option>
+                  <option key={version}>{version}</option>
                 ))}
               </select>
             )}

@@ -1,13 +1,17 @@
 import { composeStyles, globalStyle, style } from "@vanilla-extract/css";
-import { codeFont, syntaxColors } from "../lib/theme.css";
+import { codeFont, syntaxColors, codeFontStyleObj } from "../lib/theme.css";
 import { targetBackground } from "./symbol.css";
+
+const baseSymbol = {
+  ":hover": { textDecoration: "underline" },
+};
 
 export const symbolName = composeStyles(
   codeFont,
   targetBackground,
   style({
     color: syntaxColors.symbol,
-    ":hover": { textDecoration: "underline" },
+    ...baseSymbol,
   })
 );
 
@@ -18,25 +22,17 @@ export const unknownExternalReference = composeStyles(
   })
 );
 
-const baseSymbolReference = style({
-  ":hover": { textDecoration: "underline" },
+export const rootSymbolReference = style({
+  color: syntaxColors.string,
+  ...codeFontStyleObj,
+  ...baseSymbol,
 });
 
-export const rootSymbolReference = composeStyles(
-  codeFont,
-  baseSymbolReference,
-  style({
-    color: syntaxColors.string,
-  })
-);
-
-export const nonRootSymbolReference = composeStyles(
-  codeFont,
-  baseSymbolReference,
-  style({
-    color: syntaxColors.symbol,
-  })
-);
+export const nonRootSymbolReference = style({
+  color: syntaxColors.symbol,
+  ...codeFontStyleObj,
+  ...baseSymbol,
+});
 
 export const tooltipMarkdownContent = style({});
 

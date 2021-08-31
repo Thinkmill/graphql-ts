@@ -1,21 +1,22 @@
 import { composeStyles, style } from "@vanilla-extract/css";
-import { codeFont, syntaxColors, tokens } from "../lib/theme.css";
-
-export const moduleHeading = composeStyles(
+import {
   codeFont,
-  style({
-    fontSize: "2rem",
-    marginBottom: 16,
-  })
-);
+  codeFontStyleObj,
+  syntaxColors,
+  tokens,
+} from "../lib/theme.css";
 
-export const symbolHeading = composeStyles(
-  codeFont,
-  style({
-    fontSize: "1.6rem",
-    marginBottom: 16,
-  })
-);
+export const moduleHeading = style({
+  fontSize: "2rem",
+  marginBottom: 16,
+  ...codeFontStyleObj,
+});
+
+export const symbolHeading = style({
+  fontSize: "1.6rem",
+  marginBottom: 16,
+  ...codeFontStyleObj,
+});
 
 export const rootSymbolContainer = style({
   borderBottom: `1px solid ${tokens.color.gray200}`,

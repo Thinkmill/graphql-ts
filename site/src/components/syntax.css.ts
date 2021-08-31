@@ -1,11 +1,11 @@
 import { style } from "@vanilla-extract/css";
-import { syntaxColors } from "../lib/theme.css";
+import { codeFontStyleObj, syntaxColors } from "../lib/theme.css";
 
 export const syntaxKinds = {
-  parameter: style({ color: syntaxColors.parameter }),
-  keyword: style({ color: syntaxColors.keyword }),
-  bracket: style({ color: syntaxColors.bracket }),
-  colon: style({ color: syntaxColors.colon }),
-  comma: style({ color: syntaxColors.comma }),
-  string: style({ color: syntaxColors.string }),
+  parameter: style({ color: syntaxColors.parameter, ...codeFontStyleObj }),
+  keyword: style({ color: syntaxColors.keyword, ...codeFontStyleObj }),
+  bracket: style({ color: syntaxColors.bracket, ...codeFontStyleObj }),
+  colon: style({ color: syntaxColors.colon, ...codeFontStyleObj }),
+  comma: style({ color: syntaxColors.comma, ...codeFontStyleObj }),
+  string: style({ color: syntaxColors.string, ...codeFontStyleObj }),
 };

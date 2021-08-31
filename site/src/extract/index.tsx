@@ -98,7 +98,7 @@ export type DocInfo = {
   accessibleSymbols: { [k: string]: SerializedSymbol };
   symbolReferences: { [k: string]: string[] };
   canonicalExportLocations: {
-    [k: string]: { exportName: string; fileSymbolName: string };
+    [k: string]: readonly [exportName: string, fileSymbolId: string];
   };
   goodIdentifiers: Record<string, string>;
   symbolsForInnerBit: Record<string, string[]>;
@@ -158,10 +158,7 @@ export function getDocsInfo(
       ].map(([symbol, { exportName, file }]) => {
         return [
           getSymbolIdentifier(symbol),
-          {
-            exportName,
-            fileSymbolName: getSymbolIdentifier(file.getSymbolOrThrow()),
-          },
+          [exportName, getSymbolIdentifier(file.getSymbolOrThrow())] as const,
         ];
       })
     ),

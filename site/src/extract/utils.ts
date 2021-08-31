@@ -15,6 +15,7 @@ import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
 import hashString from "@emotion/hash";
 import { assert } from "../lib/assert";
+import { DocInfo } from ".";
 
 export type TypeParam = {
   name: string;
@@ -230,7 +231,7 @@ export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
 export function getObjectMembers(
   node: TypeElementMemberedNode
 ): ObjectMember[] {
-  return node.getMembers().map((member) => {
+  return node.getMembers().map((member): ObjectMember => {
     if (Node.isIndexSignatureDeclaration(member)) {
       member.getKeyTypeNode();
       return {
@@ -277,7 +278,10 @@ export function getObjectMembers(
           : _convertType(member.getReturnType(), 0),
       };
     }
-    throw new Error("unhandled object member");
+    return {
+      kind: "unknown",
+      content: `${member.getKindName()} ${member.getText()}`,
+    };
   });
 }
 
@@ -368,10 +372,7 @@ export function getSymbolIdentifier(symbol: Symbol) {
 export function getSymbolsForInnerBitsAndGoodIdentifiers(
   accessibleSymbols: Record<string, SerializedSymbol>,
   packageName: string,
-  canonicalExportLocations: Record<
-    string,
-    { exportName: string; fileSymbolName: string }
-  >,
+  canonicalExportLocations: DocInfo["canonicalExportLocations"],
   symbolReferences: Record<string, string[]>,
   _rootSymbols: string[]
 ) {
@@ -437,7 +438,7 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
     }
     const canon = canonicalExportLocations[symbol];
     assert(!!canon);
-    const { exportName, fileSymbolName } = canon;
+    const [exportName, fileSymbolName] = canon;
     return `${findIdentifier(fileSymbolName)}.${exportName}`;
   };
 
