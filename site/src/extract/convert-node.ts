@@ -57,7 +57,7 @@ function handleReference(
     };
   }
   if (
-    symbol.getName() === "Array" &&
+    symbol.getName() === "ReadonlyArray" &&
     symbol.getFullyQualifiedName() === "ReadonlyArray"
   ) {
     return {
