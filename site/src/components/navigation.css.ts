@@ -13,9 +13,14 @@ export const expandableContents = style({
 });
 
 export const expandableSummary = style({
-  display: "flex",
+  display: "block",
   fontWeight: "bold",
   marginBottom: 8,
+  selectors: {
+    "&::-webkit-details-marker": {
+      display: "none",
+    },
+  },
 });
 
 const expandableChevron = style({
@@ -30,6 +35,7 @@ const expandableChevron = style({
 export const expandableChevronOpen = composeStyles(
   expandableChevron,
   style({
+    display: "inline",
     selectors: {
       "details[open] > summary > &": {
         display: "none",
@@ -44,7 +50,7 @@ export const expandableChevronClose = composeStyles(
     display: "none",
     selectors: {
       "details[open] > summary > &": {
-        display: "initial",
+        display: "inline",
       },
     },
   })

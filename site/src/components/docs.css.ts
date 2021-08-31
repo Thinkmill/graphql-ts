@@ -8,7 +8,14 @@ export const docs = style({
   marginBottom: 16,
 });
 
-export const blockSummary = style({ display: "block" });
+export const blockSummary = style({
+  display: "block",
+  selectors: {
+    "&::-webkit-details-marker": {
+      display: "none",
+    },
+  },
+});
 
 export const details = composeStyles(
   docs,
