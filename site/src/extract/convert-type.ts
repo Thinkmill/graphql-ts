@@ -10,14 +10,12 @@ import {
 } from "ts-morph";
 import { collectSymbol } from ".";
 import { assert } from "../lib/assert";
+import { SerializedType, TupleElement, ObjectMember } from "../lib/types";
 import { convertTypeNode } from "./convert-node";
 import {
   getDocs,
   getParameters,
   getTypeParameters,
-  ObjectMember,
-  TupleElement,
-  SerializedType,
   getSymbolIdentifier,
 } from "./utils";
 

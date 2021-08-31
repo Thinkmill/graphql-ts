@@ -7,16 +7,15 @@ import {
   TypeParameterDeclaration,
 } from "ts-morph";
 import {
-  SerializedType,
   getParameters,
   getTypeParameters,
-  TupleElement,
   getSymbolIdentifier,
   getObjectMembers,
 } from "./utils";
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
 import { fakeAssert, assert, assertNever } from "../lib/assert";
+import { SerializedType, TupleElement } from "../lib/types";
 
 function wrapInTsMorphNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
   someNode: Node,

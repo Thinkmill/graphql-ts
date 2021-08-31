@@ -1,4 +1,4 @@
-import { SerializedSymbol } from "../extract/utils";
+import { SerializedSymbol } from "./types";
 import { DocsContextType } from "./DocsContext";
 
 export function groupExports(

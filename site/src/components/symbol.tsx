@@ -13,7 +13,7 @@ import {
 import { Params, Type, TypeParams } from "./type";
 
 import * as styles from "./symbol.css";
-import { ClassMember, Parameter, TypeParam } from "../extract/utils";
+import { ClassMember, Parameter, TypeParam } from "../lib/types";
 import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import { blockSummary } from "./docs.css";

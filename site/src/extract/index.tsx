@@ -22,17 +22,16 @@ import { findCanonicalExportLocations } from "./exports";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
 import {
-  SerializedSymbol,
   getParameters,
   getDocs,
   getTypeParameters,
   getDocsFromJSDocNodes,
   getSymbolIdentifier,
   getObjectMembers,
-  ClassMember,
   getSymbolsForInnerBitsAndGoodIdentifiers,
   collectEntrypointsOfPackage,
 } from "./utils";
+import { SerializedSymbol, ClassMember } from "../lib/types";
 
 // cache bust 1
 

@@ -1,6 +1,5 @@
-import React, { Fragment } from "react";
+import { Fragment } from "react";
 
-import { TypeParam, SerializedType, Parameter } from "../extract/utils";
 import { codeFont } from "../lib/theme.css";
 
 import { SymbolReference } from "./symbol-references";
@@ -8,6 +7,7 @@ import { Docs } from "./docs";
 import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import * as styles from "./type.css";
+import { SerializedType, TypeParam, Parameter } from "../lib/types";
 
 export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "intrinsic") {
