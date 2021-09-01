@@ -74,7 +74,7 @@ async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
     }
     if (results[1].status === "fulfilled") {
       return {
-        versions: Object.keys(results[0].value.versions),
+        versions: results[0].value.versions,
         version: pkgSpecifier,
         content: results[1].value,
       };
@@ -84,7 +84,7 @@ async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
   const pkg = await pkgPromise;
   const version = resolveToPackageVersion(pkg, pkgSpecifier);
   const content = await fetchPackageContent(pkgName, version);
-  return { content, version, versions: Object.keys(pkg.versions) };
+  return { content, version, versions: pkg.versions };
 }
 
 async function addPackageToNodeModules(
