@@ -12,25 +12,13 @@ import gunzip from "gunzip-maybe";
 import getNpmTarballUrl from "get-npm-tarball-url";
 import { DocInfo, getDocsInfo } from ".";
 import { collectEntrypointsOfPackage, resolveToPackageVersion } from "./utils";
-import { assertNever } from "../lib/assert";
 import { getPackageMetadata } from "./fetch-package-metadata";
 
 async function handleTarballStream(tarballStream: NodeJS.ReadableStream) {
   const extract = tarballStream.pipe(gunzip()).pipe(tar.extract());
-  const entries = new Map<
-    string,
-    { kind: "directory" } | { kind: "file"; content: string }
-  >();
+  const entries = new Map<string, string>();
   extract.on("entry", (headers, stream, next) => {
-    if (headers.type === "directory") {
-      entries.set(headers.name, { kind: "directory" });
-      next();
-      stream.resume();
-      stream.on("end", next);
-      return;
-    }
     if (headers.type !== "file" || !/\.(json|ts|tsx)$/.test(headers.name)) {
-      headers.size;
       stream.resume();
       stream.on("end", next);
       return;
@@ -38,15 +26,13 @@ async function handleTarballStream(tarballStream: NodeJS.ReadableStream) {
 
     streamToString(stream)
       .then((content) => {
-        entries.set(headers.name, { kind: "file", content });
+        entries.set(headers.name.replace(/^[^/]+\/?/, "/"), content);
         next();
       })
       .catch((err) => (next as any)(err));
   });
 
-  return new Promise<
-    Map<string, { kind: "directory" } | { kind: "file"; content: string }>
-  >((resolve, reject) => {
+  return new Promise<Map<string, string>>((resolve, reject) => {
     extract.on("finish", () => {
       resolve(entries);
     });
@@ -68,15 +54,20 @@ function streamToString(stream: NodeJS.ReadableStream) {
   });
 }
 
+async function fetchPackageContent(pkgName: string, pkgVersion: string) {
+  const tarballStream = await fetch(getNpmTarballUrl(pkgName, pkgVersion)).then(
+    (res) => res.body
+  );
+  return handleTarballStream(tarballStream);
+}
+
 async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
   let pkgPromise = getPackageMetadata(pkgName);
   if (semver.valid(pkgSpecifier)) {
-    let tarballBufferPromise = fetch(
-      getNpmTarballUrl(pkgName, pkgSpecifier)
-    ).then((res) => res.body);
+    const packageContentPromise = fetchPackageContent(pkgName, pkgSpecifier);
     const results = await Promise.allSettled([
       pkgPromise,
-      tarballBufferPromise,
+      packageContentPromise,
     ]);
     if (results[0].status !== "fulfilled") {
       throw results[0].reason;
@@ -85,16 +76,15 @@ async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
       return {
         versions: Object.keys(results[0].value.versions),
         version: pkgSpecifier,
-        tarballStream: results[1].value,
+        content: results[1].value,
       };
     }
     pkgPromise = Promise.resolve(results[0].value);
   }
   const pkg = await pkgPromise;
   const version = resolveToPackageVersion(pkg, pkgSpecifier);
-  const tarballURL: string = getNpmTarballUrl(pkgName, version);
-  const tarballStream = await fetch(tarballURL).then((res) => res.body);
-  return { tarballStream, version, versions: Object.keys(pkg.versions) };
+  const content = await fetchPackageContent(pkgName, version);
+  return { content, version, versions: Object.keys(pkg.versions) };
 }
 
 async function addPackageToNodeModules(
@@ -102,22 +92,16 @@ async function addPackageToNodeModules(
   pkgName: string,
   pkgSpecifier: string
 ) {
-  const { version, versions, tarballStream } = await getTarballAndVersions(
+  const { version, versions, content } = await getTarballAndVersions(
     pkgName,
     pkgSpecifier
   );
 
   const fileSystem = project.getFileSystem();
   const pkgPath = `/node_modules/${pkgName}`;
-  for (let [filepath, entry] of await handleTarballStream(tarballStream)) {
-    filepath = `${pkgPath}${filepath.replace(/^[^/]+\/?/, "/")}`;
-    if (entry.kind === "directory") {
-      fileSystem.mkdirSync(filepath);
-    } else if (entry.kind === "file") {
-      fileSystem.writeFileSync(filepath, entry.content);
-    } else {
-      assertNever(entry);
-    }
+  for (let [filepath, fileContent] of content) {
+    filepath = `${pkgPath}${filepath}`;
+    fileSystem.writeFileSync(filepath, fileContent);
   }
   return { pkgPath, version, versions };
 }
