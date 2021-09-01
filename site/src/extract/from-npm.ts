@@ -10,7 +10,7 @@ import semver from "semver";
 import tar from "tar-stream";
 import gunzip from "gunzip-maybe";
 import getNpmTarballUrl from "get-npm-tarball-url";
-import { getDocsInfo } from ".";
+import { DocInfo, getDocsInfo } from ".";
 import { collectEntrypointsOfPackage, resolveToPackageVersion } from "./utils";
 import { assertNever } from "../lib/assert";
 import { getPackageMetadata } from "./fetch-package-metadata";
@@ -122,7 +122,10 @@ async function addPackageToNodeModules(
   return { pkgPath, version, versions };
 }
 
-export async function getPackage(pkgName: string, pkgSpecifier: string) {
+export async function getPackage(
+  pkgName: string,
+  pkgSpecifier: string
+): Promise<DocInfo> {
   let project = new Project({
     compilerOptions: {
       noEmit: true,
