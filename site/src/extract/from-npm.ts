@@ -92,7 +92,7 @@ async function getTarballAndVersions(pkgName: string, pkgSpecifier: string) {
   }
   const pkg = await pkgPromise;
   const version = resolveToPackageVersion(pkg, pkgSpecifier);
-  const tarballURL: string = pkg.versions[version].dist.tarball;
+  const tarballURL: string = getNpmTarballUrl(pkgName, version);
   const tarballStream = await fetch(tarballURL).then((res) => res.body);
   return { tarballStream, version, versions: Object.keys(pkg.versions) };
 }

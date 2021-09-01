@@ -27,6 +27,7 @@
     "@types/tar-stream": "2.2.1",
     "@vanilla-extract/babel-plugin": "^1.0.1",
     "@vanilla-extract/css": "^1.2.3",
+    "algoliasearch": "4.10.5",
     "css-loader": "6.2.0",
     "decompress": "4.2.1",
     "framer-motion": "^4.1.16",

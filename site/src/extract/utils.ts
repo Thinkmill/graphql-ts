@@ -22,6 +22,7 @@ import {
   Parameter,
   SerializedSymbol,
 } from "../lib/types";
+import { PackageMetadata } from "./fetch-package-metadata";
 
 export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
   return node.getTypeParameters().map((typeParam) => {
@@ -324,22 +325,19 @@ export async function collectEntrypointsOfPackage(
 }
 
 export function resolveToPackageVersion(
-  pkg: import("package-json").AbbreviatedMetadata,
+  pkg: PackageMetadata,
   specifier: string | undefined
 ): string {
   if (specifier !== undefined) {
-    if (Object.prototype.hasOwnProperty.call(pkg["dist-tags"], specifier)) {
-      return pkg["dist-tags"][specifier];
+    if (Object.prototype.hasOwnProperty.call(pkg.tags, specifier)) {
+      return pkg.tags[specifier];
     }
     if (semver.validRange(specifier)) {
-      const version = semver.maxSatisfying(
-        Object.keys(pkg.versions),
-        specifier
-      );
+      const version = semver.maxSatisfying(pkg.versions, specifier);
       if (version) {
         return version;
       }
     }
   }
-  return pkg["dist-tags"].latest;
+  return pkg.tags.latest;
 }
