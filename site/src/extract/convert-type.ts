@@ -10,14 +10,7 @@ import {
 } from "ts-morph";
 import { collectSymbol } from ".";
 import { assert } from "../lib/assert";
-import {
-  SerializedType,
-  ObjectMember,
-  TypeKind,
-  TupleElementKind,
-  ObjectMemberKind,
-  KnownIntrinsic,
-} from "../lib/types";
+import { SerializedType, TupleElement, ObjectMember } from "../lib/types";
 import { convertTypeNode } from "./convert-node";
 import {
   getDocs,
@@ -44,16 +37,15 @@ export function _convertType(type: Type, depth: number): SerializedType {
     (type.compilerType as any).intrinsicName &&
     (type.compilerType as any).intrinsicName !== "error"
   ) {
-    const intrinsic = (type.compilerType as any).intrinsicName;
     return {
-      kind: TypeKind.Intrinsic,
-      value: KnownIntrinsic[intrinsic] || intrinsic,
+      kind: "intrinsic",
+      value: (type.compilerType as any).intrinsicName,
     };
   }
 
   if (type.isArray()) {
     return {
-      kind: TypeKind.Array,
+      kind: "array",
       readonly: false,
       inner: convertType(type.getArrayElementTypeOrThrow()),
     };
@@ -62,20 +54,20 @@ export function _convertType(type: Type, depth: number): SerializedType {
   if (symbol) {
     if (symbol.getName() === "ReadonlyArray") {
       return {
-        kind: TypeKind.Array,
+        kind: "array",
         readonly: true,
         inner: convertType(type.getTypeArguments()[0]),
       };
     }
     if (type.isTypeParameter()) {
-      return { kind: TypeKind.TypeParameter, name: symbol.getName() };
+      return { kind: "type-parameter", name: symbol.getName() };
     }
     const name = symbol.getName();
     if (name !== "__type" && name !== "__function" && name !== "__object") {
       symbol = symbol.getAliasedSymbol() || symbol;
       collectSymbol(symbol);
       return {
-        kind: TypeKind.Reference,
+        kind: "reference",
         fullName: getSymbolIdentifier(symbol),
         name,
         typeArguments: (type as Type)
@@ -90,7 +82,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
   if (aliasSymbol) {
     collectSymbol(aliasSymbol);
     return {
-      kind: TypeKind.Reference,
+      kind: "reference",
       fullName: getSymbolIdentifier(aliasSymbol),
       name: aliasSymbol.getName(),
       typeArguments: type.getTypeArguments().map((x) => convertType(x)),
@@ -101,13 +93,13 @@ export function _convertType(type: Type, depth: number): SerializedType {
 
   if (literalValue !== undefined) {
     if (typeof literalValue === "string") {
-      return { kind: TypeKind.StringLiteral, value: literalValue };
+      return { kind: "string-literal", value: literalValue };
     }
     if (typeof literalValue === "number") {
-      return { kind: TypeKind.NumericLiteral, value: literalValue };
+      return { kind: "numeric-literal", value: literalValue };
     }
     return {
-      kind: TypeKind.BigIntLiteral,
+      kind: "bigint-literal",
       value:
         (literalValue.negative ? "-" : "") + literalValue.base10Value + "n",
     };
@@ -118,22 +110,22 @@ export function _convertType(type: Type, depth: number): SerializedType {
     const tupleType = (type.compilerType as ts.TupleTypeReference).target;
 
     return {
-      kind: TypeKind.Tuple,
+      kind: "tuple",
       readonly: tupleType.readonly,
       elements: tupleType.elementFlags.map((flag, i) => {
         const type = convertType(elements[i]);
-        let kind: TupleElementKind | undefined = undefined;
+        let kind: TupleElement["kind"] | undefined = undefined;
         if (flag & ts.ElementFlags.Optional) {
-          kind = TupleElementKind.Optional;
+          kind = "optional";
         }
         if (flag & ts.ElementFlags.Required) {
-          kind = TupleElementKind.Required;
+          kind = "required";
         }
         if (flag & ts.ElementFlags.Variable) {
-          kind = TupleElementKind.Variadic;
+          kind = "variadic";
         }
         if (flag & ts.ElementFlags.Rest) {
-          kind = TupleElementKind.Rest;
+          kind = "rest";
         }
         assert(kind !== undefined);
         return {
@@ -158,7 +150,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
       "expected resolved false type"
     );
     return {
-      kind: TypeKind.Conditional,
+      kind: "conditional",
       checkType: convertType(
         wrapInTsMorphType(type, conditionalType.checkType)
       ),
@@ -184,7 +176,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
       wrapInTsMorphType(type, indexedAccessType.indexType)
     );
     return {
-      kind: TypeKind.IndexedAccess,
+      kind: "indexed-access",
       object,
       index,
     };
@@ -192,20 +184,20 @@ export function _convertType(type: Type, depth: number): SerializedType {
 
   if (type.isUnion()) {
     return {
-      kind: TypeKind.Union,
+      kind: "union",
       types: type.getUnionTypes().map((x) => convertType(x)),
     };
   }
 
   if (type.isIntersection()) {
     return {
-      kind: TypeKind.Intersection,
+      kind: "intersection",
       types: type.getIntersectionTypes().map((x) => convertType(x)),
     };
   }
 
   if (type.isClass()) {
-    return { kind: TypeKind.Intrinsic, value: "class" };
+    return { kind: "intrinsic", value: "class" };
   }
 
   const callSignatures = type.getCallSignatures();
@@ -214,7 +206,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
     const signature = callSignatures[0];
 
     return {
-      kind: TypeKind.Signature,
+      kind: "signature",
       docs: "",
       parameters: signature.getParameters().map((param) => {
         let decl = param.getValueDeclarationOrThrow() as ParameterDeclaration;
@@ -250,11 +242,11 @@ export function _convertType(type: Type, depth: number): SerializedType {
         if (decl instanceof PropertySignature) {
           let type = convertType(decl.getType());
           const isOptional = decl.hasQuestionToken();
-          if (isOptional && type.kind === TypeKind.Union) {
+          if (isOptional && type.kind === "union") {
             type = {
-              kind: TypeKind.Union,
+              kind: "union",
               types: type.types.filter(
-                (x) => x.kind !== TypeKind.Intrinsic || x.value !== "undefined"
+                (x) => x.kind !== "intrinsic" || x.value !== "undefined"
               ),
             };
             if (type.types.length === 1) {
@@ -262,7 +254,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
             }
           }
           return {
-            kind: ObjectMemberKind.Prop,
+            kind: "prop",
             docs: getDocs(decl),
             name: prop.getName(),
             readonly: decl.isReadonly(),
@@ -276,7 +268,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
           decl instanceof MethodDeclaration
         ) {
           return {
-            kind: ObjectMemberKind.Method,
+            kind: "method",
             name: prop.getName(),
             optional: decl.hasQuestionToken(),
             parameters: getParameters(decl),
@@ -291,11 +283,11 @@ export function _convertType(type: Type, depth: number): SerializedType {
         ) {
           let type = convertType(decl.getType());
           const isOptional = decl.hasQuestionToken();
-          if (isOptional && type.kind === TypeKind.Union) {
+          if (isOptional && type.kind === "union") {
             type = {
-              kind: TypeKind.Union,
+              kind: "union",
               types: type.types.filter(
-                (x) => x.kind !== TypeKind.Intrinsic || x.value !== "undefined"
+                (x) => x.kind !== "intrinsic" || x.value !== "undefined"
               ),
             };
             if (type.types.length === 1) {
@@ -303,7 +295,7 @@ export function _convertType(type: Type, depth: number): SerializedType {
             }
           }
           return {
-            kind: ObjectMemberKind.Prop,
+            kind: "prop",
             name: prop.getName(),
             docs: "",
             readonly: false,
@@ -312,29 +304,29 @@ export function _convertType(type: Type, depth: number): SerializedType {
           };
         }
         debugger;
-        return { kind: ObjectMemberKind.Unknown, content: decl.getText() };
+        return { kind: "unknown", content: decl.getText() };
       });
     const stringIndexType = type.getStringIndexType();
     const numberIndexType = type.getNumberIndexType();
     if (stringIndexType) {
       members.push({
-        kind: ObjectMemberKind.Index,
-        key: { kind: TypeKind.Intrinsic, value: KnownIntrinsic.string },
+        kind: "index",
+        key: { kind: "intrinsic", value: "string" },
         value: convertType(stringIndexType),
       });
     }
     if (numberIndexType) {
       members.push({
-        kind: ObjectMemberKind.Index,
-        key: { kind: TypeKind.Intrinsic, value: KnownIntrinsic.number },
+        kind: "index",
+        key: { kind: "intrinsic", value: "number" },
         value: convertType(numberIndexType),
       });
     }
     return {
-      kind: TypeKind.Object,
+      kind: "object",
       members,
     };
   }
 
-  return { kind: TypeKind.Raw, value: type.getText() };
+  return { kind: "raw", value: type.getText() };
 }

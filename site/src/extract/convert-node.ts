@@ -15,13 +15,7 @@ import {
 import { _convertType } from "./convert-type";
 import { collectSymbol } from ".";
 import { fakeAssert, assert, assertNever } from "../lib/assert";
-import {
-  KnownIntrinsic,
-  SerializedType,
-  TupleElement,
-  TupleElementKind,
-  TypeKind,
-} from "../lib/types";
+import { SerializedType, TupleElement } from "../lib/types";
 
 function wrapInTsMorphNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
   someNode: Node,
@@ -37,7 +31,7 @@ function handleReference(
   let symbol = typeName.getSymbol();
   if (!symbol) {
     return {
-      kind: TypeKind.Reference,
+      kind: "reference",
       fullName: "unknown",
       name: typeName.getText(),
       typeArguments: typeArguments.map((x) => convertTypeNode(x)),
@@ -46,7 +40,7 @@ function handleReference(
 
   if (symbol.getDeclarations()?.[0] instanceof TypeParameterDeclaration) {
     return {
-      kind: TypeKind.TypeParameter,
+      kind: "type-parameter",
       name: symbol.getName(),
     };
   }
@@ -56,7 +50,7 @@ function handleReference(
     symbol.getFullyQualifiedName() === "Array"
   ) {
     return {
-      kind: TypeKind.Array,
+      kind: "array",
       readonly: false,
       inner: convertTypeNode(typeArguments[0]),
     };
@@ -66,7 +60,7 @@ function handleReference(
     symbol.getFullyQualifiedName() === "ReadonlyArray"
   ) {
     return {
-      kind: TypeKind.Array,
+      kind: "array",
       readonly: true,
       inner: convertTypeNode(typeArguments[0]),
     };
@@ -80,7 +74,7 @@ function handleReference(
   }
 
   return {
-    kind: TypeKind.Reference,
+    kind: "reference",
     fullName,
     name,
     typeArguments: typeArguments.map((x) => convertTypeNode(x)),
@@ -99,72 +93,72 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   }
 
   if (TypeNode.isAnyKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.any };
+    return { kind: "intrinsic", value: "any" };
   }
   if (TypeNode.isUndefinedKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.undefined };
+    return { kind: "intrinsic", value: "undefined" };
   }
   if (TypeNode.isNeverKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.never };
+    return { kind: "intrinsic", value: "never" };
   }
   if (TypeNode.isBooleanKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.boolean };
+    return { kind: "intrinsic", value: "boolean" };
   }
   if (TypeNode.isObjectKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.object };
+    return { kind: "intrinsic", value: "object" };
   }
   if (TypeNode.isStringKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.string };
+    return { kind: "intrinsic", value: "string" };
   }
   if (TypeNode.isNumberKeyword(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.number };
+    return { kind: "intrinsic", value: "number" };
   }
   if (TypeNode.is(ts.SyntaxKind.VoidKeyword)(node as any)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.void };
+    return { kind: "intrinsic", value: "void" };
   }
   if (TypeNode.is(ts.SyntaxKind.UnknownKeyword)(node as any)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.unknown };
+    return { kind: "intrinsic", value: "unknown" };
   }
 
   if (TypeNode.isLiteralTypeNode(node)) {
     const literal = node.getLiteral();
     if (TypeNode.isNullLiteral(literal)) {
-      return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.null };
+      return { kind: "intrinsic", value: "null" };
     }
     if (TypeNode.isStringLiteral(literal)) {
       const value = literal.getLiteralValue();
-      return { kind: TypeKind.StringLiteral, value };
+      return { kind: "string-literal", value };
     }
     if (TypeNode.isNumericLiteral(literal)) {
       const value = literal.getLiteralValue();
-      return { kind: TypeKind.NumericLiteral, value };
+      return { kind: "numeric-literal", value };
     }
     if (TypeNode.isBigIntLiteral(literal)) {
-      return { kind: TypeKind.BigIntLiteral, value: literal.getText() };
+      return { kind: "bigint-literal", value: literal.getText() };
     }
     if (TypeNode.isTrueLiteral(literal)) {
-      return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.true };
+      return { kind: "intrinsic", value: "true" };
     }
     if (TypeNode.isFalseLiteral(literal)) {
-      return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.false };
+      return { kind: "intrinsic", value: "false" };
     }
   }
   if (TypeNode.isUnionTypeNode(node)) {
     return {
-      kind: TypeKind.Union,
+      kind: "union",
       types: node.getTypeNodes().map((x) => convertTypeNode(x)),
     };
   }
   if (TypeNode.isIndexedAccessTypeNode(node)) {
     return {
-      kind: TypeKind.IndexedAccess,
+      kind: "indexed-access",
       object: convertTypeNode(node.getObjectTypeNode()),
       index: convertTypeNode(node.getIndexTypeNode()),
     };
   }
   if (TypeNode.isConditionalTypeNode(node)) {
     return {
-      kind: TypeKind.Conditional,
+      kind: "conditional",
       checkType: convertTypeNode(node.getCheckType()),
       extendsType: convertTypeNode(node.getExtendsType()),
       trueType: convertTypeNode(node.getTrueType()),
@@ -172,15 +166,15 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     };
   }
   if (TypeNode.isParenthesizedTypeNode(node)) {
-    return { kind: TypeKind.Paren, value: convertTypeNode(node.getTypeNode()) };
+    return { kind: "paren", value: convertTypeNode(node.getTypeNode()) };
   }
 
   if (TypeNode.isInferTypeNode(node)) {
-    return { kind: TypeKind.Infer, name: node.getTypeParameter().getName() };
+    return { kind: "infer", name: node.getTypeParameter().getName() };
   }
   if (TypeNode.isIntersectionTypeNode(node)) {
     return {
-      kind: TypeKind.Intersection,
+      kind: "intersection",
       types: node.getTypeNodes().map((x) => convertTypeNode(x)),
     };
   }
@@ -189,7 +183,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     const constraint = typeParam.getConstraintOrThrow();
 
     return {
-      kind: TypeKind.Mapped,
+      kind: "mapped",
       param: {
         name: typeParam.getName(),
         constraint: convertTypeNode(constraint),
@@ -199,7 +193,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   }
   if (TypeNode.isTypeLiteralNode(node)) {
     return {
-      kind: TypeKind.Object,
+      kind: "object",
       members: getObjectMembers(node),
     };
   }
@@ -207,7 +201,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   if (TypeNode.isFunctionTypeNode(node)) {
     const returnTypeNode = node.getReturnTypeNode();
     return {
-      kind: TypeKind.Signature,
+      kind: "signature",
       parameters: getParameters(node),
       docs: "",
       typeParams: getTypeParameters(node),
@@ -219,7 +213,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
 
   if (TypeNode.isArrayTypeNode(node)) {
     return {
-      kind: TypeKind.Array,
+      kind: "array",
       readonly: false,
       inner: convertTypeNode(node.getElementTypeNode()),
     };
@@ -227,7 +221,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
 
   if (TypeNode.isTupleTypeNode(node)) {
     return {
-      kind: TypeKind.Tuple,
+      kind: "tuple",
       readonly: false,
       elements: node.getElements().map((element): TupleElement => {
         let label: string | null = null;
@@ -239,7 +233,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
         if (element.compilerNode.kind === ts.SyntaxKind.OptionalType) {
           fakeAssert<Node<ts.OptionalTypeNode>>(element);
           return {
-            kind: TupleElementKind.Optional,
+            kind: "optional",
             label,
             type: convertTypeNode(element.getNodeProperty("type")),
           };
@@ -248,13 +242,13 @@ export function convertTypeNode(node: TypeNode): SerializedType {
         if (element.compilerNode.kind === ts.SyntaxKind.RestType) {
           fakeAssert<TypeNode<ts.RestTypeNode>>(element);
           return {
-            kind: TupleElementKind.Variadic,
+            kind: "variadic",
             label,
             type: convertTypeNode(element.getNodeProperty("type")),
           };
         }
         return {
-          kind: TupleElementKind.Required,
+          kind: "required",
           label,
           type: convertTypeNode(element),
         };
@@ -265,11 +259,11 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   if (node.compilerNode.kind === ts.SyntaxKind.TypeOperator) {
     fakeAssert<TypeNode<ts.TypeOperatorNode>>(node);
     if (node.compilerNode.operator === ts.SyntaxKind.UniqueKeyword) {
-      return { kind: TypeKind.Intrinsic, value: "unique symbol" };
+      return { kind: "intrinsic", value: "unique symbol" };
     }
     if (node.compilerNode.operator === ts.SyntaxKind.ReadonlyKeyword) {
       const inner = convertTypeNode(node.getNodeProperty("type"));
-      if (inner.kind === TypeKind.Array || inner.kind === TypeKind.Tuple) {
+      if (inner.kind === "array" || inner.kind === "tuple") {
         return {
           ...inner,
           readonly: true,
@@ -282,7 +276,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     }
     if (node.compilerNode.operator === ts.SyntaxKind.KeyOfKeyword) {
       return {
-        kind: TypeKind.Keyof,
+        kind: "keyof",
         value: convertTypeNode(node.getNodeProperty("type")),
       };
     }
@@ -305,7 +299,7 @@ export function convertTypeNode(node: TypeNode): SerializedType {
       symbol = symbol.getAliasedSymbol() || symbol;
 
       return {
-        kind: TypeKind.Typeof,
+        kind: "typeof",
         fullName: getSymbolIdentifier(symbol),
         name: symbol.getName(),
       };
@@ -314,21 +308,16 @@ export function convertTypeNode(node: TypeNode): SerializedType {
 
   if (TypeNode.isTypePredicateNode(node)) {
     const typeNode = node.getTypeNode();
-    const type = typeNode ? convertTypeNode(typeNode) : typeNode;
     return {
-      kind: TypeKind.TypePredicate,
+      kind: "type-predicate",
       asserts: node.hasAssertsModifier(),
       param: node.getParameterNameNode().getText(),
-      ...(type ? { type } : {}),
+      type: typeNode ? convertTypeNode(typeNode) : typeNode,
     };
   }
 
   if (TypeNode.isThisTypeNode(node)) {
-    return { kind: TypeKind.Intrinsic, value: KnownIntrinsic.this };
+    return { kind: "intrinsic", value: "this" };
   }
-  return {
-    kind: TypeKind.Raw,
-    value: node.getText(),
-    tsKind: node.getKindName(),
-  };
+  return { kind: "raw", value: node.getText(), tsKind: node.getKindName() };
 }

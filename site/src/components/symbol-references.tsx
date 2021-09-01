@@ -12,7 +12,6 @@ import { Markdown } from "./markdown";
 import { Syntax } from "./syntax";
 import * as styles from "./symbol-references.css";
 import { Tooltip } from "./tooltip";
-import { SymbolKind } from "../lib/types";
 
 const NamesInScopeContext = createContext<Map<string, SymbolId>>(new Map());
 
@@ -130,7 +129,7 @@ export function SymbolReference({
     href: `#${goodIdentifiers[fullName]}`,
     children: isRootSymbol ? JSON.stringify(name) : name,
   };
-  if (symbols[fullName].kind === SymbolKind.Unknown) {
+  if (symbols[fullName].kind === "unknown") {
     props.style = { color: "red" };
   }
 

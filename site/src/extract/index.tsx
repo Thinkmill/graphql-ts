@@ -31,12 +31,7 @@ import {
   getSymbolsForInnerBitsAndGoodIdentifiers,
   collectEntrypointsOfPackage,
 } from "./utils";
-import {
-  SerializedSymbol,
-  ClassMember,
-  SymbolKind,
-  ClassMemberKind,
-} from "../lib/types";
+import { SerializedSymbol, ClassMember } from "../lib/types";
 
 // cache bust 1
 
@@ -228,7 +223,7 @@ function resolveSymbolQueue() {
     if (decl instanceof TypeAliasDeclaration) {
       const typeNode = decl.getTypeNode();
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.TypeAlias,
+        kind: "type-alias",
         name: symbol.getName(),
         docs: getDocs(decl),
         typeParams: getTypeParameters(decl),
@@ -239,7 +234,7 @@ function resolveSymbolQueue() {
     } else if (decl instanceof FunctionDeclaration) {
       const returnTypeNode = decl.getReturnTypeNode();
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Function,
+        kind: "function",
         name: symbol.getName(),
         parameters: getParameters(decl),
         docs: getDocs(decl),
@@ -251,7 +246,7 @@ function resolveSymbolQueue() {
     } else if (decl instanceof TypeAliasDeclaration) {
       const typeNode = decl.getTypeNode();
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.TypeAlias,
+        kind: "type-alias",
         name: symbol.getName(),
         docs: getDocs(decl),
         typeParams: getTypeParameters(decl),
@@ -289,7 +284,7 @@ function resolveSymbolQueue() {
         }
       });
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Module,
+        kind: "module",
         name: state.rootSymbols.get(symbol) || symbol.getName(),
         docs: getDocsFromJSDocNodes(jsDocs),
         exports,
@@ -302,7 +297,7 @@ function resolveSymbolQueue() {
       if (!typeNode && init instanceof ArrowFunction) {
         const returnTypeNode = init.getReturnTypeNode();
         state.publicSymbols.set(symbol, {
-          kind: SymbolKind.Function,
+          kind: "function",
           name: symbol.getName(),
           parameters: getParameters(init),
           docs: getDocs(variableStatement),
@@ -314,7 +309,7 @@ function resolveSymbolQueue() {
         continue;
       }
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Variable,
+        kind: "variable",
         name: symbol.getName(),
         docs: getDocs(variableStatement),
         variableKind: variableStatement.getDeclarationKind(),
@@ -325,7 +320,7 @@ function resolveSymbolQueue() {
     } else if (decl instanceof PropertySignature) {
       const typeNode = decl.getTypeNode();
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Variable,
+        kind: "variable",
         name: symbol.getName(),
         docs: getDocs(decl),
         variableKind: "const",
@@ -335,7 +330,7 @@ function resolveSymbolQueue() {
       });
     } else if (decl instanceof InterfaceDeclaration) {
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Interface,
+        kind: "interface",
         name: symbol.getName(),
         docs: getDocs(decl),
         typeParams: getTypeParameters(decl),
@@ -345,7 +340,7 @@ function resolveSymbolQueue() {
     } else if (decl instanceof ClassDeclaration) {
       const extendsNode = decl.getExtends();
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Class,
+        kind: "class",
         name: symbol.getName(),
         docs: getDocs(decl),
         typeParams: getTypeParameters(decl),
@@ -374,7 +369,7 @@ function resolveSymbolQueue() {
             const returnTypeNode = member.getReturnTypeNode();
             return [
               {
-                kind: ClassMemberKind.Method,
+                kind: "method",
                 docs: getDocs(member),
                 name: member.getName(),
                 optional: member.hasQuestionToken(),
@@ -392,7 +387,7 @@ function resolveSymbolQueue() {
 
             return [
               {
-                kind: ClassMemberKind.Prop,
+                kind: "prop",
                 docs: getDocs(member),
                 name: member.getName(),
                 optional: member.hasQuestionToken(),
@@ -404,19 +399,19 @@ function resolveSymbolQueue() {
               },
             ];
           }
-          return [{ kind: ClassMemberKind.Unknown, content: member.getText() }];
+          return [{ kind: "unknown", content: member.getText() }];
         }),
       });
     } else if (decl instanceof EnumDeclaration) {
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Enum,
+        kind: "enum",
         const: decl.isConstEnum(),
         name: symbol.getName(),
         docs: getDocs(decl),
         members: decl.getMembers().map((member) => {
           const symbol = member.getSymbolOrThrow();
           state.publicSymbols.set(symbol, {
-            kind: SymbolKind.EnumMember,
+            kind: "enum-member",
             name: member.getName(),
             docs: getDocs(member),
             value: member.getValue() ?? null,
@@ -427,7 +422,7 @@ function resolveSymbolQueue() {
     } else {
       let docs = Node.isJSDocableNode(decl) ? getDocs(decl) : "";
       state.publicSymbols.set(symbol, {
-        kind: SymbolKind.Unknown,
+        kind: "unknown",
         name: symbol.getName(),
         docs,
         content: decl.getText(),

@@ -10,28 +10,9 @@ export type Parameter = {
   optional: boolean;
 };
 
-// i'm not a fan of using TS enums
-// but the strings take a sizable amount of space
-// in the serialized thing and though they will compress really well
-// Lambda has a hard limit of 5mb(or something around that)
-// before compression so getting the size is imporant
-// because pages are hitting that so getting
-
-export enum SymbolKind {
-  Function,
-  Module,
-  Variable,
-  TypeAlias,
-  Unknown,
-  Interface,
-  Class,
-  Enum,
-  EnumMember,
-}
-
 export type SerializedSymbol =
   | {
-      kind: SymbolKind.Function;
+      kind: "function";
       name: string;
       parameters: Parameter[];
       docs: string;
@@ -39,33 +20,33 @@ export type SerializedSymbol =
       returnType: SerializedType;
     }
   | {
-      kind: SymbolKind.Module;
+      kind: "module";
       name: string;
       exports: Record<string, string>;
       docs: string;
     }
   | {
-      kind: SymbolKind.Variable;
+      kind: "variable";
       name: string;
       docs: string;
       variableKind: "var" | "let" | "const";
       type: SerializedType;
     }
   | {
-      kind: SymbolKind.TypeAlias;
+      kind: "type-alias";
       name: string;
       docs: string;
       typeParams: TypeParam[];
       type: SerializedType;
     }
   | {
-      kind: SymbolKind.Unknown;
+      kind: "unknown";
       name: string;
       docs: string;
       content: string;
     }
   | {
-      kind: SymbolKind.Interface;
+      kind: "interface";
       name: string;
       docs: string;
       typeParams: TypeParam[];
@@ -73,7 +54,7 @@ export type SerializedSymbol =
       members: ObjectMember[];
     }
   | {
-      kind: SymbolKind.Class;
+      kind: "class";
       name: string;
       docs: string;
       hasPrivateMembers: boolean;
@@ -88,35 +69,28 @@ export type SerializedSymbol =
       members: ClassMember[];
     }
   | {
-      kind: SymbolKind.Enum;
+      kind: "enum";
       const: boolean;
       name: string;
       docs: string;
       members: string[];
     }
   | {
-      kind: SymbolKind.EnumMember;
+      kind: "enum-member";
       name: string;
       docs: string;
       value: string | number | null;
     };
 
-export enum ClassMemberKind {
-  Index,
-  Prop,
-  Method,
-  Unknown,
-}
-
 export type ClassMember =
   | {
-      kind: ClassMemberKind.Index;
+      kind: "index";
       static: boolean;
       key: SerializedType;
       value: SerializedType;
     }
   | {
-      kind: ClassMemberKind.Prop;
+      kind: "prop";
       static: boolean;
       name: string;
       docs: string;
@@ -125,7 +99,7 @@ export type ClassMember =
       type: SerializedType;
     }
   | {
-      kind: ClassMemberKind.Method;
+      kind: "method";
       static: boolean;
       name: string;
       optional: boolean;
@@ -135,34 +109,20 @@ export type ClassMember =
       returnType: SerializedType;
     }
   | {
-      kind: ClassMemberKind.Unknown;
+      kind: "unknown";
       content: string;
     };
-
-export enum TupleElementKind {
-  Optional,
-  Required,
-  Rest,
-  Variadic,
-}
 
 export type TupleElement = {
   label: string | null;
-  kind: TupleElementKind;
+  kind: "optional" | "required" | "rest" | "variadic";
   type: SerializedType;
 };
 
-export enum ObjectMemberKind {
-  Index,
-  Prop,
-  Method,
-  Unknown,
-}
-
 export type ObjectMember =
-  | { kind: ObjectMemberKind.Index; key: SerializedType; value: SerializedType }
+  | { kind: "index"; key: SerializedType; value: SerializedType }
   | {
-      kind: ObjectMemberKind.Prop;
+      kind: "prop";
       name: string;
       docs: string;
       optional: boolean;
@@ -170,7 +130,7 @@ export type ObjectMember =
       type: SerializedType;
     }
   | {
-      kind: ObjectMemberKind.Method;
+      kind: "method";
       name: string;
       optional: boolean;
       parameters: Parameter[];
@@ -179,104 +139,60 @@ export type ObjectMember =
       returnType: SerializedType;
     }
   | {
-      kind: ObjectMemberKind.Unknown;
+      kind: "unknown";
       content: string;
     };
 
-export enum TypeKind {
-  Intrinsic,
-  Reference,
-  Typeof,
-  Array,
-  TypeParameter,
-  Union,
-  Intersection,
-  Infer,
-  Paren,
-  Tuple,
-  Object,
-  IndexedAccess,
-  Conditional,
-  StringLiteral,
-  NumericLiteral,
-  BigIntLiteral,
-  Keyof,
-  Mapped,
-  Signature,
-  TypePredicate,
-  Raw,
-}
-
-export enum KnownIntrinsic {
-  any,
-  undefined,
-  never,
-  boolean,
-  object,
-  string,
-  number,
-  void,
-  unknown,
-  null,
-  true,
-  false,
-  this,
-}
-
 export type SerializedType =
-  | { kind: TypeKind.Intrinsic; value: KnownIntrinsic | string }
+  | { kind: "intrinsic"; value: string }
   | {
-      kind: TypeKind.Reference;
+      kind: "reference";
       fullName: string;
       name: string;
       typeArguments: SerializedType[];
     }
   | {
-      kind: TypeKind.Typeof;
+      kind: "typeof";
       fullName: string;
       name: string;
     }
-  | { kind: TypeKind.Array; readonly: boolean; inner: SerializedType }
-  | { kind: TypeKind.TypeParameter; name: string }
-  | { kind: TypeKind.Union; types: SerializedType[] }
-  | { kind: TypeKind.Intersection; types: SerializedType[] }
-  | { kind: TypeKind.Infer; name: string }
-  | { kind: TypeKind.Paren; value: SerializedType }
-  | { kind: TypeKind.Tuple; readonly: boolean; elements: TupleElement[] }
-  | { kind: TypeKind.Object; members: ObjectMember[] }
+  | { kind: "array"; readonly: boolean; inner: SerializedType }
+  | { kind: "type-parameter"; name: string }
+  | { kind: "union"; types: SerializedType[] }
+  | { kind: "intersection"; types: SerializedType[] }
+  | { kind: "infer"; name: string }
+  | { kind: "paren"; value: SerializedType }
+  | { kind: "tuple"; readonly: boolean; elements: TupleElement[] }
+  | { kind: "object"; members: ObjectMember[] }
+  | { kind: "indexed-access"; object: SerializedType; index: SerializedType }
   | {
-      kind: TypeKind.IndexedAccess;
-      object: SerializedType;
-      index: SerializedType;
-    }
-  | {
-      kind: TypeKind.Conditional;
+      kind: "conditional";
       checkType: SerializedType;
       extendsType: SerializedType;
       trueType: SerializedType;
       falseType: SerializedType;
     }
-  | { kind: TypeKind.StringLiteral; value: string }
-  | { kind: TypeKind.NumericLiteral; value: number }
-  | { kind: TypeKind.BigIntLiteral; value: string }
-  | { kind: TypeKind.Keyof; value: SerializedType }
+  | { kind: "string-literal"; value: string }
+  | { kind: "numeric-literal"; value: number }
+  | { kind: "bigint-literal"; value: string }
+  | { kind: "keyof"; value: SerializedType }
   | {
-      kind: TypeKind.Mapped;
+      kind: "mapped";
       param: { name: string; constraint: SerializedType };
       type: SerializedType;
     }
   | {
-      kind: TypeKind.Signature;
+      kind: "signature";
       parameters: Parameter[];
       docs: string;
       typeParams: TypeParam[];
       returnType: SerializedType;
     }
   | {
-      kind: TypeKind.TypePredicate;
+      kind: "type-predicate";
       asserts: boolean;
       param: string;
       /** This can be optional for `asserts condition` where `condition` is a param */
       type?: SerializedType;
     }
-  | { kind: TypeKind.Raw; value: string; tsKind?: string };
+  | { kind: "raw"; value: string; tsKind?: string };

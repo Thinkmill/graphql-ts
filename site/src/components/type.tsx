@@ -7,27 +7,13 @@ import { Docs } from "./docs";
 import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import * as styles from "./type.css";
-import {
-  SerializedType,
-  TypeParam,
-  Parameter,
-  TypeKind,
-  ObjectMemberKind,
-  TupleElementKind,
-  KnownIntrinsic,
-} from "../lib/types";
+import { SerializedType, TypeParam, Parameter } from "../lib/types";
 
 export function Type({ type }: { type: SerializedType }): JSX.Element {
-  if (type.kind === TypeKind.Intrinsic) {
-    return (
-      <span className={styles.intrinsic}>
-        {typeof type.value === "string"
-          ? type.value
-          : KnownIntrinsic[type.value]}
-      </span>
-    );
+  if (type.kind === "intrinsic") {
+    return <span className={styles.intrinsic}>{type.value}</span>;
   }
-  if (type.kind === TypeKind.Reference) {
+  if (type.kind === "reference") {
     return (
       <Fragment>
         <SymbolReference name={type.name} fullName={type.fullName} />
@@ -50,7 +36,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Array) {
+  if (type.kind === "array") {
     return (
       <Fragment>
         {type.readonly ? <Syntax kind="keyword">readonly </Syntax> : null}
@@ -59,10 +45,10 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.TypeParameter) {
+  if (type.kind === "type-parameter") {
     return <Syntax kind="parameter">{type.name}</Syntax>;
   }
-  if (type.kind === TypeKind.Union) {
+  if (type.kind === "union") {
     return (
       <Fragment>
         {type.types.map((innerType, i) => {
@@ -78,7 +64,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Intersection) {
+  if (type.kind === "intersection") {
     return (
       <Fragment>
         {type.types.map((innerType, i) => {
@@ -94,7 +80,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Object) {
+  if (type.kind === "object") {
     if (type.members.length === 0) {
       return <span className={codeFont}>{"{}"}</span>;
     }
@@ -102,7 +88,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       <Fragment>
         <span className={codeFont}>{"{ "}</span>
         {type.members.map((prop, i) => {
-          if (prop.kind === ObjectMemberKind.Prop) {
+          if (prop.kind === "prop") {
             return (
               <Indent key={i}>
                 <Docs content={prop.docs} />
@@ -116,7 +102,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
               </Indent>
             );
           }
-          if (prop.kind === ObjectMemberKind.Index) {
+          if (prop.kind === "index") {
             return (
               <Indent key={i}>
                 <span className={codeFont}>
@@ -130,7 +116,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
               </Indent>
             );
           }
-          if (prop.kind === ObjectMemberKind.Unknown) {
+          if (prop.kind === "unknown") {
             return (
               <Indent key={i}>
                 <span className={codeFont}>{prop.content}</span>
@@ -153,7 +139,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Tuple) {
+  if (type.kind === "tuple") {
     return (
       <Fragment>
         {type.readonly && <Syntax kind="keyword">readonly </Syntax>}
@@ -161,17 +147,14 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
         {type.elements.map((element, i) => {
           return (
             <Fragment key={i}>
-              {(element.kind === TupleElementKind.Rest ||
-                element.kind === TupleElementKind.Variadic) && (
+              {(element.kind === "rest" || element.kind === "variadic") && (
                 <Syntax kind="colon">...</Syntax>
               )}
               <Type type={element.type} />
-              {element.kind === TupleElementKind.Optional && (
+              {element.kind === "optional" && (
                 <span className={codeFont}>?</span>
               )}
-              {element.kind === TupleElementKind.Rest && (
-                <Syntax kind="bracket">[]</Syntax>
-              )}
+              {element.kind === "rest" && <Syntax kind="bracket">[]</Syntax>}
               {i !== type.elements.length - 1 && (
                 <Syntax kind="comma">, </Syntax>
               )}
@@ -182,7 +165,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.IndexedAccess) {
+  if (type.kind === "indexed-access") {
     return (
       <Fragment>
         <Type type={type.object} />
@@ -192,7 +175,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Conditional) {
+  if (type.kind === "conditional") {
     return (
       <Fragment>
         <Type type={type.checkType} />
@@ -205,16 +188,13 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.StringLiteral) {
+  if (type.kind === "string-literal") {
     return <Syntax kind="string">"{type.value}"</Syntax>;
   }
-  if (
-    type.kind === TypeKind.NumericLiteral ||
-    type.kind === TypeKind.BigIntLiteral
-  ) {
+  if (type.kind === "numeric-literal" || type.kind === "bigint-literal") {
     return <Syntax kind="string">{type.value}</Syntax>;
   }
-  if (type.kind === TypeKind.Signature) {
+  if (type.kind === "signature") {
     return (
       <Fragment>
         <TypeParams params={type.typeParams} />
@@ -237,7 +217,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Infer) {
+  if (type.kind === "infer") {
     return (
       <Fragment>
         <Syntax kind="keyword">infer </Syntax>
@@ -245,7 +225,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Mapped) {
+  if (type.kind === "mapped") {
     return (
       <Fragment>
         <span className={codeFont}>{"{ "}</span>
@@ -263,7 +243,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
     );
   }
 
-  if (type.kind === TypeKind.Keyof) {
+  if (type.kind === "keyof") {
     return (
       <Fragment>
         <Syntax kind="keyword">keyof </Syntax>
@@ -271,7 +251,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Paren) {
+  if (type.kind === "paren") {
     return (
       <Fragment>
         <Syntax kind="bracket">(</Syntax>
@@ -280,7 +260,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.Typeof) {
+  if (type.kind === "typeof") {
     return (
       <Fragment>
         <Syntax kind="keyword">typeof </Syntax>
@@ -288,7 +268,7 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
       </Fragment>
     );
   }
-  if (type.kind === TypeKind.TypePredicate) {
+  if (type.kind === "type-predicate") {
     return (
       <Fragment>
         {type.asserts && <Syntax kind="keyword">asserts </Syntax>}
