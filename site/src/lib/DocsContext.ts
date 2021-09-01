@@ -8,7 +8,7 @@ export type DocsContextType = {
   references: Record<SymbolId, SymbolId[]>;
   canonicalExportLocations: Record<
     SymbolId,
-    { exportName: string; fileSymbolName: SymbolId }
+    { exportName: string; parent: SymbolId }
   >;
   symbolsForInnerBit: Map<SymbolId, SymbolId[]>;
   goodIdentifiers: Record<SymbolId, string>;

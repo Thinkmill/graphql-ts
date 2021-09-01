@@ -60,8 +60,8 @@ export function Root(props: import("../extract").DocInfo) {
           () =>
             Object.fromEntries(
               Object.entries(props.canonicalExportLocations).map(
-                ([key, [exportName, fileSymbolName]]) =>
-                  [key, { exportName, fileSymbolName }] as const
+                ([key, [exportName, parent]]) =>
+                  [key, { exportName, parent }] as const
               )
             ),
           [props.canonicalExportLocations]

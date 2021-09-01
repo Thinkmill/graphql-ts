@@ -246,8 +246,8 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
     }
     const canon = canonicalExportLocations[symbol];
     assert(!!canon);
-    const [exportName, fileSymbolName] = canon;
-    return `${findIdentifier(fileSymbolName)}.${exportName}`;
+    const [exportName, parent] = canon;
+    return `${findIdentifier(parent)}.${exportName}`;
   };
 
   for (const [symbolId, symbol] of Object.entries(accessibleSymbols)) {

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
 import { SymbolReference } from "./symbol-references";
-import { groupExports } from "../lib/utils";
+import { useGroupedExports } from "../lib/utils";
 
 import { ChevronDown } from "./icons/chevron-down";
 import { ChevronRight } from "./icons/chevron-right";
@@ -42,14 +42,10 @@ function Item({ children }: { children: ReactNode }) {
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
   const docContext = useDocsContext();
   let rootSymbol = docContext.symbols[rootSymbolName];
-  if (rootSymbol.kind !== "module") {
-    throw new Error("Root symbols must be modules");
+  if (rootSymbol.kind !== "module" && rootSymbol.kind !== "namespace") {
+    throw new Error("symbols in Navigation must be modules or namespaces");
   }
-  const groupedExports = groupExports(
-    rootSymbolName,
-    docContext.canonicalExportLocations,
-    docContext.symbols
-  );
+  const groupedExports = useGroupedExports(rootSymbolName);
   if (docContext.canonicalExportLocations[rootSymbolName]) {
     rootSymbol = {
       ...rootSymbol,
@@ -65,7 +61,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
       <div>
         <ul>
           {groupedExports.map((group, i) => {
-            if (group.kind === "exports") {
+            if (group.kind !== "canonical") {
               return (
                 <Item key={i}>
                   <a
@@ -78,7 +74,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
               );
             }
             const symbol = docContext.symbols[group.fullName];
-            if (symbol.kind === "module") {
+            if (symbol.kind === "module" || symbol.kind === "namespace") {
               return (
                 <Navigation key={symbol.name} rootSymbolName={group.fullName} />
               );

@@ -80,6 +80,12 @@ export type SerializedSymbol =
       name: string;
       docs: string;
       value: string | number | null;
+    }
+  | {
+      kind: "namespace";
+      name: string;
+      docs: string;
+      exports: Record<string, string>;
     };
 
 export type ClassMember =

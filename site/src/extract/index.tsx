@@ -16,6 +16,8 @@ import {
   ConstructorDeclaration,
   PropertyDeclaration,
   EnumDeclaration,
+  ModuleDeclaration,
+  ModuleDeclarationKind,
 } from "ts-morph";
 import path from "path";
 import { findCanonicalExportLocations } from "./exports";
@@ -154,10 +156,10 @@ export function getDocsInfo(
             (symbol) => symbol.getDeclarations()[0] as SourceFile
           )
         ),
-      ].map(([symbol, { exportName, file }]) => {
+      ].map(([symbol, { exportName, parent }]) => {
         return [
           getSymbolIdentifier(symbol),
-          [exportName, getSymbolIdentifier(file.getSymbolOrThrow())] as const,
+          [exportName, getSymbolIdentifier(parent.getSymbolOrThrow())] as const,
         ];
       })
     ),
@@ -264,7 +266,8 @@ function resolveSymbolQueue() {
         if (!decl) {
           continue;
         }
-        const innerSymbol = decl.getSymbolOrThrow();
+        let innerSymbol = decl.getSymbolOrThrow();
+        innerSymbol = innerSymbol.getAliasedSymbol() || innerSymbol;
         state.exportedSymbols.add(innerSymbol);
         collectSymbol(innerSymbol);
         exports[exportName] = getSymbolIdentifier(innerSymbol);
@@ -418,6 +421,32 @@ function resolveSymbolQueue() {
           });
           return getSymbolIdentifier(symbol);
         }),
+      });
+    } else if (
+      decl instanceof ModuleDeclaration &&
+      decl.getDeclarationKind() === ModuleDeclarationKind.Namespace
+    ) {
+      let exports: Record<string, string> = {};
+      for (const [
+        exportName,
+        exportedDeclarations,
+      ] of decl.getExportedDeclarations()) {
+        const decl = exportedDeclarations[0];
+        if (!decl) {
+          continue;
+        }
+
+        let innerSymbol = decl.getSymbolOrThrow();
+        innerSymbol = innerSymbol.getAliasedSymbol() || innerSymbol;
+        state.exportedSymbols.add(innerSymbol);
+        collectSymbol(innerSymbol);
+        exports[exportName] = getSymbolIdentifier(innerSymbol);
+      }
+      state.publicSymbols.set(symbol, {
+        kind: "namespace",
+        name: symbol.getName(),
+        docs: getDocs(decl),
+        exports,
       });
     } else {
       let docs = Node.isJSDocableNode(decl) ? getDocs(decl) : "";

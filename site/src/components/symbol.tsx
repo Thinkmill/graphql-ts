@@ -2,7 +2,7 @@ import { Fragment } from "react";
 
 import { useDocsContext } from "../lib/DocsContext";
 import { codeFont } from "../lib/theme.css";
-import { groupExports } from "../lib/utils";
+import { useGroupedExports } from "../lib/utils";
 import { assert } from "../lib/assert";
 import { Docs } from "./docs";
 import {
@@ -17,6 +17,7 @@ import { ClassMember, Parameter, TypeParam } from "../lib/types";
 import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import { blockSummary } from "./docs.css";
+import * as symbolReferenceStyles from "./symbol-references.css";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
   const { goodIdentifiers } = useDocsContext();
@@ -33,24 +34,18 @@ function ExportedFrom({ fullName }: { fullName: string }) {
       />
     );
   }
-  const { exportName, fileSymbolName } =
-    docContext.canonicalExportLocations[fullName];
+  const { exportName, parent } = docContext.canonicalExportLocations[fullName];
   return (
     <Fragment>
-      <ExportedFrom fullName={fileSymbolName} />.
+      <ExportedFrom fullName={parent} />.
       <SymbolReference fullName={fullName} name={exportName} />
     </Fragment>
   );
 }
 
 export function RenderRootSymbol({ fullName }: { fullName: string }) {
-  const {
-    symbols,
-    canonicalExportLocations,
-    references,
-    symbolsForInnerBit,
-    goodIdentifiers,
-  } = useDocsContext();
+  const { symbols, canonicalExportLocations, goodIdentifiers } =
+    useDocsContext();
   let rootSymbol = symbols[fullName];
   let isExported = false;
   if (canonicalExportLocations[fullName]) {
@@ -76,12 +71,6 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
   if (rootSymbol.kind === "module") {
-    const transformedExports = groupExports(
-      fullName,
-      canonicalExportLocations,
-      symbols
-    );
-
     return (
       <div className={styles.rootSymbolContainer}>
         {isExported ? (
@@ -117,100 +106,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
               </div>
             </summary>
           )}
-          <div className={styles.innerExportsContainer}>
-            {transformedExports.map((exported, i) => {
-              if (exported.kind === "canonical") {
-                const { exportName, fullName: symbol } = exported;
-                const relatedSymbols = (references[symbol] || []).filter(
-                  (thing) => symbols[thing].kind !== "module"
-                );
-                const innerBits = symbolsForInnerBit.get(symbol);
-                return (
-                  <div key={exportName}>
-                    <SymbolAnchor fullName={symbol} />
-                    <h3 className={styles.symbolHeading}>{exportName}</h3>
-                    <RenderRootSymbol fullName={symbol} />
-                    {!!relatedSymbols?.length && (
-                      <div className={styles.referencesContainer}>
-                        <h4 className={styles.referencesHeading}>
-                          References:
-                        </h4>
-                        <ul>
-                          {relatedSymbols.map((thing, i) => {
-                            return (
-                              <li key={i} className={styles.referenceItem}>
-                                <SymbolReference
-                                  key={i}
-                                  fullName={thing}
-                                  name={symbols[thing].name}
-                                />
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    )}
-                    {innerBits && (
-                      <details className={styles.referencesContainer}>
-                        <summary>Unexported symbols referenced here</summary>
-                        {innerBits.map((thing) => {
-                          return (
-                            <div key={thing}>
-                              <RenderRootSymbol fullName={thing} />
-                            </div>
-                          );
-                        })}
-                      </details>
-                    )}
-                  </div>
-                );
-              }
-              return (
-                <div
-                  key={i}
-                  id={goodIdentifiers[fullName] + `-re-exports-${i}`}
-                  className={styles.reexportTarget}
-                >
-                  <Syntax kind="keyword">export</Syntax>
-                  <Syntax kind="bracket">{" { "}</Syntax>
-                  <Indent>
-                    {exported.exports.map((x) => {
-                      if (x.localName === x.sourceName) {
-                        return (
-                          <div key={x.localName}>
-                            <SymbolReference
-                              fullName={x.fullName}
-                              name={x.localName}
-                            />
-                            ,
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div key={x.localName}>
-                          <SymbolReference
-                            fullName={x.fullName}
-                            name={x.sourceName}
-                          />
-                          <Syntax kind="keyword"> as </Syntax>
-                          <SymbolReference
-                            fullName={x.fullName}
-                            name={x.localName}
-                          />
-                          ,
-                        </div>
-                      );
-                    })}
-                  </Indent>
-                  <Syntax kind="bracket">{" } "}</Syntax>
-                  <Syntax kind="keyword">from </Syntax>{" "}
-                  <ExportedFrom fullName={exported.from} />
-                  <br />
-                </div>
-              );
-            })}
-          </div>
+          <Exports fullName={fullName} />
         </details>
 
         <div className={styles.innerExportsHeading}>
@@ -376,6 +272,30 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
 
+  if (rootSymbol.kind === "namespace") {
+    return (
+      <div className={styles.rootSymbolContainer}>
+        <Docs content={rootSymbol.docs} />
+        <details open>
+          <summary className={blockSummary}>
+            <div className={styles.innerExportsHeading}>
+              <Syntax kind="keyword">
+                {isExported ? "export " : ""}namespace{" "}
+              </Syntax>
+              <SymbolName name={rootSymbol.name} fullName={fullName} />
+              <Syntax kind="bracket">{" {"}</Syntax>
+            </div>
+          </summary>
+          <Exports fullName={fullName} />
+        </details>
+
+        <div className={styles.innerExportsHeading}>
+          <Syntax kind="bracket">{"}"}</Syntax>
+        </div>
+      </div>
+    );
+  }
+
   assert(
     rootSymbol.kind !== "enum-member",
     "unexpected enum member outside of enum declaration"
@@ -475,5 +395,161 @@ function ClassMembers({
       })}
       <span className={codeFont}>{" }"}</span>
     </Fragment>
+  );
+}
+
+function Exports({ fullName }: { fullName: string }) {
+  const { symbols, references, symbolsForInnerBit, goodIdentifiers } =
+    useDocsContext();
+  const transformedExports = useGroupedExports(fullName);
+
+  return (
+    <div className={styles.innerExportsContainer}>
+      {transformedExports.map((exported, i) => {
+        if (exported.kind === "canonical") {
+          const { exportName, fullName: symbol } = exported;
+          const relatedSymbols = (references[symbol] || []).filter(
+            (thing) => symbols[thing].kind !== "module"
+          );
+          const innerBits = symbolsForInnerBit.get(symbol);
+          return (
+            <div key={exportName}>
+              <SymbolAnchor fullName={symbol} />
+              <h3 className={styles.symbolHeading}>{exportName}</h3>
+              <RenderRootSymbol fullName={symbol} />
+              {!!relatedSymbols?.length && (
+                <div className={styles.referencesContainer}>
+                  <h4 className={styles.referencesHeading}>References:</h4>
+                  <ul>
+                    {relatedSymbols.map((thing, i) => {
+                      return (
+                        <li key={i} className={styles.referenceItem}>
+                          <SymbolReference
+                            key={i}
+                            fullName={thing}
+                            name={symbols[thing].name}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              {innerBits && (
+                <details className={styles.referencesContainer}>
+                  <summary>Unexported symbols referenced here</summary>
+                  {innerBits.map((thing) => {
+                    return (
+                      <div key={thing}>
+                        <RenderRootSymbol fullName={thing} />
+                      </div>
+                    );
+                  })}
+                </details>
+              )}
+            </div>
+          );
+        }
+        if (exported.kind === "unknown-exports") {
+          return (
+            <div
+              key={i}
+              id={goodIdentifiers[fullName] + `-re-exports-${i}`}
+              className={styles.reexportTarget}
+            >
+              <Syntax kind="keyword">export</Syntax>
+              <Syntax kind="bracket">{" { "}</Syntax>
+              <Indent>
+                {exported.exports.map((exportName) => {
+                  return (
+                    <div key={exportName}>
+                      <SymbolReference fullName="unknown" name={exportName} />,
+                    </div>
+                  );
+                })}
+              </Indent>
+              <Syntax kind="bracket">{" } "}</Syntax>
+              <Syntax kind="keyword">from </Syntax>
+              <Syntax kind="string">"unknown"</Syntax>
+            </div>
+          );
+        }
+        if (exported.kind === "external-exports") {
+          return (
+            <div
+              key={i}
+              id={goodIdentifiers[fullName] + `-re-exports-${i}`}
+              className={styles.reexportTarget}
+            >
+              <Syntax kind="keyword">export</Syntax>
+              <Syntax kind="bracket">{" { "}</Syntax>
+              <Indent>
+                {exported.exports.map((exportInfo) => {
+                  return (
+                    <div key={exportInfo.name}>
+                      <a
+                        href={`/npm/${exported.from}@${exported.version}`}
+                        className={symbolReferenceStyles.nonRootSymbolReference}
+                      >
+                        {exportInfo.name}
+                      </a>
+                      ,
+                    </div>
+                  );
+                })}
+              </Indent>
+              <Syntax kind="bracket">{" } "}</Syntax>
+              <Syntax kind="keyword">from </Syntax>
+              <a
+                href={`/npm/${exported.from}@${exported.version}`}
+                className={symbolReferenceStyles.rootSymbolReference}
+              >
+                {JSON.stringify(exported.from)}
+              </a>
+            </div>
+          );
+        }
+        return (
+          <div
+            key={i}
+            id={goodIdentifiers[fullName] + `-re-exports-${i}`}
+            className={styles.reexportTarget}
+          >
+            <Syntax kind="keyword">export</Syntax>
+            <Syntax kind="bracket">{" { "}</Syntax>
+            <Indent>
+              {exported.exports.map((x) => {
+                if (x.localName === x.sourceName) {
+                  return (
+                    <div key={x.localName}>
+                      <SymbolReference
+                        fullName={x.fullName}
+                        name={x.localName}
+                      />
+                      ,
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={x.localName}>
+                    <SymbolReference
+                      fullName={x.fullName}
+                      name={x.sourceName}
+                    />
+                    <Syntax kind="keyword"> as </Syntax>
+                    <SymbolReference fullName={x.fullName} name={x.localName} />
+                    ,
+                  </div>
+                );
+              })}
+            </Indent>
+            <Syntax kind="bracket">{" } "}</Syntax>
+            <Syntax kind="keyword">from </Syntax>{" "}
+            <ExportedFrom fullName={exported.from} />
+          </div>
+        );
+      })}
+    </div>
   );
 }

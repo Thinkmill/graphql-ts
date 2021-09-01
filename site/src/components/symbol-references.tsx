@@ -158,8 +158,8 @@ export function SymbolReference({
         <Syntax kind="keyword">import</Syntax>
         <Syntax kind="bracket">(</Syntax>
         <SymbolReference
-          fullName={canonicalExportLocation.fileSymbolName}
-          name={symbols[canonicalExportLocation.fileSymbolName].name}
+          fullName={canonicalExportLocation.parent}
+          name={symbols[canonicalExportLocation.parent].name}
         />
         <Syntax kind="bracket">)</Syntax>.{inner}
       </span>
