@@ -21,6 +21,8 @@ import {
   ObjectMember,
   Parameter,
   SerializedSymbol,
+  ObjectMemberKind,
+  SymbolKind,
 } from "../lib/types";
 
 export function getTypeParameters(node: TypeParameteredNode): TypeParam[] {
@@ -42,14 +44,14 @@ export function getObjectMembers(
     if (Node.isIndexSignatureDeclaration(member)) {
       member.getKeyTypeNode();
       return {
-        kind: "index",
+        kind: ObjectMemberKind.Index,
         key: convertTypeNode(member.getKeyTypeNode()),
         value: convertTypeNode(member.getReturnTypeNodeOrThrow()),
       };
     }
     if (Node.isPropertySignature(member)) {
       return {
-        kind: "prop",
+        kind: ObjectMemberKind.Prop,
         name: member.getName(),
         docs: getDocs(member),
         optional: member.hasQuestionToken(),
@@ -60,7 +62,7 @@ export function getObjectMembers(
     if (Node.isMethodSignature(member)) {
       const returnTypeNode = member.getReturnTypeNode();
       return {
-        kind: "method",
+        kind: ObjectMemberKind.Method,
         name: member.getName(),
         optional: member.hasQuestionToken(),
         parameters: getParameters(member),
@@ -74,7 +76,7 @@ export function getObjectMembers(
     if (Node.isCallSignatureDeclaration(member)) {
       const returnTypeNode = member.getReturnTypeNode();
       return {
-        kind: "method",
+        kind: ObjectMemberKind.Method,
         name: "",
         optional: false,
         parameters: getParameters(member),
@@ -86,7 +88,7 @@ export function getObjectMembers(
       };
     }
     return {
-      kind: "unknown",
+      kind: ObjectMemberKind.Unknown,
       content: `${member.getKindName()} ${member.getText()}`,
     };
   });
@@ -191,7 +193,7 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
     if (
       !canonicalExportLocations[symbolFullName] &&
       accessibleSymbols[symbolFullName] &&
-      accessibleSymbols[symbolFullName].kind !== "enum-member"
+      accessibleSymbols[symbolFullName].kind !== SymbolKind.EnumMember
     ) {
       const firstExportedSymbol = symbols.find(
         (x) => canonicalExportLocations[x] !== undefined
@@ -250,7 +252,7 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
   };
 
   for (const [symbolId, symbol] of Object.entries(accessibleSymbols)) {
-    if (symbol.kind == "enum-member") continue;
+    if (symbol.kind == SymbolKind.EnumMember) continue;
     if (rootSymbols.has(symbolId)) {
       goodIdentifiers[symbolId] = symbol.name;
     } else if (canonicalExportLocations[symbolId]) {
@@ -271,7 +273,7 @@ export function getSymbolsForInnerBitsAndGoodIdentifiers(
         goodIdentifiers[symbolId] = `${identifier}-${index}`;
       }
     }
-    if (symbol.kind === "enum") {
+    if (symbol.kind === SymbolKind.Enum) {
       for (const childSymbolId of symbol.members) {
         goodIdentifiers[
           childSymbolId

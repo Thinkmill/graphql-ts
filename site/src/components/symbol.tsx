@@ -13,7 +13,14 @@ import {
 import { Params, Type, TypeParams } from "./type";
 
 import * as styles from "./symbol.css";
-import { ClassMember, Parameter, TypeParam } from "../lib/types";
+import {
+  ClassMember,
+  ClassMemberKind,
+  Parameter,
+  SymbolKind,
+  TypeKind,
+  TypeParam,
+} from "../lib/types";
 import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import { blockSummary } from "./docs.css";
@@ -60,7 +67,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       name: canonicalExportLocations[fullName].exportName,
     };
   }
-  if (rootSymbol.kind === "function") {
+  if (rootSymbol.kind === SymbolKind.Function) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
@@ -75,7 +82,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       </div>
     );
   }
-  if (rootSymbol.kind === "module") {
+  if (rootSymbol.kind === SymbolKind.Module) {
     const transformedExports = groupExports(
       fullName,
       canonicalExportLocations,
@@ -122,7 +129,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
               if (exported.kind === "canonical") {
                 const { exportName, fullName: symbol } = exported;
                 const relatedSymbols = (references[symbol] || []).filter(
-                  (thing) => symbols[thing].kind !== "module"
+                  (thing) => symbols[thing].kind !== SymbolKind.Module
                 );
                 const innerBits = symbolsForInnerBit.get(symbol);
                 return (
@@ -219,7 +226,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
       </div>
     );
   }
-  if (rootSymbol.kind === "variable") {
+  if (rootSymbol.kind === SymbolKind.Variable) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
@@ -238,7 +245,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
 
-  if (rootSymbol.kind === "unknown") {
+  if (rootSymbol.kind === SymbolKind.Unknown) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
@@ -250,7 +257,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
 
-  if (rootSymbol.kind === "interface") {
+  if (rootSymbol.kind === SymbolKind.Interface) {
     const interfaceSymbol = rootSymbol;
     return (
       <div className={styles.rootSymbolContainer}>
@@ -279,14 +286,16 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
               </Fragment>
             )}
             <span className={codeFont}> </span>
-            <Type type={{ kind: "object", members: rootSymbol.members }} />
+            <Type
+              type={{ kind: TypeKind.Object, members: rootSymbol.members }}
+            />
           </AddNameToScope>
         </Fragment>
       </div>
     );
   }
 
-  if (rootSymbol.kind === "class") {
+  if (rootSymbol.kind === SymbolKind.Class) {
     const classSymbol = rootSymbol;
     return (
       <div className={styles.rootSymbolContainer}>
@@ -331,7 +340,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     );
   }
 
-  if (rootSymbol.kind === "enum") {
+  if (rootSymbol.kind === SymbolKind.Enum) {
     const enumSymbol = rootSymbol;
     return (
       <div className={styles.rootSymbolContainer}>
@@ -347,7 +356,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
           {rootSymbol.members.map((memberId, i) => {
             const member = symbols[memberId];
             assert(
-              member.kind === "enum-member",
+              member.kind === SymbolKind.EnumMember,
               "expected enum to only contain enum members"
             );
             return (
@@ -377,7 +386,7 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
   }
 
   assert(
-    rootSymbol.kind !== "enum-member",
+    rootSymbol.kind !== SymbolKind.EnumMember,
     "unexpected enum member outside of enum declaration"
   );
 
@@ -428,7 +437,7 @@ function ClassMembers({
         );
       })}
       {members.map((prop, i) => {
-        if (prop.kind === "prop") {
+        if (prop.kind === ClassMemberKind.Prop) {
           return (
             <Indent key={i}>
               <Docs content={prop.docs} />
@@ -440,7 +449,7 @@ function ClassMembers({
             </Indent>
           );
         }
-        if (prop.kind === "index") {
+        if (prop.kind === ClassMemberKind.Index) {
           return (
             <Indent key={i}>
               <span className={codeFont}>
@@ -454,7 +463,7 @@ function ClassMembers({
             </Indent>
           );
         }
-        if (prop.kind === "unknown") {
+        if (prop.kind === ClassMemberKind.Unknown) {
           return (
             <Indent key={i}>
               <span className={codeFont}>{prop.content}</span>

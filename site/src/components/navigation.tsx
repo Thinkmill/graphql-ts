@@ -10,6 +10,7 @@ import { Minus } from "./icons/minus";
 
 import * as styles from "./navigation.css";
 import { nonRootSymbolReference } from "./symbol-references.css";
+import { SymbolKind } from "../lib/types";
 
 function Expandable({
   summary,
@@ -42,7 +43,7 @@ function Item({ children }: { children: ReactNode }) {
 export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
   const docContext = useDocsContext();
   let rootSymbol = docContext.symbols[rootSymbolName];
-  if (rootSymbol.kind !== "module") {
+  if (rootSymbol.kind !== SymbolKind.Module) {
     throw new Error("Root symbols must be modules");
   }
   const groupedExports = groupExports(
@@ -78,7 +79,7 @@ export function Navigation({ rootSymbolName }: { rootSymbolName: string }) {
               );
             }
             const symbol = docContext.symbols[group.fullName];
-            if (symbol.kind === "module") {
+            if (symbol.kind === SymbolKind.Module) {
               return (
                 <Navigation key={symbol.name} rootSymbolName={group.fullName} />
               );

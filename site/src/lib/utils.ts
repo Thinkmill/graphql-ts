@@ -1,4 +1,4 @@
-import { SerializedSymbol } from "./types";
+import { SerializedSymbol, SymbolKind } from "./types";
 import { DocsContextType } from "./DocsContext";
 
 export function groupExports(
@@ -7,7 +7,7 @@ export function groupExports(
   allSymbols: DocsContextType["symbols"]
 ) {
   const rootThing = allSymbols[fullName];
-  if (rootThing.kind !== "module") {
+  if (rootThing.kind !== SymbolKind.Module) {
     throw new Error("expected module symbol");
   }
   const transformedExports: (
@@ -50,7 +50,7 @@ export function groupExports(
         }
         const prevSymbol = allSymbols[prev.from] as Extract<
           SerializedSymbol,
-          { kind: "module" }
+          { kind: SymbolKind.Module }
         >;
         if (prevSymbol) {
           const potentialExport = Object.entries(prevSymbol.exports).find(
