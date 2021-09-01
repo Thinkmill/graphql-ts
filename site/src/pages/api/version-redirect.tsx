@@ -10,6 +10,10 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
   if (!specifier || !semver.parse(specifier)) {
     const pkg = await getPackageMetadata(pkgName);
     const version = resolveToPackageVersion(pkg, specifier);
+    res.setHeader(
+      "Cache-Control",
+      `public, s-maxage=${60 * 20}, stale-while-revalidate=${60 * 60 * 8}`
+    );
     return res.redirect(302, `/npm/${pkgName}@${version}`);
   }
   return res.send("already valid info");

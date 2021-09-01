@@ -78,7 +78,7 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
     // and the size of the generated results of some packages can exceed that
     // so for large packages things, we compress it before it leaves the Lambda
     // which does indeed result in a larger payload over the wire
-    // but means that it packages will have to be _even_ larger for this to fail
+    // but it means that packages will have to be _even_ larger for this to fail
 
     if (stringified.length > 1000000) {
       data = compressToUTF16(stringified);
@@ -88,6 +88,7 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
         data,
         kind: "package" as const,
       },
+      revalidate: 60 * 60,
     };
   } catch (err) {
     if (err instanceof PackageNotFoundError) {
