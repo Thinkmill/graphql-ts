@@ -29,8 +29,23 @@ export const innerExportsHeading = composeStyles(
   style({
     fontSize: "1.2rem",
     fontWeight: 500,
+    position: "sticky",
+    top: 0,
+    padding: "6px 0px",
+    marginLeft: "2px",
+    borderBottom: "1px solid transparent",
+    transitionProperty: "padding",
+    transitionDuration: "0.3s",
+    transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
   })
 );
+
+export const innerExportsHeadingSticky = style({
+  background: "rgba(255,255,255,0.8)",
+  borderBottom: "1px solid rgba(0,0,0,0.10)",
+  backdropFilter: "blur( 4px )",
+  padding: "6px 12px",
+});
 
 export const innerExportsContainer = style({
   borderLeft: `2px solid ${tokens.color.blueGray300}`,

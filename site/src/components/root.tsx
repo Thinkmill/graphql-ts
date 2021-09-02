@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { DocsContext } from "../lib/DocsContext";
 
 import { RenderRootSymbol } from "../components/symbol";
+import { SymbolExportsManager } from "../components/symbol-exports";
 import { Navigation } from "../components/navigation";
 import {
   Contents,
@@ -72,52 +73,54 @@ export function Root(props: import("../extract").DocInfo) {
         externalSymbols: props.externalSymbols,
       }}
     >
-      <div className={themeClass}>
-        <svg xmlns="http://www.w3.org/2000/svg" style={{ display: "none" }}>
-          <symbol id="minus-icon" viewBox="0 0 20 20">
-            <path
-              fill="currentColor"
-              fillRule="evenodd"
-              d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
-              clipRule="evenodd"
-            />
-          </symbol>
-        </svg>
-        <Header packageName={props.packageName} />
-        <PageContainer>
-          <NavigationContainer>
-            {props.versions && (
-              <select
-                onChange={(event) => {
-                  const newVersion = event.target.value;
-                  router.push(`/npm/${props.packageName}@${newVersion}`);
-                  setVersionState((x) => ({ ...x, current: newVersion }));
-                }}
-                value={versionState.current}
-                disabled={
-                  versionState.current !== versionState.fromCurrentProps
-                }
-              >
-                {props.versions.map((version) => (
-                  <option key={version}>{version}</option>
-                ))}
-              </select>
-            )}
-            {versionState.current !== versionState.fromCurrentProps && (
-              <span aria-label="Loading new version">⏳</span>
-            )}
+      <SymbolExportsManager>
+        <div className={themeClass}>
+          <svg xmlns="http://www.w3.org/2000/svg" style={{ display: "none" }}>
+            <symbol id="minus-icon" viewBox="0 0 20 20">
+              <path
+                fill="currentColor"
+                fillRule="evenodd"
+                d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+                clipRule="evenodd"
+              />
+            </symbol>
+          </svg>
+          <Header packageName={props.packageName} />
+          <PageContainer>
+            <NavigationContainer>
+              {props.versions && (
+                <select
+                  onChange={(event) => {
+                    const newVersion = event.target.value;
+                    router.push(`/npm/${props.packageName}@${newVersion}`);
+                    setVersionState((x) => ({ ...x, current: newVersion }));
+                  }}
+                  value={versionState.current}
+                  disabled={
+                    versionState.current !== versionState.fromCurrentProps
+                  }
+                >
+                  {props.versions.map((version) => (
+                    <option key={version}>{version}</option>
+                  ))}
+                </select>
+              )}
+              {versionState.current !== versionState.fromCurrentProps && (
+                <span aria-label="Loading new version">⏳</span>
+              )}
 
-            {props.rootSymbols.map((rootSymbol) => (
-              <Navigation key={rootSymbol} rootSymbolName={rootSymbol} />
-            ))}
-          </NavigationContainer>
-          <Contents>
-            {props.rootSymbols.map((rootSymbol) => (
-              <RenderRootSymbol key={rootSymbol} fullName={rootSymbol} />
-            ))}
-          </Contents>
-        </PageContainer>
-      </div>
+              {props.rootSymbols.map((rootSymbol) => (
+                <Navigation key={rootSymbol} rootSymbolName={rootSymbol} />
+              ))}
+            </NavigationContainer>
+            <Contents>
+              {props.rootSymbols.map((rootSymbol) => (
+                <RenderRootSymbol key={rootSymbol} fullName={rootSymbol} />
+              ))}
+            </Contents>
+          </PageContainer>
+        </div>
+      </SymbolExportsManager>
     </DocsContext.Provider>
   );
 }

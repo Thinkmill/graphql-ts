@@ -5,6 +5,7 @@ import { codeFont } from "../lib/theme.css";
 import { useGroupedExports } from "../lib/utils";
 import { assert } from "../lib/assert";
 import { Docs } from "./docs";
+import { SymbolExports, SymbolExportsHeader } from "./symbol-exports";
 import {
   SymbolName,
   SymbolReference,
@@ -81,18 +82,16 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
             <Docs content={rootSymbol.docs} />
           </Fragment>
         )}
-        <details open>
-          {isExported ? (
-            <summary className={blockSummary}>
+        <SymbolExports id={goodIdentifiers[fullName]}>
+          <SymbolExportsHeader>
+            {isExported ? (
               <div className={styles.innerExportsHeading}>
                 <Syntax kind="keyword">export * as </Syntax>
                 <SymbolName name={rootSymbol.name} fullName={fullName} />
                 <Syntax kind="keyword"> from</Syntax>
                 <Syntax kind="bracket">{" {"}</Syntax>
               </div>
-            </summary>
-          ) : (
-            <summary className={blockSummary}>
+            ) : (
               <div className={styles.innerExportsHeading}>
                 <Syntax kind="keyword">module </Syntax>
                 <a
@@ -104,10 +103,10 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
                 </a>
                 <Syntax kind="bracket">{" {"}</Syntax>
               </div>
-            </summary>
-          )}
+            )}
+          </SymbolExportsHeader>
           <Exports fullName={fullName} />
-        </details>
+        </SymbolExports>
 
         <div className={styles.innerExportsHeading}>
           <Syntax kind="bracket">{"}"}</Syntax>
