@@ -91,7 +91,7 @@ export function PackageSearch() {
                 });
               },
               onSelect(item) {
-                router.push(item.itemUrl);
+                router.push(item.itemUrl!);
               },
               getItemUrl({ item }) {
                 return `/npm/${item.name}@${item.tags.latest}`;
