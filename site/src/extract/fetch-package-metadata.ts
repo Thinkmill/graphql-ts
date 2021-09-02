@@ -1,4 +1,9 @@
 import algoliasearch from "algoliasearch";
+import {
+  NPM_SEARCH_ALGOLIA_API_KEY,
+  NPM_SEARCH_ALGOLIA_APP_ID,
+  NPM_SEARCH_ALGOLIA_INDEX,
+} from "../lib/constants";
 
 export class PackageNotFoundError extends Error {
   constructor(pkg: string) {
@@ -7,9 +12,9 @@ export class PackageNotFoundError extends Error {
 }
 
 const index = algoliasearch(
-  "OFCNCOG2CU",
-  "f54e21fa3a2a0160595bb058179bfb1e"
-).initIndex("npm-search");
+  NPM_SEARCH_ALGOLIA_APP_ID,
+  NPM_SEARCH_ALGOLIA_API_KEY
+).initIndex(NPM_SEARCH_ALGOLIA_INDEX);
 
 export type PackageMetadata = {
   versions: string[];

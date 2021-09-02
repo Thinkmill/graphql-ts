@@ -243,6 +243,7 @@ export const [themeClass, tokens] = createTheme({
 
 export const rootStyles = style({
   fontFamily: tokens.font.body,
+  lineHeight: 1.5,
 });
 
 /** Our codeFont stack as a style for easy use */
@@ -258,11 +259,6 @@ export const codeFontStyleObj = {
 };
 
 /** Thanks for the reset, @tailwindcss (everything below here) */
-
-globalStyle(`html`, {
-  fontFamily: tokens.font.body,
-  lineHeight: 1.5,
-});
 
 /** Inherit font-family and line-height from `html` */
 

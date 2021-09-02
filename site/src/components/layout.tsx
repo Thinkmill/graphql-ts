@@ -1,9 +1,17 @@
 import { ReactNode } from "react";
 
 import * as styles from "./layout.css";
+import { PackageSearch } from "./package-search";
 
 export function Header({ packageName }: { packageName: string }) {
-  return <h1 className={styles.header}>{packageName} API Documentation</h1>;
+  return (
+    <header className={styles.header}>
+      <h1 className={styles.headerHeading}>{packageName} API Documentation</h1>
+      <div className={styles.headerSearch}>
+        <PackageSearch />
+      </div>
+    </header>
+  );
 }
 
 export function PageContainer({ children }: { children: ReactNode }) {

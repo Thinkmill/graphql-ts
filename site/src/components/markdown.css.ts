@@ -21,3 +21,5 @@ export const codeblock = composeStyles(
     borderRadius: 6,
   })
 );
+
+export const codeblockInner = style({ backgroundColor: "transparent" });

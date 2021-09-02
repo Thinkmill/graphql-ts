@@ -1,11 +1,7 @@
 import { AppProps } from "next/app";
-import { themeClass, rootStyles } from "../lib/theme.css";
+import "../lib/theme.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return (
-    <div css={{}} className={`${themeClass} ${rootStyles}`}>
-      <Component {...pageProps} />
-    </div>
-  );
+  return <Component {...pageProps} />;
 }
 export default MyApp;

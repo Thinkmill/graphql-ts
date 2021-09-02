@@ -58,7 +58,6 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     // "allowJs": true,
     "moduleResolution": "node",
-    "jsxImportSource": "@emotion/react",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowJs": true,

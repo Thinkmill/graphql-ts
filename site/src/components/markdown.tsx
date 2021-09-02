@@ -65,11 +65,8 @@ const components: ReactMarkdownOptions["components"] = {
           }) => {
             return (
               <div
-                className={className}
-                css={{
-                  ...style,
-                  backgroundColor: "transparent",
-                }}
+                className={`${className} ${styles.codeblockInner}`}
+                style={style}
               >
                 {tokens.map((line, i) => {
                   return (

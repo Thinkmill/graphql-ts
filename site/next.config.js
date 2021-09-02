@@ -33,15 +33,6 @@ module.exports = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 })(
   withVanillaExtract({
-    async redirects() {
-      return [
-        {
-          source: "/",
-          destination: "/npm/@graphql-ts/schema",
-          permanent: false,
-        },
-      ];
-    },
     async rewrites() {
       return {
         beforeFiles: [

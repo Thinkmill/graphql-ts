@@ -98,6 +98,9 @@ export function convertTypeNode(node: TypeNode): SerializedType {
   if (TypeNode.isUndefinedKeyword(node)) {
     return { kind: "intrinsic", value: "undefined" };
   }
+  if (TypeNode.isSymbolKeyword(node)) {
+    return { kind: "intrinsic", value: "symbol" };
+  }
   if (TypeNode.isNeverKeyword(node)) {
     return { kind: "intrinsic", value: "never" };
   }
