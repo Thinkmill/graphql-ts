@@ -14,6 +14,8 @@ import {
 
 import { themeClass } from "../lib/theme.css";
 import { useRouter } from "next/router";
+import * as styles from "./root.css";
+import { ChevronDown } from "./icons/chevron-down";
 
 function openParentDetails(element: HTMLElement) {
   if (element instanceof HTMLDetailsElement) {
@@ -89,22 +91,30 @@ export function Root(props: import("../extract").DocInfo) {
           <PageContainer>
             <NavigationContainer>
               {props.versions && (
-                <select
-                  onChange={(event) => {
-                    const newVersion = event.target.value;
-                    router.push(`/npm/${props.packageName}@${newVersion}`);
-                    setVersionState((x) => ({ ...x, current: newVersion }));
-                  }}
-                  value={versionState.current}
-                  disabled={
-                    versionState.current !== versionState.fromCurrentProps
-                  }
-                >
-                  {props.versions.map((version) => (
-                    <option key={version}>{version}</option>
-                  ))}
-                </select>
+                <span className={styles.versionSelectWrapper}>
+                  <select
+                    className={styles.versionSelect}
+                    onChange={(event) => {
+                      const newVersion = event.target.value;
+                      router.push(`/npm/${props.packageName}@${newVersion}`);
+                      setVersionState((x) => ({ ...x, current: newVersion }));
+                    }}
+                    value={versionState.current}
+                    disabled={
+                      versionState.current !== versionState.fromCurrentProps
+                    }
+                  >
+                    {props.versions.map((version) => (
+                      <option key={version}>{version}</option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    height="20px"
+                    className={styles.versionSelectChevron}
+                  />
+                </span>
               )}
+
               {versionState.current !== versionState.fromCurrentProps && (
                 <span aria-label="Loading new version">⏳</span>
               )}

@@ -126,7 +126,12 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
           return (
             <Indent key={i}>
               <Docs content={prop.docs} />
-              <span className={codeFont}>{prop.name}</span>
+              {prop.kind === "constructor" && (
+                <Syntax kind="keyword">new </Syntax>
+              )}
+              {prop.kind === "method" && (
+                <span className={codeFont}>{prop.name}</span>
+              )}
               <TypeParams params={prop.typeParams} />
               <Params params={prop.parameters} />
               <Syntax kind="colon">: </Syntax>
@@ -194,9 +199,10 @@ export function Type({ type }: { type: SerializedType }): JSX.Element {
   if (type.kind === "numeric-literal" || type.kind === "bigint-literal") {
     return <Syntax kind="string">{type.value}</Syntax>;
   }
-  if (type.kind === "signature") {
+  if (type.kind === "signature" || type.kind === "constructor") {
     return (
       <Fragment>
+        {type.kind === "constructor" && <Syntax kind="keyword">new </Syntax>}
         <TypeParams params={type.typeParams} />
         <Syntax kind="bracket">(</Syntax>
         {type.parameters.map((param, i) => {
@@ -327,8 +333,13 @@ export function Params({ params }: { params: Parameter[] }) {
       {params.map((param, i) => {
         return (
           <Fragment key={i}>
-            <Syntax kind="parameter">{param.name}</Syntax>
-            <Syntax kind="colon">{param.optional ? "?: " : ": "}</Syntax>
+            <Syntax kind="parameter">
+              {param.kind === "rest" ? "..." : ""}
+              {param.name}
+            </Syntax>
+            <Syntax kind="colon">
+              {param.kind === "optional" ? "?: " : ": "}
+            </Syntax>
             <Type type={param.type} />
             {i === params.length - 1 ? null : <Syntax kind="comma">, </Syntax>}
           </Fragment>

@@ -6,7 +6,7 @@ export const header = style({
   justifyContent: "space-between",
   flexWrap: "wrap",
   padding: "1rem",
-  backgroundColor: tokens.color.gray100,
+  backgroundColor: tokens.color.gray50,
   borderBottom: `1px solid ${tokens.color.gray300}`,
 });
 
@@ -28,10 +28,16 @@ export const pageContainer = style({
 
 export const navigationContainer = style({
   padding: "16px 24px 16px 16px",
-  marginRight: 16,
-  width: 360,
+  flex: 1,
+  minWidth: 280,
+  top: 0,
+  position: "sticky",
+  overflowY: "auto",
+  height: "100vh",
 });
 
 export const contents = style({
   padding: 16,
+  paddingLeft: 0,
+  flex: 4,
 });

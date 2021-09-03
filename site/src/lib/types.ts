@@ -7,7 +7,7 @@ export type TypeParam = {
 export type Parameter = {
   name: string;
   type: SerializedType;
-  optional: boolean;
+  kind: "optional" | "rest" | "normal";
 };
 
 export type SerializedSymbol =
@@ -104,16 +104,13 @@ export type ClassMember =
       readonly: boolean;
       type: SerializedType;
     }
-  | {
+  | ({
       kind: "method";
       static: boolean;
       name: string;
-      optional: boolean;
-      parameters: Parameter[];
       docs: string;
-      typeParams: TypeParam[];
-      returnType: SerializedType;
-    }
+      optional: boolean;
+    } & FunctionLike)
   | {
       kind: "unknown";
       content: string;
@@ -123,6 +120,12 @@ export type TupleElement = {
   label: string | null;
   kind: "optional" | "required" | "rest" | "variadic";
   type: SerializedType;
+};
+
+type FunctionLike = {
+  parameters: Parameter[];
+  typeParams: TypeParam[];
+  returnType: SerializedType;
 };
 
 export type ObjectMember =
@@ -135,15 +138,16 @@ export type ObjectMember =
       readonly: boolean;
       type: SerializedType;
     }
-  | {
+  | ({
       kind: "method";
       name: string;
-      optional: boolean;
-      parameters: Parameter[];
       docs: string;
-      typeParams: TypeParam[];
-      returnType: SerializedType;
-    }
+      optional: boolean;
+    } & FunctionLike)
+  | ({
+      kind: "constructor" | "call";
+      docs: string;
+    } & FunctionLike)
   | {
       kind: "unknown";
       content: string;
@@ -190,7 +194,12 @@ export type SerializedType =
   | {
       kind: "signature";
       parameters: Parameter[];
-      docs: string;
+      typeParams: TypeParam[];
+      returnType: SerializedType;
+    }
+  | {
+      kind: "constructor";
+      parameters: Parameter[];
       typeParams: TypeParam[];
       returnType: SerializedType;
     }

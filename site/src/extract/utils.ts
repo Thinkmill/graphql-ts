@@ -14,7 +14,7 @@ import path from "path";
 import { convertTypeNode } from "./convert-node";
 import { _convertType } from "./convert-type";
 import hashString from "@emotion/hash";
-import { assert } from "../lib/assert";
+import { assert, assertNever } from "../lib/assert";
 import { DocInfo } from ".";
 import {
   TypeParam,
@@ -75,9 +75,7 @@ export function getObjectMembers(
     if (Node.isCallSignatureDeclaration(member)) {
       const returnTypeNode = member.getReturnTypeNode();
       return {
-        kind: "method",
-        name: "",
-        optional: false,
+        kind: "call",
         parameters: getParameters(member),
         typeParams: getTypeParameters(member),
         docs: getDocs(member),
@@ -86,20 +84,33 @@ export function getObjectMembers(
           : _convertType(member.getReturnType(), 0),
       };
     }
-    return {
-      kind: "unknown",
-      content: `${member.getKindName()} ${member.getText()}`,
-    };
+    if (Node.isConstructSignatureDeclaration(member)) {
+      const returnTypeNode = member.getReturnTypeNode();
+      return {
+        kind: "constructor",
+        parameters: getParameters(member),
+        typeParams: getTypeParameters(member),
+        docs: getDocs(member),
+        returnType: returnTypeNode
+          ? convertTypeNode(returnTypeNode)
+          : _convertType(member.getReturnType(), 0),
+      };
+    }
+    assertNever(member);
   });
 }
 
 export function getParameters(node: ParameteredNode): Parameter[] {
-  return node.getParameters().map((x) => {
+  return node.getParameters().map((x): Parameter => {
     const typeNode = x.getTypeNode();
     return {
       name: x.getName(),
       type: typeNode ? convertTypeNode(typeNode) : _convertType(x.getType(), 0),
-      optional: x.hasQuestionToken(),
+      kind: x.isOptional()
+        ? "optional"
+        : x.isRestParameter()
+        ? "rest"
+        : "normal",
     };
   });
 }

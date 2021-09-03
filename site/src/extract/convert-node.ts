@@ -206,8 +206,19 @@ export function convertTypeNode(node: TypeNode): SerializedType {
     return {
       kind: "signature",
       parameters: getParameters(node),
-      docs: "",
       typeParams: getTypeParameters(node),
+      returnType: returnTypeNode
+        ? convertTypeNode(returnTypeNode)
+        : _convertType(node.getReturnType(), 0),
+    };
+  }
+
+  if (TypeNode.isConstructorTypeNode(node)) {
+    const returnTypeNode = node.getReturnTypeNode();
+    return {
+      kind: "constructor",
+      parameters: getParameters(node),
+      typeParams: [],
       returnType: returnTypeNode
         ? convertTypeNode(returnTypeNode)
         : _convertType(node.getReturnType(), 0),

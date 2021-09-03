@@ -10,7 +10,13 @@ import {
 } from "ts-morph";
 import { collectSymbol } from ".";
 import { assert } from "../lib/assert";
-import { SerializedType, TupleElement, ObjectMember } from "../lib/types";
+import {
+  SerializedType,
+  TupleElement,
+  ObjectMember,
+  Parameter,
+  TypeParam,
+} from "../lib/types";
 import { convertTypeNode } from "./convert-node";
 import {
   getDocs,
@@ -203,33 +209,43 @@ export function _convertType(type: Type, depth: number): SerializedType {
   const callSignatures = type.getCallSignatures();
 
   if (callSignatures.length) {
-    const signature = callSignatures[0];
-
-    return {
-      kind: "signature",
-      docs: "",
-      parameters: signature.getParameters().map((param) => {
-        let decl = param.getValueDeclarationOrThrow() as ParameterDeclaration;
-        const typeNode = decl.getTypeNode();
-        return {
-          name: param.getName(),
-          type: typeNode
-            ? convertTypeNode(typeNode)
-            : convertType(decl.getType()),
-          optional: decl.hasQuestionToken(),
-        };
-      }),
-      typeParams: signature.getTypeParameters().map((typeParam) => {
-        const constraint = typeParam.getConstraint();
-        const defaultType = typeParam.getDefault();
-        return {
-          name: typeParam.getSymbolOrThrow().getName(),
-          constraint: constraint ? convertType(constraint) : null,
-          default: defaultType ? convertType(defaultType) : null,
-        };
-      }),
-      returnType: convertType(signature.getReturnType()),
-    };
+    const signatures = callSignatures.map((signature) => {
+      return {
+        kind: "signature" as const,
+        parameters: signature.getParameters().map((param): Parameter => {
+          let decl = param.getValueDeclarationOrThrow();
+          assert(decl instanceof ParameterDeclaration);
+          const typeNode = decl.getTypeNode();
+          return {
+            name: param.getName(),
+            type: typeNode
+              ? convertTypeNode(typeNode)
+              : convertType(decl.getType()),
+            kind: decl.isOptional()
+              ? "optional"
+              : decl.isRestParameter()
+              ? "rest"
+              : "normal",
+          };
+        }),
+        typeParams: signature
+          .getTypeParameters()
+          .map((typeParam): TypeParam => {
+            const constraint = typeParam.getConstraint();
+            const defaultType = typeParam.getDefault();
+            return {
+              name: typeParam.getSymbolOrThrow().getName(),
+              constraint: constraint ? convertType(constraint) : null,
+              default: defaultType ? convertType(defaultType) : null,
+            };
+          }),
+        returnType: convertType(signature.getReturnType()),
+      };
+    });
+    if (signatures.length === 1) {
+      return signatures[0];
+    }
+    return { kind: "intersection", types: signatures };
   }
 
   const objectFlags = type.getObjectFlags();
