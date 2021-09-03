@@ -17,13 +17,6 @@ import {
 import { compressToUTF16, decompressFromUTF16 } from "lz-string";
 import { DocInfo } from "../../extract";
 
-type Thing = {};
-
-const Thing = {};
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-namespace Thing {}
-
 export default function Npm(
   _props: InferGetStaticPropsType<typeof getStaticProps>
 ) {
