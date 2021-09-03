@@ -272,20 +272,31 @@ function resolveSymbolQueue() {
         collectSymbol(innerSymbol);
         exports[exportName] = getSymbolIdentifier(innerSymbol);
       }
-      const jsDocs: JSDoc[] = [];
-      decl.forEachChild((node) => {
-        if (!!(node.compilerNode as any).jsDoc) {
-          const nodes: ts.JSDoc[] = (node.compilerNode as any).jsDoc ?? [];
-          const jsdocs: JSDoc[] = nodes.map((n) =>
-            (node as any)._getNodeFromCompilerNode(n)
-          );
-          for (const doc of jsdocs) {
-            if (doc.getTags().some((tag) => tag.getTagName() === "module")) {
-              jsDocs.push(doc);
-            }
+
+      let jsDocs = getJsDocsFromSourceFile(decl);
+
+      // if you have a file that re-exports _everything_ from somewhere else
+      // then look at that place for jsdocs since e.g. Preconstruct
+      // generates a declaration file that re-exports from the actual place that might include a JSDoc comment
+      if (jsDocs.length === 0) {
+        let foundStar = false;
+        let sourceFile: undefined | SourceFile = undefined;
+        for (const exportDecl of decl.getExportDeclarations()) {
+          const file = exportDecl.getModuleSpecifierSourceFile();
+          if (!file || (sourceFile && file !== sourceFile)) {
+            sourceFile = undefined;
+            break;
+          }
+          sourceFile = file;
+          if (exportDecl.getNodeProperty("exportClause") === undefined) {
+            foundStar = true;
           }
         }
-      });
+        if (foundStar && sourceFile) {
+          jsDocs = getJsDocsFromSourceFile(sourceFile);
+        }
+      }
+
       state.publicSymbols.set(symbol, {
         kind: "module",
         name: state.rootSymbols.get(symbol) || symbol.getName(),
@@ -459,4 +470,22 @@ function resolveSymbolQueue() {
       console.log(symbol.getName(), decl.getKindName());
     }
   }
+}
+
+function getJsDocsFromSourceFile(decl: SourceFile) {
+  const jsDocs: JSDoc[] = [];
+  decl.forEachChild((node) => {
+    if (!!(node.compilerNode as any).jsDoc) {
+      const nodes: ts.JSDoc[] = (node.compilerNode as any).jsDoc ?? [];
+      const jsdocs: JSDoc[] = nodes.map((n) =>
+        (node as any)._getNodeFromCompilerNode(n)
+      );
+      for (const doc of jsdocs) {
+        if (doc.getTags().some((tag) => tag.getTagName() === "module")) {
+          jsDocs.push(doc);
+        }
+      }
+    }
+  });
+  return jsDocs;
 }
