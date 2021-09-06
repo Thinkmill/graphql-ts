@@ -18,6 +18,7 @@ import {
   EnumDeclaration,
   ModuleDeclaration,
   ModuleDeclarationKind,
+  PrivateIdentifier,
 } from "ts-morph";
 import path from "path";
 import { findCanonicalExportLocations } from "./exports";
@@ -34,22 +35,6 @@ import {
   collectEntrypointsOfPackage,
 } from "./utils";
 import { SerializedSymbol, ClassMember } from "../lib/types";
-
-// cache bust 1
-
-// function symbolFlagsToString(flags: ts.SymbolFlags) {
-//   return Object.keys(ts.SymbolFlags).filter(
-//     // @ts-ignore
-//     (flagName) => flags & ts.SymbolFlags[flagName]
-//   );
-// }
-
-// function typeFlagsToString(type: ts.Type) {
-//   return Object.keys(ts.TypeFlags).filter(
-//     // @ts-ignore
-//     (flagName) => type.flags & ts.TypeFlags[flagName]
-//   );
-// }
 
 function getInitialState() {
   return {
@@ -360,9 +345,15 @@ function resolveSymbolQueue() {
         typeParams: getTypeParameters(decl),
         extends: extendsNode ? convertTypeNode(extendsNode) : null,
         implements: decl.getImplements().map((x) => convertTypeNode(x)),
-        hasPrivateMembers: decl
+        willBeComparedNominally: decl
           .getMembers()
-          .some((member) => member.hasModifier("private")),
+          .some(
+            (member) =>
+              member.hasModifier("private") ||
+              member.hasModifier("protected") ||
+              (!(member instanceof ConstructorDeclaration) &&
+                member.getNameNode() instanceof PrivateIdentifier)
+          ),
         constructors: decl.getConstructors().map((x) => {
           return {
             docs: getDocs(x),
@@ -377,24 +368,28 @@ function resolveSymbolQueue() {
           ) {
             return [];
           }
-          // TODO: show protected
-          // (and have a tooltip explaining what protected does)
+          if (member.getNameNode() instanceof PrivateIdentifier) {
+            return [];
+          }
           if (member instanceof MethodDeclaration) {
-            const returnTypeNode = member.getReturnTypeNode();
-            return [
-              {
+            // TODO: show protected
+            // (and have a tooltip explaining what protected does)
+
+            return [...member.getOverloads(), member].map((member) => {
+              const returnTypeNode = member.getReturnTypeNode();
+              return {
                 kind: "method",
                 docs: getDocs(member),
                 name: member.getName(),
+                static: member.isStatic(),
                 optional: member.hasQuestionToken(),
                 parameters: getParameters(member),
                 returnType: returnTypeNode
                   ? convertTypeNode(returnTypeNode)
                   : _convertType(member.getReturnType(), 0),
-                static: member.isStatic(),
                 typeParams: getTypeParameters(member),
-              },
-            ];
+              };
+            });
           }
           if (member instanceof PropertyDeclaration) {
             const typeNode = member.getTypeNode();

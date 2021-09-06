@@ -36,12 +36,12 @@ export function useGroupedExports(fullName: string) {
   for (const [exportName, exportedSymbol] of Object.entries(
     rootThing.exports
   )) {
-    const prev = transformedExports[transformedExports.length - 1];
-
+    const _prev = transformedExports[transformedExports.length - 1];
+    const prev: typeof _prev | undefined = _prev;
     if (!symbols[exportedSymbol]) {
       const external = externalSymbols[exportedSymbol];
       if (!external) {
-        if (prev.kind === "unknown-exports") {
+        if (prev?.kind === "unknown-exports") {
           prev.exports.push(exportName);
         }
         transformedExports.push({

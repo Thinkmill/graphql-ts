@@ -69,7 +69,12 @@ export function _convertType(type: Type, depth: number): SerializedType {
       return { kind: "type-parameter", name: symbol.getName() };
     }
     const name = symbol.getName();
-    if (name !== "__type" && name !== "__function" && name !== "__object") {
+    if (
+      name !== "__type" &&
+      name !== "__function" &&
+      name !== "__object" &&
+      symbol.getFlags() & ts.SymbolFlags.Type
+    ) {
       symbol = symbol.getAliasedSymbol() || symbol;
       collectSymbol(symbol);
       return {
@@ -343,6 +348,16 @@ export function _convertType(type: Type, depth: number): SerializedType {
       members,
     };
   }
+  return {
+    kind: "raw",
+    value: type.getText(),
+    tsKind: typeFlagsToString(type.compilerType).join(", "),
+  };
+}
 
-  return { kind: "raw", value: type.getText() };
+function typeFlagsToString(type: ts.Type) {
+  return Object.keys(ts.TypeFlags).filter(
+    // @ts-ignore
+    (flagName) => type.flags & ts.TypeFlags[flagName]
+  );
 }

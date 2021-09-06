@@ -57,7 +57,7 @@ export type SerializedSymbol =
       kind: "class";
       name: string;
       docs: string;
-      hasPrivateMembers: boolean;
+      willBeComparedNominally: boolean;
       typeParams: TypeParam[];
       extends: SerializedType | null;
       implements: SerializedType[];

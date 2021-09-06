@@ -106,10 +106,10 @@ export function getParameters(node: ParameteredNode): Parameter[] {
     return {
       name: x.getName(),
       type: typeNode ? convertTypeNode(typeNode) : _convertType(x.getType(), 0),
-      kind: x.isOptional()
-        ? "optional"
-        : x.isRestParameter()
+      kind: x.isRestParameter()
         ? "rest"
+        : x.isOptional()
+        ? "optional"
         : "normal",
     };
   });
@@ -118,46 +118,59 @@ export function getParameters(node: ParameteredNode): Parameter[] {
 export function getDocsFromJSDocNodes(nodes: JSDoc[]) {
   return nodes
     .map((x) => {
+      let fromTags = x
+        .getTags()
+        .filter((x) => x.getTagName() !== "module")
+        .map((x) => {
+          return `${x.getTagName()}: ${x.getCommentText()}`;
+        })
+        .join("\n\n");
+      if (fromTags) {
+        fromTags = `\n\n${fromTags}`;
+      }
       const commentStuff = x.getComment() || [];
       if (typeof commentStuff === "string") {
-        return commentStuff;
+        return commentStuff + fromTags;
       }
-      return commentStuff
-        .map((x) => {
-          if (x === undefined) {
-            throw new Error("undefined!");
-          }
 
-          if (ts.isJSDocLink(x.compilerNode)) {
-            if (x.getSymbol()) {
-              const symbol = x.getSymbolOrThrow();
-              const finalSymbol = symbol.getAliasedSymbol() || symbol;
-              return {
-                kind: "link" as const,
-                content: x.compilerNode.text,
-                name: finalSymbol.getName(),
-                fullName: getSymbolIdentifier(finalSymbol),
-              };
-            } else {
-              console.log(
-                "could not get symbol for link with text at:",
-                x.getFullText(),
-                x.compilerNode.getSourceFile().fileName
-              );
+      return (
+        commentStuff
+          .map((x) => {
+            if (x === undefined) {
+              throw new Error("undefined!");
             }
-          }
 
-          return { kind: "text" as const, content: x.compilerNode.text };
-        })
-        .map((x) => {
-          if (x.kind === "text") {
-            return x.content;
-          }
-          return `[${x.content || x.name}](#symbol-${x.fullName})`;
-        })
-        .join("");
+            if (ts.isJSDocLink(x.compilerNode)) {
+              if (x.getSymbol()) {
+                const symbol = x.getSymbolOrThrow();
+                const finalSymbol = symbol.getAliasedSymbol() || symbol;
+                return {
+                  kind: "link" as const,
+                  content: x.compilerNode.text,
+                  name: finalSymbol.getName(),
+                  fullName: getSymbolIdentifier(finalSymbol),
+                };
+              } else {
+                console.log(
+                  "could not get symbol for link with text at:",
+                  x.getFullText(),
+                  x.compilerNode.getSourceFile().fileName
+                );
+              }
+            }
+
+            return { kind: "text" as const, content: x.compilerNode.text };
+          })
+          .map((x) => {
+            if (x.kind === "text") {
+              return x.content;
+            }
+            return `[${x.content || x.name}](#symbol-${x.fullName})`;
+          })
+          .join("") + fromTags
+      );
     })
-    .join("\n");
+    .join("\n\n");
 }
 
 export function getDocs(decl: JSDocableNode) {

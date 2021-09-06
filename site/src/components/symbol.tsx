@@ -19,6 +19,7 @@ import { Syntax } from "./syntax";
 import { Indent } from "./indent";
 import { blockSummary } from "./docs.css";
 import * as symbolReferenceStyles from "./symbol-references.css";
+import { a } from "./markdown.css";
 
 function SymbolAnchor({ fullName }: { fullName: string }) {
   const { goodIdentifiers } = useDocsContext();
@@ -186,6 +187,18 @@ export function RenderRootSymbol({ fullName }: { fullName: string }) {
     return (
       <div className={styles.rootSymbolContainer}>
         <Docs content={rootSymbol.docs} />
+        {rootSymbol.willBeComparedNominally && (
+          <p>
+            This class has private members, so it it will be compared nominally
+            instead of structurally.{" "}
+            <a
+              className={a}
+              href="https://www.typescriptlang.org/docs/handbook/type-compatibility.html#private-and-protected-members-in-classes"
+            >
+              See the TypeScript reference for more details.
+            </a>
+          </p>
+        )}
         <Fragment>
           <Syntax kind="keyword">
             {isExported ? "export " : ""}
@@ -351,7 +364,12 @@ function ClassMembers({
           return (
             <Indent key={i}>
               <Docs content={prop.docs} />
-              {prop.readonly ? <Syntax kind="keyword">readonly </Syntax> : null}
+              {prop.readonly || prop.static ? (
+                <Syntax kind="keyword">
+                  {prop.static ? "static " : ""}
+                  {prop.readonly ? "readonly " : ""}
+                </Syntax>
+              ) : null}
               <span className={codeFont}>{prop.name}</span>
               <Syntax kind="colon">{prop.optional ? "?: " : ": "}</Syntax>
               <Type type={prop.type} />

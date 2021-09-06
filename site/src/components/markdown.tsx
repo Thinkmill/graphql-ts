@@ -1,13 +1,20 @@
-import ReactMarkdown, { ReactMarkdownOptions } from "react-markdown";
+import ReactMarkdown, { Options as ReactMarkdownOptions } from "react-markdown";
 import Highlight, { Prism } from "prism-react-renderer";
 import { codeFont, colors } from "../lib/theme.css";
 import { SymbolReference } from "./symbol-references";
 import { useDocsContext } from "../lib/DocsContext";
+import remarkGfm from "remark-gfm";
 
 import * as styles from "./markdown.css";
 
 export function Markdown({ content }: { content: string }) {
-  return <ReactMarkdown children={content} components={components} />;
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      children={content}
+      components={components}
+    />
+  );
 }
 
 const theme = {

@@ -22,8 +22,8 @@ export const headerSearch = style({
 
 export const pageContainer = style({
   display: "flex",
-  justifyContent: "start",
-  alignItems: "start",
+  justifyContent: "flex-start",
+  alignItems: "flex-start",
 });
 
 export const navigationContainer = style({

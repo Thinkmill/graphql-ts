@@ -151,10 +151,21 @@ export async function getPackage(
 
   await Promise.all(
     [...dependencies].map(async (dep) => {
-      const specifier =
-        pkgJson.dependencies?.[dep] ||
-        pkgJson.optionalDependencies?.[dep] ||
-        pkgJson.peerDependencies?.[dep];
+      const definitelyTypedDep = `@types/${
+        dep.startsWith("@") ? dep.slice(1).replace("/", "__") : dep
+      }`;
+      let specifier =
+        pkgJson.dependencies?.[definitelyTypedDep] ||
+        pkgJson.optionalDependencies?.[definitelyTypedDep] ||
+        pkgJson.peerDependencies?.[definitelyTypedDep];
+      if (specifier) {
+        dep = definitelyTypedDep;
+      } else {
+        specifier =
+          pkgJson.dependencies?.[dep] ||
+          pkgJson.optionalDependencies?.[dep] ||
+          pkgJson.peerDependencies?.[dep];
+      }
       if (typeof specifier !== "string") return;
       const { version, pkgPath } = await addPackageToNodeModules(
         project,
@@ -199,6 +210,9 @@ export async function getPackage(
       rootSymbols.set(sourceFileSymbol, entrypoint);
     }
   }
+
+  // console.log("getting diagnostics");
+  // console.log(project.getPreEmitDiagnostics().map((x) => x.getMessageText()));
 
   return {
     ...getDocsInfo(rootSymbols, pkgPath, pkgName, version, (symbolId) =>

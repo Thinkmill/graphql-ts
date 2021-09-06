@@ -333,10 +333,8 @@ export function Params({ params }: { params: Parameter[] }) {
       {params.map((param, i) => {
         return (
           <Fragment key={i}>
-            <Syntax kind="parameter">
-              {param.kind === "rest" ? "..." : ""}
-              {param.name}
-            </Syntax>
+            {param.kind === "rest" && <Syntax kind="colon">...</Syntax>}
+            <Syntax kind="parameter">{param.name}</Syntax>
             <Syntax kind="colon">
               {param.kind === "optional" ? "?: " : ": "}
             </Syntax>

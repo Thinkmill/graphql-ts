@@ -85,6 +85,13 @@ export function SymbolReference({
     : externalReferences.get(name);
   if (externalSymbols[fullName]) {
     const external = externalSymbols[fullName];
+    let pkgDisplayName = external.pkg;
+    if (pkgDisplayName.startsWith("@types/")) {
+      pkgDisplayName = pkgDisplayName.replace("@types/", "");
+      if (pkgDisplayName.includes("__")) {
+        pkgDisplayName = `@${pkgDisplayName.replace("__", "/")}`;
+      }
+    }
     return (
       <span className={codeFont}>
         <Syntax kind="keyword">import</Syntax>
@@ -93,7 +100,7 @@ export function SymbolReference({
           className={styles.rootSymbolReference}
           href={`/npm/${external.pkg}@${external.version}`}
         >
-          {JSON.stringify(external.pkg)}
+          {JSON.stringify(pkgDisplayName)}
         </a>
         <Syntax kind="bracket">)</Syntax>.
         <a
