@@ -3,14 +3,17 @@ import {
   GraphQLInputType,
   GraphQLList,
 } from "graphql/type/definition";
-import { EnumType, EnumValue } from "./enum";
+import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
-// (these are referenced in the docs)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { NullableOutputType, OutputType } from "../output";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Type } from "../type";
 import { ListType, NonNullType } from "..";
+
+export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
+  NullableOutputType<any>,
+  OutputType<any>,
+  Type<any>
+];
 
 /**
  * Any input list type. This type only exists because of limitations in circular types.

@@ -12,7 +12,7 @@
     "@changesets/changelog-github": "^0.4.0",
     "@changesets/cli": "^2.16.0",
     "@manypkg/cli": "0.18.0",
-    "@preconstruct/cli": "^2.1.0",
+    "@preconstruct/cli": "^2.1.2",
     "@types/decompress": "4.2.4",
     "@types/jest": "26.0.24",
     "@types/node-fetch": "2.5.12",
@@ -35,7 +35,8 @@
     "test": "jest",
     "types": "tsc",
     "lint": "eslint .",
-    "site": "cd site && pnpm dev"
+    "site": "cd site && pnpm dev",
+    "build": "preconstruct build"
   },
   "preconstruct": {
     "packages": [

@@ -2,15 +2,17 @@ import {
   NullableInputType,
   NullableOutputType,
   NonNullType,
-
-  // (these are referenced in the docs)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   InputType,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   OutputType,
 } from ".";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { list, nonNull } from "./api-without-context/list-and-non-null";
+
+export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
+  InputType,
+  OutputType<any>,
+  typeof list,
+  typeof nonNull
+];
 
 /**
  * Any **nullable** GraphQL type for a given `Context`.

@@ -22,17 +22,21 @@ import {
   EnumType,
   ListType,
   NonNullType,
-  EnumValue,
 } from "./api-without-context";
-// (referenced in docs)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { NullableType, Type } from "./type";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type {
   object,
   field,
   interface as interfaceFunc,
 } from "./api-with-context";
+
+export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
+  typeof interfaceFunc,
+  typeof field,
+  typeof object,
+  NullableType<any>,
+  Type<any>
+];
 
 /**
  * Any output list type. This type only exists because of limitations in circular types.
