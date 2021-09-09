@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 0.3.1
+
+### Patch Changes
+
+- [`1e10a22`](https://github.com/Thinkmill/graphql-ts/commit/1e10a228e59b206f86e963d423567486fa590aab) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Fixed broken links in JSDoc comments
+
 ## 0.3.0
 
 ### Minor Changes
