@@ -64,7 +64,7 @@ importers:
       '@graphql-ts/schema': ^0.3.0
       graphql: ^15.5.0
     dependencies:
-      '@graphql-ts/schema': 0.3.1_graphql@15.5.0
+      '@graphql-ts/schema': link:../packages/schema
       graphql: 15.5.0
 
 packages:
@@ -1661,15 +1661,6 @@ packages:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
-
-  /@graphql-ts/schema/0.3.1_graphql@15.5.0:
-    resolution: {integrity: sha512-sPK1dXo0HEk4+DkMm9eE1MeylcDxtjK/sAKJJ4FJbYKK5F0gew7ohszVfgidVwk1nrjcT2/SWncdwM3plBX28g==}
-    peerDependencies:
-      graphql: ^15.0.0
-    dependencies:
-      '@babel/runtime': 7.15.3
-      graphql: 15.5.0
     dev: false
 
   /@istanbuljs/load-nyc-config/1.1.0:
