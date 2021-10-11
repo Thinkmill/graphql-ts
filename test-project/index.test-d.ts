@@ -10,7 +10,9 @@ import {
 import * as graphqlWithContext from "./schema-api";
 
 // this isn't really right
-function expectType<T>(type: T) {}
+function expectType<T>(type: T) {
+  console.log(type);
+}
 
 graphqlWithContext.arg({
   type: graphqlWithContext.Boolean,
@@ -69,16 +71,26 @@ const Circular: CircularInputType = graphql.inputObject({
   } | null>(valOfSomethingType);
 }
 
+// this is all just to make ts's no unused local errors go away
+
+function useType<T>(a?: T) {
+  console.log(a);
+}
+
 {
   // should be unknown
   type a = graphql.InferValueFromOutputType<graphql.OutputType>;
+  useType<a>();
 }
 {
   // should be unknown
   type a = graphql.InferValueFromInputType<graphql.InputType>;
+  useType<a>();
   type b = graphql.InferValueFromArg<graphql.Arg<graphql.InputType>>;
+  useType<b>();
   // should be { readonly a: unknown }
   type c = graphql.InferValueFromArgs<{ a: graphql.Arg<graphql.InputType> }>;
+  useType<c>();
 }
 
 {
@@ -231,6 +243,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
                 })
               ),
               async resolve(rootVal, args, context) {
+                console.log(rootVal, args, context);
                 return "read" as const;
               },
             }),
@@ -324,6 +337,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           type: graphql.String,
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
             return "";
           },
@@ -336,6 +350,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextB.field({
           type: fromA,
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean; other: string }>(context);
             return {};
           },
@@ -349,6 +364,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
           // @ts-expect-error
           type: fromBWithA,
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -361,6 +377,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
           // @ts-expect-error
           type: graphql.list(fromBWithA),
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -373,6 +390,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
           // @ts-expect-error
           type: graphql.list(graphql.list(fromBWithA)),
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -385,6 +403,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
           // @ts-expect-error
           type: graphql.nonNull(fromBWithA),
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -397,6 +416,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
           // @ts-expect-error
           type: graphql.list(graphql.nonNull(fromBWithA)),
           resolve(rootVal, args, context) {
+            console.log(rootVal, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -515,6 +535,7 @@ graphql.object()({
       type: graphql.ID,
 
       resolve(rootVal, args) {
+        console.log(rootVal);
         // @ts-expect-error
         args.something;
         return "";
@@ -552,6 +573,7 @@ graphql.object()({
     ref: graphql.field({
       type: graphql.nonNull(graphql.String),
       resolve(data) {
+        console.log(data);
         return "";
       },
     }),
@@ -559,6 +581,7 @@ graphql.object()({
       type: graphql.nonNull(graphql.String),
       args: {},
       resolve(data, {}, context) {
+        console.log(data, context);
         return "";
       },
     }),
@@ -574,6 +597,7 @@ graphql.object()({
     interfaces: [ImageFieldOutput],
     fields: imageOutputFields,
   });
+  console.log(LocalImageFieldOutput);
 }
 
 graphql.fields<{ thing: Promise<string>[] }>()({
@@ -606,6 +630,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert);
 }
 
 {
@@ -615,6 +640,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert);
 }
 
 {
@@ -624,6 +650,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert);
 }
 
 {
@@ -633,6 +660,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert);
 }
 
 {
@@ -642,6 +670,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert);
 }
 
 {
@@ -651,6 +680,7 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert);
 }
 
 {
@@ -672,13 +702,19 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  console.log(_assert);
   // @ts-expect-error
   const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert1);
   // @ts-expect-error
   const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert2);
   const _assert3: (x: graphql.Arg<typeof graphql.String, boolean>) => void = (
     x: typeof arg
-  ) => {};
+  ) => {
+    console.log(x);
+  };
+  console.log(_assert3);
 }
 
 {
@@ -698,10 +734,13 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  console.log(_assert);
   // @ts-expect-error
   const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert1);
   // @ts-expect-error
   const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert2);
 }
 
 {
@@ -720,10 +759,13 @@ graphql.fields<{ thing: Promise<string> }>()({
     ...x,
   });
   const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  console.log(_assert);
   // @ts-expect-error
   const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert1);
   // @ts-expect-error
   const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert2);
 }
 
 {
@@ -735,10 +777,13 @@ graphql.fields<{ thing: Promise<string> }>()({
   });
 
   const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  console.log(_assert);
   // @ts-expect-error
   const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  console.log(_assert1);
   // @ts-expect-error
   const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  console.log(_assert2);
 }
 
 graphql.arg({
@@ -910,12 +955,14 @@ graphql.object<any>()({
     ref: graphql.field({
       type: graphql.nonNull(graphql.String),
       resolve(data) {
+        console.log(data);
         return "";
       },
     }),
     src: graphql.field({
       type: graphql.nonNull(graphql.String),
       resolve(data, args, context) {
+        console.log(data, args, context);
         return "";
       },
     }),

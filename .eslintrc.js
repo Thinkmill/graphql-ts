@@ -14,6 +14,8 @@ module.exports = {
     "@typescript-eslint/ban-types": 0,
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/ban-ts-comment": 0,
+    // ts will check this
+    "@typescript-eslint/no-unused-vars": 0,
   },
   overrides: [
     {

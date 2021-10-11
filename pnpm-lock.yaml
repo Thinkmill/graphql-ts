@@ -50,6 +50,17 @@ importers:
       prettier-plugin-jsdoc: 0.3.23_prettier@2.3.1
       typescript: 4.3.5
 
+  packages/extend:
+    specifiers:
+      '@babel/runtime': ^7.9.2
+      '@graphql-ts/schema': ^0.3.1
+      graphql: ^15.5.0
+    dependencies:
+      '@babel/runtime': 7.15.3
+    devDependencies:
+      '@graphql-ts/schema': link:../schema
+      graphql: 15.5.0
+
   packages/schema:
     specifiers:
       '@babel/runtime': ^7.9.2
