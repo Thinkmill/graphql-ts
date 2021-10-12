@@ -10,7 +10,7 @@
  * @module
  */
 
-import { Field, OutputType, graphql } from "@graphql-ts/schema";
+import { Field, OutputType, graphql, ObjectType } from "@graphql-ts/schema";
 import {
   GraphQLSchema,
   isInterfaceType,
@@ -55,7 +55,30 @@ export function extend(
   return (schema) => {
     assertValidSchema(schema);
     const extension =
-      typeof _extension === "function" ? _extension({ schema }) : _extension;
+      typeof _extension === "function"
+        ? _extension({
+            schema,
+            object(name) {
+              const graphQLType = schema.getType(name);
+              if (graphQLType == null) {
+                throw new Error(
+                  `Getting the type named ${name} in the schema that is being extended is not possible because no type with that name exists in the schema`
+                );
+              }
+              if (!isObjectType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not an object type`
+                );
+              }
+              return {
+                kind: "object",
+                __context: () => {},
+                __rootVal: undefined as any,
+                graphQLType,
+              };
+            },
+          })
+        : _extension;
     const queryType = schema.getQueryType()!;
     const mutationType = schema.getMutationType();
     const usages = findObjectTypeUsages(
@@ -125,10 +148,21 @@ export function extend(
   };
 }
 
-type FieldsOnAnything = Record<
-  string,
-  Field<unknown, any, OutputType<any>, string, any>
->;
+/**
+ * Note the distinct usages of `any` vs `unknown` is intentional.
+ *
+ * - The `unknown` used for the rootVal is because the root val isn't known and it
+ *   should generally be used here because these fields are on the query and
+ *   mutation types
+ * - The first `any` used for the `Args` type parameter is used because `Args` is
+ *   invariant so only `Record<string, Arg<InputType, boolean>>` would work with
+ *   it. The arguable unsafety here doesn't really matter because people will
+ *   always use `graphql.field`
+ * - The `any` in `OutputType` and the last type argument ``
+ */
+type FieldsOnAnything = {
+  [key: string]: Field<unknown, any, OutputType<any>, string, any>;
+};
 
 /**
  * An extension to a GraphQL schema. This currently only supports adding fields
@@ -195,6 +229,33 @@ export type Extension = {
  */
 export type BaseSchemaInfo = {
   schema: GraphQLSchema;
+  /**
+   * Gets an object type from the existing GraphQL schema and wraps it in an
+   * {@link ObjectType}. If there is no object type in the existing schema with
+   * the name passed, an error will be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: base.object("Something"),
+   *       resolve() {
+   *         return { something: true };
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   *
+   * Note that this returns an {@link ObjectType} that allows any root val and
+   * any context to be used. If you know what it accepts, you can cast it to the
+   * appropriate thing. Arguably this should return `ObjectType<never, never>`
+   * to make it clear that it's not known what the required root val and context
+   * is which would make it require casting before use.
+   */
+  object(name: string): ObjectType<unknown, unknown>;
 };
 
 function getGraphQLJSFieldsFromGraphQLTSFields(
