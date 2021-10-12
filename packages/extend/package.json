@@ -1,0 +1,22 @@
+{
+  "name": "@graphql-ts/extend",
+  "version": "0.0.0",
+  "main": "dist/graphql-ts-extend.cjs.js",
+  "module": "dist/graphql-ts-extend.esm.js",
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@babel/runtime": "^7.9.2"
+  },
+  "peerDependencies": {
+    "@graphql-ts/schema": "^0.3.0",
+    "graphql": "^15.0.0"
+  },
+  "devDependencies": {
+    "@graphql-ts/schema": "^0.3.1",
+    "graphql": "^15.5.0"
+  },
+  "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/extend"
+}
