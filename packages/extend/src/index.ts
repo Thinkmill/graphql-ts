@@ -6,6 +6,8 @@
  * various places in it.
  *
  * See {@link extend} for more details.
+ *
+ * @module
  */
 
 import { Field, OutputType, graphql } from "@graphql-ts/schema";
@@ -20,71 +22,35 @@ import {
   assertValidSchema,
 } from "graphql";
 
-type FieldsOnAnything<Context> = Record<
-  string,
-  Field<unknown, any, OutputType<Context>, string, Context>
->;
-
-type CurrentSchemaInfo = {
-  schema: GraphQLSchema;
-};
-
-type Extension<Context> = {
-  /**
-   * Extra fields to be added to the query type.
-   *
-   * ```ts
-   * const extension: Extension<Context> = {
-   *   query: {
-   *     isLoggedIn: graphql.field({
-   *       type: graphql.Boolean,
-   *       resolve(rootVal, args, context, info) {
-   *         // ...
-   *       },
-   *     }),
-   *   },
-   * };
-   * ```
-   */
-  // Note this is distinct from using `object.Query` because the query
-  // type of a schema doesn't have to be named `Query` even though it
-  // generally is. By using `query` instead of `object.Query`, these
-  // fields will be added to the query type regardless of what it is called.
-  query?: FieldsOnAnything<Context>;
-  /**
-   * Extra fields to be added to the mutation type.
-   *
-   * ```ts
-   * const extension: Extension<Context> = {
-   *   mutation: {
-   *     createPost: graphql.field({
-   *       type: graphql.Boolean,
-   *       resolve(rootVal, args, context, info) {
-   *         // ...
-   *       },
-   *     }),
-   *   },
-   * };
-   * ```
-   */
-  // Note this is distinct from using `object.Mutation` because the mutation
-  // type of a schema doesn't have to be named `Mutation` even though it
-  // generally is. By using `mutation` instead of `object.Mutation`, these
-  // fields will be added to the mutation type regardless of what it is called.
-  mutation?: FieldsOnAnything<Context>;
-  // /** Extra fields to be added to an abitrary object type */
-  // object?: Record<string, FieldsOnAnything<Context>>;
-  // /** Extra fields to be added to an abitrary type */
-  // inputObject?: Record<string, FieldsOnAnything<Context>>;
-  /** Extra variants to add to a */
-  // /** If you define an object implementation of an interface but never use the object type */
-  //   unreferencedConcreteInterfaceImplementations?: ObjectType<Context, any>[];
-};
-
+/**
+ * `extend` allows you to extend a {@link GraphQLSchema} with `@graphql-ts/schema`.
+ *
+ * ```ts
+ * const originalSchema = new GraphQLSchema({ ...etc });
+ *
+ * const extendedSchema = extend({
+ *   query: {
+ *     hello: graphql.field({
+ *       type: graphql.String,
+ *       resolve() {
+ *         return "Hello!";
+ *       },
+ *     }),
+ *   },
+ * })(originalSchema);
+ * ```
+ *
+ * `extend` will currently throw an error if the query or mutation types are
+ * used in other types like this
+ *
+ * ```graphql
+ * type Query {
+ *   thing: Query
+ * }
+ * ```
+ */
 export function extend(
-  _extension:
-    | Extension<unknown>
-    | ((current: CurrentSchemaInfo) => Extension<unknown>)
+  _extension: Extension | ((current: BaseSchemaInfo) => Extension)
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
     assertValidSchema(schema);
@@ -158,6 +124,78 @@ export function extend(
     return updatedSchema;
   };
 }
+
+type FieldsOnAnything = Record<
+  string,
+  Field<unknown, any, OutputType<any>, string, any>
+>;
+
+/**
+ * An extension to a GraphQL schema. This currently only supports adding fields
+ * to the query and mutation types. Extending other types will be supported in
+ * the future.
+ */
+export type Extension = {
+  /**
+   * Extra fields to be added to the query type.
+   *
+   * ```ts
+   * const extension: Extension = {
+   *   query: {
+   *     isLoggedIn: graphql.field({
+   *       type: graphql.Boolean,
+   *       resolve(rootVal, args, context, info) {
+   *         // ...
+   *       },
+   *     }),
+   *   },
+   * };
+   * ```
+   */
+  // Note this is distinct from using `object.Query` because the query
+  // type of a schema doesn't have to be named `Query` even though it
+  // generally is. By using `query` instead of `object.Query`, these
+  // fields will be added to the query type regardless of what it is called.
+  query?: FieldsOnAnything;
+  /**
+   * Extra fields to be added to the mutation type.
+   *
+   * ```ts
+   * const extension: Extension = {
+   *   mutation: {
+   *     createPost: graphql.field({
+   *       type: graphql.Boolean,
+   *       resolve(rootVal, args, context, info) {
+   *         // ...
+   *       },
+   *     }),
+   *   },
+   * };
+   * ```
+   */
+  // Note this is distinct from using `object.Mutation` because the mutation
+  // type of a schema doesn't have to be named `Mutation` even though it
+  // generally is. By using `mutation` instead of `object.Mutation`, these
+  // fields will be added to the mutation type regardless of what it is called.
+  mutation?: FieldsOnAnything;
+  // /** Extra fields to be added to an abitrary object type */
+  // object?: Record<string, FieldsOnAnything<Context>>;
+  // /** Extra fields to be added to an abitrary type */
+  // inputObject?: Record<string, FieldsOnAnything<Context>>;
+  /** Extra variants to add to a */
+  // /** If you define an object implementation of an interface but never use the object type */
+  //   unreferencedConcreteInterfaceImplementations?: ObjectType<Context, any>[];
+};
+
+/**
+ * Information about the GraphQL schema that is being extended. Currently this
+ * only exposes the {@link GraphQLSchema} object. In the future, this will be
+ * extended to allow easily getting a type that exists in the base schema and
+ * wrapping it in a `@graphql-ts/schema` type to use in the extension.
+ */
+export type BaseSchemaInfo = {
+  schema: GraphQLSchema;
+};
 
 function getGraphQLJSFieldsFromGraphQLTSFields(
   fields: Record<string, graphql.Field<any, any, any, any>>
