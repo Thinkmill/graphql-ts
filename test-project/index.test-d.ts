@@ -331,6 +331,22 @@ graphql.object<{ id: string } | { id: boolean }>()({
   }
 
   {
+    const A = typesWithContextB.object<{ thing: string }>()({
+      name: "",
+      fields: {
+        thing: typesWithContextA.field({
+          type: graphql.String,
+        }),
+      },
+    });
+    typesWithContextA.union({
+      name: "",
+      // @ts-expect-error
+      types: [A],
+    });
+  }
+
+  {
     const fromA = typesWithContextA.object<{}>()({
       name: "Something",
       fields: {

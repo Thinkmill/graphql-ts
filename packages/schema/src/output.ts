@@ -451,14 +451,11 @@ export type UnionTypeFunc<Context> = <
   types: TObjectType[];
   resolveType?: (
     type: TObjectType["__rootVal"],
-    context: Parameters<TObjectType["__context"]>[0],
+    context: Context,
     info: GraphQLResolveInfo,
     abstractType: GraphQLUnionType
   ) => string;
-}) => UnionType<
-  TObjectType["__rootVal"],
-  Parameters<TObjectType["__context"]>[0]
->;
+}) => UnionType<TObjectType["__rootVal"], Context>;
 
 function bindUnionTypeToContext<Context>(): UnionTypeFunc<Context> {
   return function union(config) {
