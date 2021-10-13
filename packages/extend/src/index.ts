@@ -10,7 +10,21 @@
  * @module
  */
 
-import { Field, OutputType, graphql, ObjectType } from "@graphql-ts/schema";
+import {
+  Field,
+  OutputType,
+  graphql,
+  ObjectType,
+  InputObjectType,
+  Arg,
+  InputType,
+  EnumType,
+  EnumValue,
+  UnionType,
+  InterfaceType,
+  InterfaceField,
+  ScalarType,
+} from "@graphql-ts/schema";
 import {
   GraphQLSchema,
   isInterfaceType,
@@ -20,7 +34,17 @@ import {
   GraphQLObjectType,
   GraphQLFieldConfigMap,
   assertValidSchema,
+  isInputObjectType,
+  isEnumType,
+  isScalarType,
+  specifiedScalarTypes,
 } from "graphql";
+
+import * as wrap from "./wrap";
+
+export { wrap };
+
+const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
 
 /**
  * `extend` allows you to extend a {@link GraphQLSchema} with `@graphql-ts/schema`.
@@ -54,28 +78,77 @@ export function extend(
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
     assertValidSchema(schema);
+    const getType = (name: string) => {
+      const graphQLType = schema.getType(name);
+      if (graphQLType == null) {
+        throw new Error(
+          `No type named ${name} exists in the schema that is being extended`
+        );
+      }
+      return graphQLType;
+    };
     const extension =
       typeof _extension === "function"
         ? _extension({
             schema,
             object(name) {
-              const graphQLType = schema.getType(name);
-              if (graphQLType == null) {
-                throw new Error(
-                  `Getting the type named ${name} in the schema that is being extended is not possible because no type with that name exists in the schema`
-                );
-              }
+              const graphQLType = getType(name);
               if (!isObjectType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${name} in the schema being extended but it is not an object type`
                 );
               }
-              return {
-                kind: "object",
-                __context: () => {},
-                __rootVal: undefined as any,
-                graphQLType,
-              };
+              return wrap.object(graphQLType);
+            },
+            inputObject(name) {
+              const graphQLType = getType(name);
+              if (!isInputObjectType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not an input object type`
+                );
+              }
+              return wrap.inputObject(graphQLType);
+            },
+            enum(name) {
+              const graphQLType = getType(name);
+              if (!isEnumType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not an enum type`
+                );
+              }
+              return wrap.enum(graphQLType);
+            },
+            interface(name) {
+              const graphQLType = getType(name);
+              if (!isInterfaceType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not an interface type`
+                );
+              }
+              return wrap.interface(graphQLType);
+            },
+            scalar(name) {
+              if (builtinScalars.has(name)) {
+                throw new Error(
+                  `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but ${name} was passed`
+                );
+              }
+              const graphQLType = getType(name);
+              if (!isScalarType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not a scalar type`
+                );
+              }
+              return wrap.scalar(graphQLType);
+            },
+            union(name) {
+              const graphQLType = getType(name);
+              if (!isUnionType(graphQLType)) {
+                throw new Error(
+                  `There is a type named ${name} in the schema being extended but it is not a union type`
+                );
+              }
+              return wrap.union(graphQLType);
             },
           })
         : _extension;
@@ -226,6 +299,9 @@ export type Extension = {
  * only exposes the {@link GraphQLSchema} object. In the future, this will be
  * extended to allow easily getting a type that exists in the base schema and
  * wrapping it in a `@graphql-ts/schema` type to use in the extension.
+ *
+ * See the caveats mentioned {@link wrap} to learn about the lack of type safety
+ * guarantees with these APIs
  */
 export type BaseSchemaInfo = {
   schema: GraphQLSchema;
@@ -248,14 +324,139 @@ export type BaseSchemaInfo = {
    *   },
    * }))(originalSchema);
    * ```
-   *
-   * Note that this returns an {@link ObjectType} that allows any root val and
-   * any context to be used. If you know what it accepts, you can cast it to the
-   * appropriate thing. Arguably this should return `ObjectType<never, never>`
-   * to make it clear that it's not known what the required root val and context
-   * is which would make it require casting before use.
    */
   object(name: string): ObjectType<unknown, unknown>;
+  /**
+   * Gets an input object type from the existing GraphQL schema and wraps it in
+   * an {@link InputObjectType}. If there is no input object type in the existing
+   * schema with the name passed, an error will be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: graphql.String,
+   *       args: {
+   *         something: graphql.field({
+   *           type: base.inputObject("Something"),
+   *         }),
+   *       },
+   *       resolve(rootVal, { something }) {
+   *         console.log(something);
+   *         return "";
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   */
+  inputObject(
+    name: string
+  ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }>;
+  /**
+   * Gets an enum type from the existing GraphQL schema and wraps it in an
+   * {@link EnumType}. If there is no enum type in the existing schema with the
+   * name passed, an error will be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: base.enum("Something"),
+   *       args: {
+   *         something: graphql.field({
+   *           type: base.enum("Something"),
+   *         }),
+   *       },
+   *       resolve(rootVal, { something }) {
+   *         return something;
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   */
+  enum(name: string): EnumType<Record<string, EnumValue<unknown>>>;
+  /**
+   * Gets a union type from the existing GraphQL schema and wraps it in an
+   * {@link UnionType}. If there is no union type in the existing schema with the
+   * name passed, an error will be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: base.union("Something"),
+   *       resolve() {
+   *         return { something: true };
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   */
+  union(name: string): UnionType<unknown, unknown>;
+  /**
+   * Gets an interface type from the existing GraphQL schema and wraps it in an
+   * {@link InterfaceType}. If there is no interface type in the existing schema
+   * with the name passed, an error will be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: base.interface("Something"),
+   *       resolve() {
+   *         return { something: true };
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   */
+  interface(
+    name: string
+  ): InterfaceType<
+    unknown,
+    Record<string, InterfaceField<any, OutputType<unknown>, unknown>>,
+    unknown
+  >;
+  /**
+   * Gets a scalar type from the existing GraphQL schema and wraps it in an
+   * {@link ScalarType}. If there is no scalar type in the existing schema with
+   * the name passed, an error will be thrown.
+   *
+   * If the name of a built-in scalar type is passed, an error will also be thrown.
+   *
+   * ```ts
+   * const originalSchema = new GraphQLSchema({ ...etc });
+   *
+   * const extendedSchema = extend((base) => ({
+   *   query: {
+   *     something: graphql.field({
+   *       type: base.scalar("JSON"),
+   *       args: {
+   *         something: graphql.field({
+   *           type: base.scalar("JSON"),
+   *         }),
+   *       },
+   *       resolve(rootVal, { something }) {
+   *         return something;
+   *       },
+   *     }),
+   *   },
+   * }))(originalSchema);
+   * ```
+   */
+  scalar(name: string): ScalarType<unknown>;
 };
 
 function getGraphQLJSFieldsFromGraphQLTSFields(

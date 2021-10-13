@@ -1,4 +1,9 @@
-import { GraphQLSchema, graphqlSync, printSchema } from "graphql";
+import {
+  GraphQLScalarType,
+  GraphQLSchema,
+  graphqlSync,
+  printSchema,
+} from "graphql";
 import { graphql } from "@graphql-ts/schema";
 import { extend } from ".";
 
@@ -435,7 +440,7 @@ test("errors when no type ", () => {
     expect(true).toBe(false);
   } catch (err) {
     expect(err.message).toEqual(
-      "Getting the type named Something in the schema that is being extended is not possible because no type with that name exists in the schema"
+      "No type named Something exists in the schema that is being extended"
     );
   }
 });
@@ -481,4 +486,76 @@ test("errors when the type isn't an object type", () => {
       "There is a type named Something in the schema being extended but it is not an object type"
     );
   }
+});
+
+test(".scalar throws for built-in scalars", () => {
+  const initial = new GraphQLSchema({
+    query: graphql.object()({
+      name: "Query",
+      fields: {
+        something: graphql.field({
+          type: graphql.String,
+          resolve() {
+            return "";
+          },
+        }),
+      },
+    }).graphQLType,
+  });
+  try {
+    extend((base) => ({
+      query: {
+        hello: graphql.field({
+          type: base.scalar("String"),
+          resolve() {
+            return {};
+          },
+        }),
+      },
+    }))(initial);
+    expect(true).toBe(false);
+  } catch (err) {
+    expect(err.message).toEqual(
+      "The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but String was passed"
+    );
+  }
+});
+
+test(".scalar works for custom scalars", () => {
+  const Something = graphql.scalar(
+    new GraphQLScalarType({
+      name: "Something",
+    })
+  );
+  const initial = new GraphQLSchema({
+    query: graphql.object()({
+      name: "Query",
+      fields: {
+        something: graphql.field({
+          type: Something,
+          resolve() {
+            return "";
+          },
+        }),
+      },
+    }).graphQLType,
+  });
+  const extended = extend((base) => ({
+    query: {
+      hello: graphql.field({
+        type: base.scalar("Something"),
+        resolve() {
+          return "";
+        },
+      }),
+    },
+  }))(initial);
+  expect(extended).toMatchInlineSnapshot(`
+type Query {
+  something: Something
+  hello: Something
+}
+
+scalar Something
+`);
 });
