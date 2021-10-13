@@ -5,5 +5,8 @@
     { "repo": "Thinkmill/graphql-ts" }
   ],
   "access": "public",
-  "baseBranch": "main"
+  "baseBranch": "main",
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  }
 }
