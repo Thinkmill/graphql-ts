@@ -1,5 +1,15 @@
 # @graphql-ts/schema
 
+## 0.4.0
+
+### Minor Changes
+
+- [`910d1ed`](https://github.com/Thinkmill/graphql-ts/commit/910d1edc596f4a17b0a3dec3e3df8ebd94a5cb80) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Replaced `fields` property on `InterfaceType` with `__fields` that does not exist at runtime to align with other types
+
+### Patch Changes
+
+- [`6c85396`](https://github.com/Thinkmill/graphql-ts/commit/6c85396eee29d6eea75c43f54e50b90a3e63a266) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Updated the definition of `graphql.union` so that the `Context` of the `UnionType` returned and the `Context` passed to `resolveType` are determined by the `Context` of the `graphql` object rather than a union of the `Context`s of the union's member types.
+
 ## 0.3.1
 
 ### Patch Changes
