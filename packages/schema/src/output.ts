@@ -540,8 +540,8 @@ export type InterfaceType<
   kind: "interface";
   __rootVal: (rootVal: RootVal) => void;
   __context: (context: Context) => void;
+  __fields: Fields;
   graphQLType: GraphQLInterfaceType;
-  fields: () => Fields;
 };
 
 export type InterfaceTypeFunc<Context> = <
@@ -585,8 +585,7 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
         }),
         __rootVal: undefined as any,
         __context: undefined as any,
-        fields: () =>
-          typeof config.fields === "function" ? config.fields() : config.fields,
+        __fields: undefined as any,
       };
     };
   };
