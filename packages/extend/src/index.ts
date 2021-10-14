@@ -33,11 +33,14 @@ import {
   getNamedType,
   GraphQLObjectType,
   GraphQLFieldConfigMap,
-  assertValidSchema,
   isInputObjectType,
   isEnumType,
   isScalarType,
   specifiedScalarTypes,
+  printType,
+  parse,
+  ObjectTypeDefinitionNode,
+  print,
 } from "graphql";
 
 import * as wrap from "./wrap";
@@ -74,28 +77,34 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  * ```
  */
 export function extend(
-  _extension: Extension | ((current: BaseSchemaInfo) => Extension)
+  extension:
+    | Extension
+    | readonly Extension[]
+    | ((current: BaseSchemaInfo) => Extension | readonly Extension[])
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
-    assertValidSchema(schema);
     const getType = (name: string) => {
       const graphQLType = schema.getType(name);
       if (graphQLType == null) {
         throw new Error(
-          `No type named ${name} exists in the schema that is being extended`
+          `No type named ${JSON.stringify(
+            name
+          )} exists in the schema that is being extended`
         );
       }
       return graphQLType;
     };
-    const extension =
-      typeof _extension === "function"
-        ? _extension({
+    const resolvedExtension = flattenExtensions(
+      typeof extension === "function"
+        ? extension({
             schema,
             object(name) {
               const graphQLType = getType(name);
               if (!isObjectType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not an object type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not an object type`
                 );
               }
               return wrap.object(graphQLType);
@@ -104,7 +113,9 @@ export function extend(
               const graphQLType = getType(name);
               if (!isInputObjectType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not an input object type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not an input object type`
                 );
               }
               return wrap.inputObject(graphQLType);
@@ -113,7 +124,9 @@ export function extend(
               const graphQLType = getType(name);
               if (!isEnumType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not an enum type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not an enum type`
                 );
               }
               return wrap.enum(graphQLType);
@@ -122,7 +135,9 @@ export function extend(
               const graphQLType = getType(name);
               if (!isInterfaceType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not an interface type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not an interface type`
                 );
               }
               return wrap.interface(graphQLType);
@@ -136,7 +151,9 @@ export function extend(
               const graphQLType = getType(name);
               if (!isScalarType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not a scalar type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not a scalar type`
                 );
               }
               return wrap.scalar(graphQLType);
@@ -145,66 +162,61 @@ export function extend(
               const graphQLType = getType(name);
               if (!isUnionType(graphQLType)) {
                 throw new Error(
-                  `There is a type named ${name} in the schema being extended but it is not a union type`
+                  `There is a type named ${JSON.stringify(
+                    name
+                  )} in the schema being extended but it is not a union type`
                 );
               }
               return wrap.union(graphQLType);
             },
           })
-        : _extension;
-    const queryType = schema.getQueryType()!;
-    const mutationType = schema.getMutationType();
-    const usages = findObjectTypeUsages(
-      schema,
-      new Set(mutationType ? [queryType, mutationType] : [queryType])
+        : extension
     );
+    const queryType = schema.getQueryType();
+    const mutationType = schema.getMutationType();
+    const typesToFind = new Set<GraphQLObjectType>();
+    if (queryType) {
+      typesToFind.add(queryType);
+    }
+    if (mutationType) {
+      typesToFind.add(mutationType);
+    }
+    const usages = findObjectTypeUsages(schema, typesToFind);
     if (usages.size) {
       throw new Error(
         `@graphql-ts/extend doesn't yet support using the query and mutation types in other types but\n${[
           ...usages,
         ]
           .map(([type, usages]) => {
-            return `- ${type} is used at ${usages.join(", ")}`;
+            return `- ${JSON.stringify(type)} is used at ${usages
+              .map((x) => JSON.stringify(x))
+              .join(", ")}`;
           })
           .join("\n")}`
       );
     }
-    if (!extension.mutation && !extension.query) {
+    if (!resolvedExtension.mutation && !resolvedExtension.query) {
       return schema;
     }
-    const queryTypeConfig = queryType.toConfig();
-    const newQueryType = new GraphQLObjectType({
-      ...queryTypeConfig,
-      fields: {
-        ...queryTypeConfig?.fields,
-        ...getGraphQLJSFieldsFromGraphQLTSFields(extension.query || {}),
-      },
-    });
-    const mutationTypeConfig = mutationType?.toConfig();
-    const hasExtension = !!Object.entries(extension.mutation || {}).length;
-    const newMutationType = hasExtension
-      ? new GraphQLObjectType({
-          name: "Mutation",
-          ...mutationTypeConfig,
-          fields: {
-            ...mutationTypeConfig?.fields,
-            ...getGraphQLJSFieldsFromGraphQLTSFields(extension.mutation!),
-          },
-        })
-      : mutationType;
+    const newQueryType = extendObjectType(
+      queryType,
+      resolvedExtension.query || {},
+      "Query"
+    );
+    const newMutationType = extendObjectType(
+      mutationType,
+      resolvedExtension.mutation || {},
+      "Mutation"
+    );
     const schemaConfig = schema.toConfig();
     let types = [
-      ...(queryType ? [] : [newQueryType]),
+      ...(queryType || !newQueryType ? [] : [newQueryType]),
       ...(mutationType || !newMutationType ? [] : [newMutationType]),
       ...schemaConfig.types.map((type) => {
-        if (queryType && type.name === queryType?.name) {
+        if (newQueryType && type.name === queryType?.name) {
           return newQueryType;
         }
-        if (
-          newMutationType &&
-          mutationType &&
-          type.name === mutationType?.name
-        ) {
+        if (newMutationType && type.name === mutationType?.name) {
           return newMutationType;
         }
         return type;
@@ -216,9 +228,109 @@ export function extend(
       mutation: newMutationType,
       types,
     });
-    assertValidSchema(updatedSchema);
     return updatedSchema;
   };
+}
+
+function printFieldOnType(type: GraphQLObjectType, fieldName: string) {
+  const printed = printType(type);
+  const document = parse(printed);
+  const parsed = document.definitions[0] as ObjectTypeDefinitionNode;
+  const parsedField = parsed.fields!.find((x) => x.name.value === fieldName)!;
+  return print(parsedField);
+}
+
+function extendObjectType<ExistingType extends undefined | null = never>(
+  existingType: GraphQLObjectType | ExistingType,
+  fieldsToAdd: FieldsOnAnything,
+  defaultName: string
+): GraphQLObjectType | ExistingType {
+  const hasNewFields = Object.entries(fieldsToAdd).length;
+  if (!hasNewFields) {
+    return existingType;
+  }
+  const existingTypeConfig = existingType?.toConfig();
+  const newFields: GraphQLFieldConfigMap<any, any> = {
+    ...existingTypeConfig?.fields,
+  };
+  for (const [key, val] of Object.entries(
+    getGraphQLJSFieldsFromGraphQLTSFields(fieldsToAdd)
+  )) {
+    if (newFields[key]) {
+      throw new Error(
+        `The schema extension defines a field ${JSON.stringify(
+          key
+        )} on the ${JSON.stringify(
+          existingType!.name ?? defaultName
+        )} type but that type already defines a field with that name.\nThe original field:\n${printFieldOnType(
+          existingType!,
+          key
+        )}\nThe field added by the extension:\n${printFieldOnType(
+          new GraphQLObjectType({
+            name: "ForError",
+            fields: {
+              [key]: val,
+            },
+          }),
+          key
+        )}`
+      );
+    }
+    newFields[key] = val;
+  }
+  return new GraphQLObjectType({
+    name: defaultName,
+    ...existingTypeConfig,
+    fields: newFields,
+  });
+}
+
+// https://github.com/microsoft/TypeScript/issues/17002
+const isReadonlyArray: (arr: any) => arr is readonly any[] =
+  Array.isArray as any;
+
+const operations = ["query", "mutation"] as const;
+
+function flattenExtensions(
+  extensions: Extension | readonly Extension[]
+): Extension {
+  if (isReadonlyArray(extensions)) {
+    const resolvedExtension: Required<Extension> = {
+      mutation: {},
+      query: {},
+    };
+    for (const extension of extensions) {
+      for (const operation of operations) {
+        const fields = extension[operation];
+        if (fields) {
+          for (const [key, val] of Object.entries(fields)) {
+            if (resolvedExtension[operation][key]) {
+              throw new Error(
+                `More than one extension defines a field named ${JSON.stringify(
+                  key
+                )} on the ${operation} type.\nThe first field:\n${printFieldOnType(
+                  graphql.object()({
+                    name: "ForError",
+                    fields: { [key]: val },
+                  }).graphQLType,
+                  key
+                )}\nThe second field:\n${printFieldOnType(
+                  graphql.object()({
+                    name: "ForError",
+                    fields: { [key]: resolvedExtension[operation][key] },
+                  }).graphQLType,
+                  key
+                )}`
+              );
+            }
+            resolvedExtension[operation][key] = val;
+          }
+        }
+      }
+    }
+    return resolvedExtension;
+  }
+  return extensions;
 }
 
 /**
