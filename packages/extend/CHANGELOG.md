@@ -1,5 +1,11 @@
 # @graphql-ts/extend
 
+## 0.3.0
+
+### Minor Changes
+
+- [`c92bf61`](https://github.com/Thinkmill/graphql-ts/commit/c92bf61044af69d72003a076b2a191ff685633fb) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - An array of extensions can now be passed to `extend`
+
 ## 0.2.0
 
 ### Minor Changes
