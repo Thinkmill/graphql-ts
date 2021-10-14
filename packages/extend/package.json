@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/extend",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
   "files": [
