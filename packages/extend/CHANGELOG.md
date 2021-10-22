@@ -1,5 +1,13 @@
 # @graphql-ts/extend
 
+## 0.4.0
+
+### Minor Changes
+
+- [`5d1c299`](https://github.com/Thinkmill/graphql-ts/commit/5d1c299ae50a8bafea8e409f9c2c1e5abedaa29a) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Type parameters named `RootVal` have been renamed to `Source` and properties named `__rootVal` have been renamed to `__source`. This won't require code changes unless you've relied on the `__rootVal` properties(which you shouldn't).
+
+* [`232cec8`](https://github.com/Thinkmill/graphql-ts/commit/232cec81c04c3489c053e24cfe37ab7f3d8a4265) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - `BaseSchemaInfo` has been renamed to `BaseSchemaMeta`
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @graphql-ts/test-project
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`5d1c299`](https://github.com/Thinkmill/graphql-ts/commit/5d1c299ae50a8bafea8e409f9c2c1e5abedaa29a)]:
+  - @graphql-ts/schema@0.5.0
+
 ## 1.0.4
 
 ### Patch Changes
