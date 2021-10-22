@@ -53,7 +53,7 @@ importers:
   packages/extend:
     specifiers:
       '@babel/runtime': ^7.9.2
-      '@graphql-ts/schema': ^0.4.0
+      '@graphql-ts/schema': ^0.5.0
       graphql: ^15.5.0
     dependencies:
       '@babel/runtime': 7.15.3
@@ -72,7 +72,7 @@ importers:
 
   test-project:
     specifiers:
-      '@graphql-ts/schema': ^0.4.0
+      '@graphql-ts/schema': ^0.5.0
       graphql: ^15.5.0
     dependencies:
       '@graphql-ts/schema': link:../packages/schema
