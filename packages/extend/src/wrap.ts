@@ -6,6 +6,8 @@
  * return GraphQL types that accept/can be used as any type and can be used with
  * any context. If you know more specific types for the GraphQL types, you
  * should cast them with `as`.
+ *
+ * @module
  */
 
 import {
@@ -51,7 +53,7 @@ export function object(
     kind: "object",
     graphQLType,
     __context: undefined as any,
-    __rootVal: undefined as any,
+    __source: undefined as any,
   };
 }
 
@@ -68,7 +70,7 @@ export function object(
  *   args: {
  *     something: graphql.arg({ type: someInputObjectType }),
  *   },
- *   resolve(rootVal, { something }) {
+ *   resolve(source, { something }) {
  *     console.log(something);
  *     // ...
  *   },
@@ -99,7 +101,7 @@ export function inputObject(
  *   args: {
  *     something: graphql.arg({ type: wrap.enum(someEnumType) }),
  *   },
- *   resolve(rootVal, { something }) {
+ *   resolve(source, { something }) {
  *     console.log(something);
  *     // ...
  *   },
@@ -150,7 +152,7 @@ export function union(
   return {
     kind: "union",
     __context: undefined as any,
-    __rootVal: undefined as any,
+    __source: undefined as any,
     graphQLType,
   };
 }
@@ -181,7 +183,7 @@ function interfaceType(
   return {
     kind: "interface",
     __context: undefined as any,
-    __rootVal: undefined as any,
+    __source: undefined as any,
     __fields: undefined as any,
     graphQLType,
   };

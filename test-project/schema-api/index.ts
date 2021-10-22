@@ -16,25 +16,25 @@ export type Type = graphqltsSchema.Type<Context>;
 export type NullableOutputType = graphqltsSchema.NullableOutputType<Context>;
 export type OutputType = graphqltsSchema.OutputType<Context>;
 export type Field<
-  RootVal,
+  Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType,
   Key extends string
-> = graphqltsSchema.Field<RootVal, Args, TType, Key, Context>;
+> = graphqltsSchema.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
-  RootVal,
+  Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType
-> = graphqltsSchema.FieldResolver<RootVal, Args, TType, Context>;
-export type ObjectType<RootVal> = graphqltsSchema.ObjectType<RootVal, Context>;
-export type UnionType<RootVal> = graphqltsSchema.UnionType<RootVal, Context>;
+> = graphqltsSchema.FieldResolver<Source, Args, TType, Context>;
+export type ObjectType<Source> = graphqltsSchema.ObjectType<Source, Context>;
+export type UnionType<Source> = graphqltsSchema.UnionType<Source, Context>;
 export type InterfaceType<
-  RootVal,
+  Source,
   Fields extends Record<
     string,
     graphqltsSchema.InterfaceField<any, OutputType, Context>
   >
-> = graphqltsSchema.InterfaceType<RootVal, Fields, Context>;
+> = graphqltsSchema.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType

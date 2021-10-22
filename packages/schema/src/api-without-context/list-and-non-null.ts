@@ -28,7 +28,7 @@ export type ListType<Of extends Type<any>> = {
  * graphql.field({
  *   type: graphql.String,
  *   args: { thing: graphql.arg({ type: graphql.list(graphql.String) }) },
- *   resolve(rootVal, { thing }) {
+ *   resolve(source, { thing }) {
  *     const theThing: undefined | null | Array<string | null> = thing;
  *     return "";
  *   },
@@ -118,7 +118,7 @@ export type NonNullType<Of extends NullableType<any>> = {
  *     }),
  *   },
  *   type: graphql.String,
- *   resolve(rootVal, args) {
+ *   resolve(source, args) {
  *     // both of these will always be a string
  *     args.someNonNullAndRequiredArg;
  *     args.someNonNullButOptionalArg;
@@ -153,7 +153,7 @@ export type NonNullType<Of extends NullableType<any>> = {
  * ```ts
  * graphql.field({
  *   type: graphql.nonNull(graphql.String),
- *   resolve(rootVal, args) {
+ *   resolve(source, args) {
  *     return "something";
  *   },
  * });

@@ -228,8 +228,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
 
   graphql.fields<{ path: string; listKey: string }>()({
     thing: graphql.field({
-      resolve(rootVal) {
-        return { fieldPath: rootVal.path, listKey: rootVal.listKey };
+      resolve(source) {
+        return { fieldPath: source.path, listKey: source.listKey };
       },
       type: graphql.nonNull(
         graphql.object<FieldIdentifier>()({
@@ -242,8 +242,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
                   values: graphql.enumValues(["read", "hidden"]),
                 })
               ),
-              async resolve(rootVal, args, context) {
-                console.log(rootVal, args, context);
+              async resolve(source, args, context) {
+                console.log(source, args, context);
                 return "read" as const;
               },
             }),
@@ -274,7 +274,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
     }),
   });
 
-  const sharedFieldsWithUnkownRootVal = graphql.fields()({
+  const sharedFieldsWithUnkownSource = graphql.fields()({
     other: graphql.field({
       type: graphql.nonNull(graphql.String),
       resolve() {
@@ -287,13 +287,13 @@ graphql.object<{ id: string } | { id: boolean }>()({
     name: "",
     fields: {
       ...sharedFields,
-      ...sharedFieldsWithUnkownRootVal,
+      ...sharedFieldsWithUnkownSource,
     },
   });
 
   graphql.object<{ other: string }>()({
     name: "",
-    fields: sharedFieldsWithUnkownRootVal,
+    fields: sharedFieldsWithUnkownSource,
   });
 
   graphql.object<{ other: string }>()({
@@ -352,8 +352,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           type: graphql.String,
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
             return "";
           },
@@ -365,8 +365,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextB.field({
           type: fromA,
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean; other: string }>(context);
             return {};
           },
@@ -379,8 +379,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           // @ts-expect-error
           type: fromBWithA,
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -392,8 +392,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           // @ts-expect-error
           type: graphql.list(fromBWithA),
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -405,8 +405,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           // @ts-expect-error
           type: graphql.list(graphql.list(fromBWithA)),
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -418,8 +418,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           // @ts-expect-error
           type: graphql.nonNull(fromBWithA),
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -431,8 +431,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
         a: typesWithContextA.field({
           // @ts-expect-error
           type: graphql.list(graphql.nonNull(fromBWithA)),
-          resolve(rootVal, args, context) {
-            console.log(rootVal, args, context);
+          resolve(source, args, context) {
+            console.log(source, args, context);
             expectType<{ something: boolean }>(context);
           },
         }),
@@ -550,8 +550,8 @@ graphql.object()({
     id: graphql.field({
       type: graphql.ID,
 
-      resolve(rootVal, args) {
-        console.log(rootVal);
+      resolve(source, args) {
+        console.log(source);
         // @ts-expect-error
         args.something;
         return "";

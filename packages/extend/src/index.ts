@@ -67,8 +67,29 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  * })(originalSchema);
  * ```
  *
+ * To use existing types from the schema you're extending, you can provide a
+ * function and use the {@link BaseSchemaMeta} passed into the function to use
+ * existing types in the schema.
+ *
+ * ```ts
+ * const originalSchema = new GraphQLSchema({ ...etc });
+ *
+ * const extendedSchema = extend((base) => ({
+ *   query: {
+ *     something: graphql.field({
+ *       type: base.object("Something"),
+ *       resolve() {
+ *         return { something: true };
+ *       },
+ *     }),
+ *   },
+ * }))(originalSchema);
+ * ```
+ *
+ * See {@link BaseSchemaMeta} for how to get other types from the schema
+ *
  * `extend` will currently throw an error if the query or mutation types are
- * used in other types like this
+ * used in other types like this. This will be allowed in a future version.
  *
  * ```graphql
  * type Query {
@@ -80,7 +101,7 @@ export function extend(
   extension:
     | Extension
     | readonly Extension[]
-    | ((current: BaseSchemaInfo) => Extension | readonly Extension[])
+    | ((base: BaseSchemaMeta) => Extension | readonly Extension[])
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
     const getType = (name: string) => {
@@ -334,16 +355,23 @@ function flattenExtensions(
 }
 
 /**
+ * Any
+ *
  * Note the distinct usages of `any` vs `unknown` is intentional.
  *
- * - The `unknown` used for the rootVal is because the root val isn't known and it
- *   should generally be used here because these fields are on the query and
- *   mutation types
+ * - The `unknown` used for the source type is because the source isn't known and
+ *   it shouldn't generally be used here because these fields are on the query
+ *   and mutation types
  * - The first `any` used for the `Args` type parameter is used because `Args` is
  *   invariant so only `Record<string, Arg<InputType, boolean>>` would work with
  *   it. The arguable unsafety here doesn't really matter because people will
  *   always use `graphql.field`
- * - The `any` in `OutputType` and the last type argument ``
+ * - The `any` in `OutputType` and the last type argument mean that a field that
+ *   requires any context can be provided. This is unsafe, the only way this
+ *   could arguably be made more "safe" is by making this unknown which would
+ *   requiring casting or make `extend` and etc. generic over a `Context` but
+ *   given this is immediately used on an arbitrary {@link GraphQLSchema} so the
+ *   type would immediately be thrown away, it would be pretty much pointless.
  */
 type FieldsOnAnything = {
   [key: string]: Field<unknown, any, OutputType<any>, string, any>;
@@ -363,7 +391,7 @@ export type Extension = {
    *   query: {
    *     isLoggedIn: graphql.field({
    *       type: graphql.Boolean,
-   *       resolve(rootVal, args, context, info) {
+   *       resolve(source, args, context, info) {
    *         // ...
    *       },
    *     }),
@@ -384,7 +412,7 @@ export type Extension = {
    *   mutation: {
    *     createPost: graphql.field({
    *       type: graphql.Boolean,
-   *       resolve(rootVal, args, context, info) {
+   *       resolve(source, args, context, info) {
    *         // ...
    *       },
    *     }),
@@ -407,15 +435,11 @@ export type Extension = {
 };
 
 /**
- * Information about the GraphQL schema that is being extended. Currently this
- * only exposes the {@link GraphQLSchema} object. In the future, this will be
- * extended to allow easily getting a type that exists in the base schema and
- * wrapping it in a `@graphql-ts/schema` type to use in the extension.
+ * This object contains the schema being extended and functions to get wrapped
  *
- * See the caveats mentioned {@link wrap} to learn about the lack of type safety
- * guarantees with these APIs
+ * Note that the just like {@link wrap}, all of the GraphQL types returned
  */
-export type BaseSchemaInfo = {
+export type BaseSchemaMeta = {
   schema: GraphQLSchema;
   /**
    * Gets an object type from the existing GraphQL schema and wraps it in an
@@ -455,7 +479,7 @@ export type BaseSchemaInfo = {
    *           type: base.inputObject("Something"),
    *         }),
    *       },
-   *       resolve(rootVal, { something }) {
+   *       resolve(source, { something }) {
    *         console.log(something);
    *         return "";
    *       },
@@ -484,7 +508,7 @@ export type BaseSchemaInfo = {
    *           type: base.enum("Something"),
    *         }),
    *       },
-   *       resolve(rootVal, { something }) {
+   *       resolve(source, { something }) {
    *         return something;
    *       },
    *     }),
@@ -560,7 +584,7 @@ export type BaseSchemaInfo = {
    *           type: base.scalar("JSON"),
    *         }),
    *       },
-   *       resolve(rootVal, { something }) {
+   *       resolve(source, { something }) {
    *         return something;
    *       },
    *     }),

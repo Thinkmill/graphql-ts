@@ -78,7 +78,7 @@
  *         title: graphql.arg({ type: graphql.String }),
  *       },
  *       type: Todo,
- *       resolve(rootVal, { title }) {
+ *       resolve(source, { title }) {
  *         const todo = { title };
  *         todos.push(todo);
  *         return todo;
@@ -193,20 +193,20 @@ export type Type = graphql.Type<Context>;
 export type NullableOutputType = graphql.NullableOutputType<Context>;
 export type OutputType = graphql.OutputType<Context>;
 export type Field<
-  RootVal,
+  Source,
   Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType,
   Key extends string
-> = graphql.Field<RootVal, Args, TType, Key, Context>;
+> = graphql.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
-  RootVal,
+  Source,
   Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType
-> = graphql.FieldResolver<RootVal, Args, TType, Context>;
-export type ObjectType<RootVal> = graphql.ObjectType<RootVal, Context>;
-export type UnionType<RootVal> = graphql.UnionType<RootVal, Context>;
+> = graphql.FieldResolver<Source, Args, TType, Context>;
+export type ObjectType<Source> = graphql.ObjectType<Source, Context>;
+export type UnionType<Source> = graphql.UnionType<Source, Context>;
 export type InterfaceType<
-  RootVal,
+  Source,
   Fields extends Record<
     string,
     graphql.InterfaceField<
@@ -215,7 +215,7 @@ export type InterfaceType<
       Context
     >
   >
-> = graphql.InterfaceType<RootVal, Fields, Context>;
+> = graphql.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
   Args extends Record<string, graphql.Arg<graphql.InputType>>,
   TType extends OutputType

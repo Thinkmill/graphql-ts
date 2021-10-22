@@ -112,7 +112,7 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  *   args: {
  *     something: graphql.arg({ type: graphql.String }),
  *   },
- *   resolve(rootVal, { something }) {
+ *   resolve(source, { something }) {
  *     return something || somethingElse;
  *   },
  * });
@@ -145,7 +145,7 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  *   args: {
  *     something: graphql.arg({ type: graphql.nonNull(graphql.String) }),
  *   },
- *   resolve(rootVal, { something }) {
+ *   resolve(source, { something }) {
  *     // `something` will always be a string
  *     return something;
  *   },
@@ -176,7 +176,7 @@ export type Arg<
  *   args: {
  *     something: graphql.arg({ type: graphql.String }),
  *   },
- *   resolve(rootVal, { something }) {
+ *   resolve(source, { something }) {
  *     return something || somethingElse;
  *   },
  * });
