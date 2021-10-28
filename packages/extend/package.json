@@ -4,7 +4,8 @@
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "license": "MIT",
   "dependencies": {

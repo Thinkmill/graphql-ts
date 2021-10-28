@@ -6,7 +6,8 @@
   "files": [
     "dist",
     "api-without-context",
-    "api-with-context"
+    "api-with-context",
+    "src"
   ],
   "license": "MIT",
   "dependencies": {
