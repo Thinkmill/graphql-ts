@@ -14,10 +14,10 @@
     "@babel/runtime": "^7.9.2"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "15 || 16"
   },
   "devDependencies": {
-    "graphql": "^15.5.0"
+    "graphql": "^16.3.0"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/schema",
   "preconstruct": {

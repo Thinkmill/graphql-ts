@@ -6,6 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "@graphql-ts/schema": "^0.5.0",
-    "graphql": "^15.5.0"
+    "graphql": "^16.3.0"
   }
 }
