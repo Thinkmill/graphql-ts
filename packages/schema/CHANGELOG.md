@@ -1,5 +1,13 @@
 # @graphql-ts/schema
 
+## 0.5.1
+
+### Patch Changes
+
+- [`ef18bba`](https://github.com/Thinkmill/graphql-ts/commit/ef18bba55773e38309f538b987099650ad66533d) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Added declaration maps
+
+* [`65391d3`](https://github.com/Thinkmill/graphql-ts/commit/65391d30c7a56313325acb647110e8536008d82b) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - `graphql@16` is now allowed in `peerDependencies`
+
 ## 0.5.0
 
 ### Minor Changes
