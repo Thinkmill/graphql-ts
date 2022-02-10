@@ -997,3 +997,38 @@ graphql.object<any>()({
     },
   });
 }
+
+{
+  const a = graphql.field({
+    type: graphql.String,
+    resolve() {
+      return null;
+    },
+  });
+
+  graphql.object()({
+    name: "",
+    fields: {
+      a,
+    },
+  });
+}
+
+{
+  const a = graphql.fields()({
+    b: graphql.field({
+      type: graphql.String,
+      resolve() {
+        return null;
+      },
+    }),
+  });
+
+  graphql.object()({
+    name: "",
+    fields: {
+      // @ts-expect-error
+      a: a.b,
+    },
+  });
+}

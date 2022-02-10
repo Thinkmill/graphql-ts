@@ -149,7 +149,7 @@ export type Field<
 > = {
   args?: Args;
   type: TType;
-  __key: Key;
+  __key: (key: Key) => void;
   __source: (source: Source) => void;
   __context: (context: Context) => void;
   resolve?: FieldResolver<Source, Args, TType, Context>;
@@ -408,7 +408,7 @@ function bindObjectTypeToContext<Context>(): ObjectTypeFunc<Context> {
 function buildFields(
   fields: Record<
     string,
-    Field<any, Record<string, Arg<InputType>>, OutputType<any>, string, any>
+    Field<any, Record<string, Arg<InputType>>, OutputType<any>, any, any>
   >
 ): GraphQLFieldConfigMap<any, any> {
   return Object.fromEntries(
