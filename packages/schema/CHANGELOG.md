@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 0.5.2
+
+### Patch Changes
+
+- [`3e4909f`](https://github.com/Thinkmill/graphql-ts/commit/3e4909f3885a0edf3d989f8ce598f91473f97446) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Fixed `Field<_, _, _, string, _>` not being assignable to `Field<_, _, _, "literal", _>`
+
 ## 0.5.1
 
 ### Patch Changes
