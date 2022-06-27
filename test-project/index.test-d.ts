@@ -595,7 +595,6 @@ graphql.object()({
     }),
     src: graphql.field({
       type: graphql.nonNull(graphql.String),
-      args: {},
       resolve(data, {}, context) {
         console.log(data, context);
         return "";
@@ -1029,6 +1028,85 @@ graphql.object<any>()({
     fields: {
       // @ts-expect-error
       a: a.b,
+    },
+  });
+}
+
+type Invariant<T> = (t: T) => T;
+function assertCompatible<A, _B extends A>() {}
+
+{
+  graphql.field({
+    type: graphql.Int,
+    args: {
+      blah: graphql.arg({
+        type: Math.random() > 0.5 ? graphql.nonNull(graphql.Int) : graphql.Int,
+      }),
+    },
+    resolve(_, { blah }) {
+      assertCompatible<
+        Invariant<number | undefined | null>,
+        Invariant<typeof blah>
+      >();
+      return 1;
+    },
+  });
+  graphql.field({
+    type: graphql.Int,
+    args: {
+      blah: graphql.arg({
+        type: Math.random() > 0.5 ? graphql.String : graphql.Int,
+      }),
+    },
+    resolve(_, { blah }) {
+      assertCompatible<
+        Invariant<string | number | undefined | null>,
+        Invariant<typeof blah>
+      >();
+      return 1;
+    },
+  });
+  graphql.field({
+    type: graphql.Int,
+    args: {
+      blah:
+        Math.random() > 0.5
+          ? graphql.arg({
+              type: graphql.nonNull(graphql.Int),
+            })
+          : graphql.arg({
+              type: graphql.Int,
+              defaultValue: 1,
+            }),
+    },
+    resolve(_, { blah }) {
+      assertCompatible<Invariant<number | null>, Invariant<typeof blah>>();
+      return 1;
+    },
+  });
+  graphql.field({
+    type: graphql.Int,
+    args: {
+      blah:
+        Math.random() > 0.5
+          ? graphql.arg({
+              type: graphql.nonNull(graphql.Int),
+            })
+          : Math.random() > 0.5
+          ? graphql.arg({
+              type: graphql.Int,
+              defaultValue: 1,
+            })
+          : graphql.arg({
+              type: graphql.Int,
+            }),
+    },
+    resolve(_, { blah }) {
+      assertCompatible<
+        Invariant<number | null | undefined>,
+        Invariant<typeof blah>
+      >();
+      return 1;
     },
   });
 }

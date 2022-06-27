@@ -78,12 +78,25 @@ export type InferValueFromArgs<Args extends Record<string, Arg<InputType>>> = {
 };
 
 export type InferValueFromArg<TArg extends Arg<InputType>> =
-  | InferValueFromInputType<TArg["type"]>
-  | ("non-null" extends TArg["type"]["kind"]
-      ? never
-      : TArg["__hasDefaultValue"] extends true
-      ? never
-      : undefined);
+  // the distribution technically only needs to be around the AddUndefined
+  // but having it here instead of inside the union
+  // means that TypeScript will print the resulting type
+  // when you use it rather than keep the alias and
+  // the resulting type is generally far more readable
+  TArg extends unknown
+    ?
+        | InferValueFromInputType<TArg["type"]>
+        | AddUndefined<TArg["type"], TArg["__hasDefaultValue"]>
+    : never;
+
+type AddUndefined<
+  TInputType extends InputType,
+  HasDefaultValue extends boolean
+> = TInputType extends NonNullType<any>
+  ? never
+  : HasDefaultValue extends true
+  ? never
+  : undefined;
 
 type InputNonNullTypeForInference<Of extends NullableInputType> =
   NonNullType<Of>;
