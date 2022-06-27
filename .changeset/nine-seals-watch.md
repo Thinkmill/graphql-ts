@@ -14,10 +14,8 @@ graphql.field({
     }),
   },
   resolve(source, { something }) {
-    // this previously incorrectly did not cause an error, it will now error
-    const a: string | null = something;
-    // it should be this:
-    const b: string | null | undefined = something;
+    const previouslyIncorrectlyAllowedNowError: string | null = something;
+    const correct: string | null | undefined = something;
     return "";
   },
 });
