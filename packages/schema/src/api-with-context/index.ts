@@ -1,6 +1,5 @@
-// Preconstruct doesn't currently correctly handle .js with .d.ts files directly at an entrypoint
-// though it does correctly handle them as dependencies of an entrypoint so we need to have a .ts
-// as the actual entrypoint and then Preconstruct will be okay with it
+// this is written like this because an export * from './something'
+// where ./something uses `export = ` is not allowed
 export {
   field,
   fields,
