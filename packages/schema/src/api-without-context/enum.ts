@@ -2,6 +2,7 @@ import {
   GraphQLEnumType,
   GraphQLEnumTypeExtensions,
 } from "graphql/type/definition";
+import * as wrap from "../wrap";
 
 /**
  * An individual enum value in an {@link EnumType enum type} created using
@@ -131,18 +132,14 @@ function enumType<Values extends Record<string, EnumValue<unknown>>>(config: {
   extensions?: Readonly<GraphQLEnumTypeExtensions>;
   values: Values;
 }): EnumType<Values> {
-  const graphQLType = new GraphQLEnumType({
-    name: config.name,
-    description: config.description,
-    extensions: config.extensions,
-    values: config.values,
-  });
-  return {
-    kind: "enum",
-    values: config.values,
-    graphQLType,
-    __context: undefined as any,
-  };
+  return wrap.enum(
+    new GraphQLEnumType({
+      name: config.name,
+      description: config.description,
+      extensions: config.extensions,
+      values: config.values,
+    })
+  ) as EnumType<Values>;
 }
 
 export { enumType as enum };

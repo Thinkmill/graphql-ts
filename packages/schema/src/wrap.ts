@@ -10,7 +10,7 @@
  * @module
  */
 
-import {
+import type {
   ObjectType,
   InputObjectType,
   EnumType,
@@ -21,12 +21,14 @@ import {
   InterfaceType,
   InterfaceField,
   OutputType,
-} from "@graphql-ts/schema";
-import {
+  ScalarType,
+} from ".";
+import type {
   GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLUnionType,
 } from "graphql";
 
@@ -191,4 +193,46 @@ function interfaceType(
 
 export { interfaceType as interface };
 
-export { scalar } from "@graphql-ts/schema/api-without-context";
+/**
+ * Wraps an existing {@link GraphQLScalarType} into a {@link ScalarType} so that
+ * it can be used in a GraphQL schema built with `@graphql-ts/schema`.
+ *
+ * ```ts
+ * // this will likely be obtained from some existing GraphQLSchema
+ * const someInterfaceType = new GraphQLScalarType({ ...etc });
+ *
+ * graphql.field({
+ *   type: wrap.interface(someInterfaceType),
+ *   resolve() {
+ *     // ...
+ *   },
+ * });
+ * ```
+ *
+ * You should provide a type as a type parameter which is the type of the scalar
+ * value. Note, while graphql-js allows you to express scalar types like the
+ * `ID` type which accepts integers and strings as both input values and return
+ * values from resolvers which are transformed into strings before calling
+ * resolvers and returning the query respectively, the type you use should be
+ * `string` for `ID` since that is what it is transformed into.
+ * `@graphql-ts/schema` doesn't currently express the coercion of scalars. To
+ * workaround this, you can convert values to the canonical form before
+ * returning from resolvers.
+ *
+ * ```ts
+ * const JSON = graphql.scalar(GraphQLJSON) as ScalarType<JSONValue>;
+ * // for fields on output types
+ * graphql.field({ type: someScalar });
+ *
+ * // for args on output fields or fields on input types
+ * graphql.arg({ type: someScalar });
+ * ```
+ */
+export function scalar(scalar: GraphQLScalarType): ScalarType<unknown> {
+  return {
+    kind: "scalar",
+    __type: undefined as any,
+    __context: undefined as any,
+    graphQLType: scalar,
+  };
+}

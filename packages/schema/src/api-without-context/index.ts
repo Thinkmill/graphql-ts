@@ -15,3 +15,4 @@ export { Boolean, Float, ID, Int, String, scalar } from "./scalars";
 export type { ListType, NonNullType } from "./list-and-non-null";
 export { list, nonNull } from "./list-and-non-null";
 export type { InferValueFromOutputType } from "../output";
+export * as wrap from "../wrap";

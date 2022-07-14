@@ -22,8 +22,9 @@ import {
   EnumType,
   ListType,
   NonNullType,
+  wrap,
 } from "./api-without-context";
-import type { NullableType, Type } from "./type";
+import { NullableType, Type } from "./type";
 import type {
   object,
   field,
@@ -381,10 +382,8 @@ export type ObjectTypeFunc<Context> = <
 function bindObjectTypeToContext<Context>(): ObjectTypeFunc<Context> {
   return function object() {
     return function objectInner(config) {
-      return {
-        kind: "object",
-        name: config.name,
-        graphQLType: new GraphQLObjectType({
+      return wrap.object(
+        new GraphQLObjectType({
           name: config.name,
           description: config.description,
           isTypeOf: config.isTypeOf,
@@ -397,10 +396,8 @@ function bindObjectTypeToContext<Context>(): ObjectTypeFunc<Context> {
             return buildFields(fields);
           },
           extensions: config.extensions,
-        }),
-        __source: undefined as any,
-        __context: undefined as any,
-      };
+        })
+      ) as ObjectType<any, Context>;
     };
   };
 }
@@ -449,27 +446,19 @@ export type UnionTypeFunc<Context> = <
   name: string;
   description?: string;
   types: TObjectType[];
-  resolveType?: (
-    type: TObjectType["__source"],
-    context: Context,
-    info: GraphQLResolveInfo,
-    abstractType: GraphQLUnionType
-  ) => string;
+  resolveType?: GraphQLTypeResolver<TObjectType["__source"], Context>;
 }) => UnionType<TObjectType["__source"], Context>;
 
 function bindUnionTypeToContext<Context>(): UnionTypeFunc<Context> {
   return function union(config) {
-    return {
-      kind: "union",
-      graphQLType: new GraphQLUnionType({
+    return wrap.union(
+      new GraphQLUnionType({
         name: config.name,
         description: config.description,
         types: config.types.map((x) => x.graphQLType),
         resolveType: config.resolveType as any,
-      }),
-      __source: undefined as any,
-      __context: undefined as any,
-    };
+      })
+    );
   };
 }
 
@@ -564,9 +553,8 @@ export type InterfaceTypeFunc<Context> = <
 function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
   return function interfaceType() {
     return function interfaceInner(config) {
-      return {
-        kind: "interface",
-        graphQLType: new GraphQLInterfaceType({
+      return wrap.interface(
+        new GraphQLInterfaceType({
           name: config.name,
           description: config.description,
           resolveType: config.resolveType,
@@ -579,11 +567,8 @@ function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
                 : config.fields;
             return buildFields(fields as any);
           },
-        }),
-        __source: undefined as any,
-        __context: undefined as any,
-        __fields: undefined as any,
-      };
+        })
+      ) as InterfaceType<any, any, Context>;
     };
   };
 }

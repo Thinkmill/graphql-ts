@@ -1,4 +1,8 @@
-import { GraphQLScalarType } from "graphql/type/definition";
+import { ValueNode } from "graphql/language/ast";
+import {
+  GraphQLScalarType,
+  GraphQLScalarTypeExtensions,
+} from "graphql/type/definition";
 import {
   GraphQLID,
   GraphQLString,
@@ -6,11 +10,12 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from "graphql/type/scalars";
+import { scalar as wrapScalar } from "../wrap";
 
 /**
- * A GraphQL scalar type which wraps an underlying graphql-js
- * `GraphQLScalarType` with a type representing the deserialized form of the
- * scalar. These should be created used {@link scalar `graphql.scalar`}.
+ * A GraphQL scalar type which wraps a {@link GraphQLScalarType} with a type
+ * representing the deserialized form of the scalar. These should be created
+ * used {@link scalar `graphql.scalar`}.
  *
  * ```ts
  * const someScalar = graphql.scalar<string>(new GraphQLScalarType({}));
@@ -30,38 +35,54 @@ export type ScalarType<Type> = {
 };
 
 /**
- * Creates a {@link ScalarType} from a graphql-js {@link GraphQLScalarType}.
- *
- * You should provide a type as a type parameter which is the type of the scalar
- * value. Note, while graphql-js allows you to express scalar types like the
- * `ID` type which accepts integers and strings as both input values and return
- * values from resolvers which are transformed into strings before calling
- * resolvers and returning the query respectively, the type you use should be
- * `string` for `ID` since that is what it is transformed into.
- * `@graphql-ts/schema` doesn't currently express the coercion of scalars, you
- * should instead convert values to the canonical form yourself before returning
- * from resolvers.
+ * Creates an {@link ScalarType}. Note if you have a {@link GraphQLScalarType} and
+ * you want to wrap it in a {@link ScalarType} so it can be used with
+ * `@graphql-ts/schema`, you should use {@link wrapScalar `wrap.scalar`}.
  *
  * ```ts
- * const JSON = graphql.scalar<JSONValue>(GraphQLJSON);
+ * const JSON = graphql.scalar({
+ *   name: "JSON",
+ *   description: string,
+ *   serialize: (value) => value,
+ *   parseValue: (value) => value,
+ *   parseLiteral: (node) => {
+ *     // ...
+ *   },
+ *   specifiedByURL:
+ *     "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf",
+ * });
+ *
  * // for fields on output types
- * graphql.field({ type: someScalar });
+ * graphql.field({ type: JSON });
  *
  * // for args on output fields or fields on input types
- * graphql.arg({ type: someScalar });
+ * graphql.arg({ type: JSON });
  * ```
  */
-export function scalar<Type>(scalar: GraphQLScalarType): ScalarType<Type> {
-  return {
-    kind: "scalar",
-    __type: undefined as any,
-    __context: undefined as any,
-    graphQLType: scalar,
-  };
+export function scalar<Type>(config: {
+  name: string;
+  description?: string;
+  serialize: (value: Type) => unknown;
+  parseValue: (value: unknown) => Type;
+  parseLiteral: (valueNode: ValueNode) => Type;
+  specifiedByURL?: string;
+  extensions?: Readonly<GraphQLScalarTypeExtensions>;
+}): ScalarType<Type> {
+  return wrapScalar(
+    new GraphQLScalarType({
+      name: config.name,
+      description: config.description,
+      specifiedByURL: config.specifiedByURL,
+      serialize: config.serialize as any,
+      parseValue: config.parseValue,
+      parseLiteral: config.parseLiteral,
+      extensions: config.extensions,
+    })
+  ) as ScalarType<Type>;
 }
 
-export const ID: ScalarType<string> = scalar<string>(GraphQLID);
-export const String: ScalarType<string> = scalar<string>(GraphQLString);
-export const Float: ScalarType<number> = scalar<number>(GraphQLFloat);
-export const Int: ScalarType<number> = scalar<number>(GraphQLInt);
-export const Boolean: ScalarType<boolean> = scalar<boolean>(GraphQLBoolean);
+export const ID = wrapScalar(GraphQLID) as ScalarType<string>;
+export const String = wrapScalar(GraphQLString) as ScalarType<string>;
+export const Float = wrapScalar(GraphQLFloat) as ScalarType<number>;
+export const Int = wrapScalar(GraphQLInt) as ScalarType<number>;
+export const Boolean = wrapScalar(GraphQLBoolean) as ScalarType<boolean>;

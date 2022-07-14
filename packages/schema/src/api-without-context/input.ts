@@ -8,6 +8,7 @@ import { ScalarType } from "./scalars";
 import type { NullableOutputType, OutputType } from "../output";
 import type { Type } from "../type";
 import { ListType, NonNullType } from "..";
+import * as wrap from "../wrap";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   NullableOutputType<any>,
@@ -296,31 +297,30 @@ export function inputObject<
   description?: string;
   fields: (() => Fields) | Fields;
 }): InputObjectType<Fields> {
-  const fields = config.fields;
-  const graphQLType = new GraphQLInputObjectType({
-    name: config.name,
-    description: config.description,
-    fields: () => {
-      return Object.fromEntries(
-        Object.entries(typeof fields === "function" ? fields() : fields).map(
-          ([key, value]) =>
-            [
-              key,
-              {
-                description: value.description,
-                type: value.type.graphQLType as GraphQLInputType,
-                defaultValue: value.defaultValue,
-                deprecationReason: value.deprecationReason,
-              },
-            ] as const
-        )
-      );
-    },
-  });
-  return {
-    kind: "input",
-    __fields: undefined as any,
-    __context: undefined as any,
-    graphQLType,
-  };
+  return wrap.inputObject(
+    new GraphQLInputObjectType({
+      name: config.name,
+      description: config.description,
+      fields: () => {
+        return Object.fromEntries(
+          Object.entries(
+            typeof config.fields === "function"
+              ? config.fields()
+              : config.fields
+          ).map(
+            ([key, value]) =>
+              [
+                key,
+                {
+                  description: value.description,
+                  type: value.type.graphQLType as GraphQLInputType,
+                  defaultValue: value.defaultValue,
+                  deprecationReason: value.deprecationReason,
+                },
+              ] as const
+          )
+        );
+      },
+    })
+  ) as InputObjectType<Fields>;
 }

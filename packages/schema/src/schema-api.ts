@@ -176,6 +176,7 @@ export type {
   Arg,
 } from "./api-without-context";
 export { scalar } from "./api-without-context";
+export { wrap } from "./api-without-context";
 
 /**
  * The particular `Context` type for this `graphql` export that is provided to

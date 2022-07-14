@@ -43,10 +43,6 @@ import {
   print,
 } from "graphql";
 
-import * as wrap from "./wrap";
-
-export { wrap };
-
 const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
 
 /**
@@ -128,7 +124,7 @@ export function extend(
                   )} in the schema being extended but it is not an object type`
                 );
               }
-              return wrap.object(graphQLType);
+              return graphql.wrap.object(graphQLType);
             },
             inputObject(name) {
               const graphQLType = getType(name);
@@ -139,7 +135,7 @@ export function extend(
                   )} in the schema being extended but it is not an input object type`
                 );
               }
-              return wrap.inputObject(graphQLType);
+              return graphql.wrap.inputObject(graphQLType);
             },
             enum(name) {
               const graphQLType = getType(name);
@@ -150,7 +146,7 @@ export function extend(
                   )} in the schema being extended but it is not an enum type`
                 );
               }
-              return wrap.enum(graphQLType);
+              return graphql.wrap.enum(graphQLType);
             },
             interface(name) {
               const graphQLType = getType(name);
@@ -161,7 +157,7 @@ export function extend(
                   )} in the schema being extended but it is not an interface type`
                 );
               }
-              return wrap.interface(graphQLType);
+              return graphql.wrap.interface(graphQLType);
             },
             scalar(name) {
               if (builtinScalars.has(name)) {
@@ -177,7 +173,7 @@ export function extend(
                   )} in the schema being extended but it is not a scalar type`
                 );
               }
-              return wrap.scalar(graphQLType);
+              return graphql.wrap.scalar(graphQLType);
             },
             union(name) {
               const graphQLType = getType(name);
@@ -188,7 +184,7 @@ export function extend(
                   )} in the schema being extended but it is not a union type`
                 );
               }
-              return wrap.union(graphQLType);
+              return graphql.wrap.union(graphQLType);
             },
           })
         : extension
