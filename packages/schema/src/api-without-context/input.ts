@@ -86,15 +86,15 @@ export type InferValueFromArg<TArg extends Arg<InputType>> =
   TArg extends unknown
     ?
         | InferValueFromInputType<TArg["type"]>
-        | AddUndefined<TArg["type"], TArg["__hasDefaultValue"]>
+        | AddUndefined<TArg["type"], TArg["defaultValue"]>
     : never;
 
 type AddUndefined<
   TInputType extends InputType,
-  HasDefaultValue extends boolean
+  DefaultValue
 > = TInputType extends NonNullType<any>
   ? never
-  : HasDefaultValue extends true
+  : DefaultValue extends {} | null
   ? never
   : undefined;
 
@@ -174,8 +174,10 @@ export type Arg<
   type: Type;
   description?: string;
   deprecationReason?: string;
-  __hasDefaultValue: HasDefaultValue;
-  defaultValue: unknown;
+  defaultValue: {
+    true: {} | null;
+    false: undefined;
+  }[`${HasDefaultValue}`];
 };
 
 /**
