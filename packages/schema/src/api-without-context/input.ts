@@ -24,7 +24,6 @@ type InputListType = {
   kind: "list";
   of: InputType;
   graphQLType: GraphQLList<any>;
-  __context: any;
 };
 
 /**
@@ -110,7 +109,6 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
   {
     kind: "input";
     __fields: Fields;
-    __context: (context: unknown) => void;
     graphQLType: GraphQLInputObjectType;
   };
 
@@ -322,7 +320,6 @@ export function inputObject<
   return {
     kind: "input",
     __fields: undefined as any,
-    __context: undefined as any,
     graphQLType,
   };
 }

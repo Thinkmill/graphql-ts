@@ -9,7 +9,6 @@ import { NullableType, Type } from "../type";
 export type ListType<Of extends Type<any>> = {
   kind: "list";
   of: Of;
-  __context: Of["__context"];
   graphQLType: GraphQLList<Of["graphQLType"]>;
 };
 
@@ -73,7 +72,6 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
   return {
     kind: "list",
     of,
-    __context: of["__context"],
     graphQLType: new GraphQLList(of.graphQLType),
   };
 }
@@ -86,7 +84,6 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 export type NonNullType<Of extends NullableType<any>> = {
   kind: "non-null";
   of: Of;
-  __context: Of["__context"];
   graphQLType: GraphQLNonNull<Of["graphQLType"]>;
 };
 
@@ -176,7 +173,6 @@ export function nonNull<Of extends NullableType<any>>(of: Of): NonNullType<Of> {
   return {
     kind: "non-null",
     of,
-    __context: of["__context"],
     graphQLType: new GraphQLNonNull(of.graphQLType) as GraphQLNonNull<
       Of["graphQLType"]
     >,

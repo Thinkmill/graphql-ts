@@ -41,7 +41,6 @@ export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
   kind: "enum";
   values: Values;
   graphQLType: GraphQLEnumType;
-  __context: (context: unknown) => void;
 };
 
 /**
@@ -141,7 +140,6 @@ function enumType<Values extends Record<string, EnumValue<unknown>>>(config: {
     kind: "enum",
     values: config.values,
     graphQLType,
-    __context: undefined as any,
   };
 }
 

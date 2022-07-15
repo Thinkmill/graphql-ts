@@ -82,7 +82,6 @@ export function inputObject(
 ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }> {
   return {
     kind: "input",
-    __context: undefined as any,
     __fields: undefined as any,
     graphQLType,
   };
@@ -113,7 +112,6 @@ function enumType(
 ): EnumType<Record<string, EnumValue<unknown>>> {
   return {
     kind: "enum",
-    __context: undefined as any,
     graphQLType,
     values: Object.fromEntries(
       graphQLType.getValues().map((value): [string, EnumValue<unknown>] => [

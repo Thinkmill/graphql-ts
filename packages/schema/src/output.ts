@@ -48,7 +48,6 @@ type OutputListType<Context> = {
   kind: "list";
   of: OutputType<Context>;
   graphQLType: GraphQLList<GraphQLType>;
-  __context: (context: Context) => void;
 };
 
 /**
