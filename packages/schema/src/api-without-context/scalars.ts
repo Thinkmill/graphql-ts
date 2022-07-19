@@ -22,10 +22,11 @@ import {
  * graphql.arg({ type: someScalar });
  * ```
  */
-export type ScalarType<Type> = {
+export type ScalarType<Type extends {}> = {
   kind: "scalar";
-  __type: Type;
-  graphQLType: GraphQLScalarType;
+  graphQLType: GraphQLScalarType<Type, unknown> & {
+    serialize: (value: Type) => unknown;
+  };
 };
 
 /**
@@ -50,11 +51,12 @@ export type ScalarType<Type> = {
  * graphql.arg({ type: someScalar });
  * ```
  */
-export function scalar<Type>(scalar: GraphQLScalarType): ScalarType<Type> {
+export function scalar<Type extends {}>(
+  scalar: GraphQLScalarType
+): ScalarType<Type> {
   return {
     kind: "scalar",
-    __type: undefined as any,
-    graphQLType: scalar,
+    graphQLType: scalar as ScalarType<Type>["graphQLType"],
   };
 }
 

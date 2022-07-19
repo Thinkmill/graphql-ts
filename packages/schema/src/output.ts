@@ -60,7 +60,7 @@ type OutputListType<Context> = {
  * - {@link OutputType}
  */
 export type NullableOutputType<Context> =
-  | ScalarType<any>
+  | ScalarType<{}>
   | ObjectType<any, Context>
   | UnionType<any, Context>
   | InterfaceType<any, any, Context>

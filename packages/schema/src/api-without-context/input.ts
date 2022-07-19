@@ -59,14 +59,13 @@ export type NullableInputType =
  */
 export type InputType = NullableInputType | NonNullType<NullableInputType>;
 
-type InputListTypeForInference<Of extends InputType> = ListType<Of>;
 
 type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
   Type extends ScalarType<infer Value>
     ? Value
     : Type extends EnumType<infer Values>
     ? Values[keyof Values]["value"]
-    : Type extends InputListTypeForInference<infer Value>
+    : Type extends ListType<infer Value extends InputType>
     ? InferValueFromInputType<Value>[]
     : Type extends InputObjectType<infer Fields>
     ? InferValueFromArgs<Fields>

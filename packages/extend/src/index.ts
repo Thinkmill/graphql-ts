@@ -592,7 +592,7 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  scalar(name: string): ScalarType<unknown>;
+  scalar(name: string): ScalarType<{}>;
 };
 
 function getGraphQLJSFieldsFromGraphQLTSFields(
