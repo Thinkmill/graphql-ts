@@ -1,8 +1,23 @@
 {
   "name": "@graphql-ts/schema",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "main": "dist/graphql-ts-schema.cjs.js",
   "module": "dist/graphql-ts-schema.esm.js",
+  "exports": {
+    ".": {
+      "module": "./dist/graphql-ts-schema.esm.js",
+      "default": "./dist/graphql-ts-schema.cjs.js"
+    },
+    "./api-with-context": {
+      "module": "./api-with-context/dist/graphql-ts-schema-api-with-context.esm.js",
+      "default": "./api-with-context/dist/graphql-ts-schema-api-with-context.cjs.js"
+    },
+    "./api-without-context": {
+      "module": "./api-without-context/dist/graphql-ts-schema-api-without-context.esm.js",
+      "default": "./api-without-context/dist/graphql-ts-schema-api-without-context.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "api-without-context",

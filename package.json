@@ -12,7 +12,7 @@
     "@changesets/changelog-github": "^0.4.0",
     "@changesets/cli": "^2.16.0",
     "@manypkg/cli": "0.18.0",
-    "@preconstruct/cli": "^2.1.2",
+    "@preconstruct/cli": "^2.2.1",
     "@types/decompress": "4.2.4",
     "@types/jest": "26.0.24",
     "@types/node-fetch": "2.5.12",
@@ -41,7 +41,11 @@
   "preconstruct": {
     "packages": [
       "packages/*"
-    ]
+    ],
+    "exports": true,
+    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+      "exports": true
+    }
   },
   "manypkg": {
     "defaultBranch": "main"
