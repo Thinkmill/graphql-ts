@@ -1,6 +1,6 @@
 ---
-"@graphql-ts/extend": patch
-"@graphql-ts/schema": patch
+"@graphql-ts/extend": minor
+"@graphql-ts/schema": minor
 ---
 
 Added `exports` field
