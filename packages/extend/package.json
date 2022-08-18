@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/extend",
-  "version": "0.4.1",
+  "version": "1.0.0",
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
   "exports": {
@@ -19,11 +19,11 @@
     "@babel/runtime": "^7.9.2"
   },
   "peerDependencies": {
-    "@graphql-ts/schema": "^0.5.0",
+    "@graphql-ts/schema": "^0.6.0",
     "graphql": "15 || 16"
   },
   "devDependencies": {
-    "@graphql-ts/schema": "^0.5.1",
+    "@graphql-ts/schema": "^0.6.0",
     "graphql": "^16.3.0"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/extend"

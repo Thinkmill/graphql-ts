@@ -1,4 +1,4 @@
-lockfileVersion: 5.4
+lockfileVersion: 5.3
 
 importers:
 
@@ -38,8 +38,8 @@ importers:
       '@types/decompress': 4.2.4
       '@types/jest': 26.0.24
       '@types/node-fetch': 2.5.12
-      '@typescript-eslint/eslint-plugin': 4.26.1_lpwvjyzpjsxtu4vwcigiw7sgbu
-      '@typescript-eslint/parser': 4.26.1_hvsn7xyc3cha3odhoi2h7wbqka
+      '@typescript-eslint/eslint-plugin': 4.26.1_5bed54e32f4caf3a72b6120c8b7e460d
+      '@typescript-eslint/parser': 4.26.1_eslint@7.28.0+typescript@4.3.5
       babel-jest: 27.0.6_@babel+core@7.14.3
       eslint: 7.28.0
       got: 11.8.2
@@ -53,7 +53,7 @@ importers:
   packages/extend:
     specifiers:
       '@babel/runtime': ^7.9.2
-      '@graphql-ts/schema': ^0.5.1
+      '@graphql-ts/schema': ^0.6.0
       graphql: ^16.3.0
     dependencies:
       '@babel/runtime': 7.15.3
@@ -72,7 +72,7 @@ importers:
 
   test-project:
     specifiers:
-      '@graphql-ts/schema': ^0.5.0
+      '@graphql-ts/schema': ^0.6.0
       graphql: ^16.3.0
     dependencies:
       '@graphql-ts/schema': link:../packages/schema
@@ -1901,8 +1901,6 @@ packages:
       semver: 6.3.0
       spawndamnit: 2.0.0
       validate-npm-package-name: 3.0.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /@manypkg/find-root/1.1.0:
@@ -2306,7 +2304,7 @@ packages:
       '@types/yargs-parser': 20.2.1
     dev: false
 
-  /@typescript-eslint/eslint-plugin/4.26.1_lpwvjyzpjsxtu4vwcigiw7sgbu:
+  /@typescript-eslint/eslint-plugin/4.26.1_5bed54e32f4caf3a72b6120c8b7e460d:
     resolution: {integrity: sha512-aoIusj/8CR+xDWmZxARivZjbMBQTT9dImUtdZ8tVCVRXgBUuuZyM5Of5A9D9arQPxbi/0rlJLcuArclz/rCMJw==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -2317,8 +2315,8 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/experimental-utils': 4.26.1_hvsn7xyc3cha3odhoi2h7wbqka
-      '@typescript-eslint/parser': 4.26.1_hvsn7xyc3cha3odhoi2h7wbqka
+      '@typescript-eslint/experimental-utils': 4.26.1_eslint@7.28.0+typescript@4.3.5
+      '@typescript-eslint/parser': 4.26.1_eslint@7.28.0+typescript@4.3.5
       '@typescript-eslint/scope-manager': 4.26.1
       debug: 4.3.1
       eslint: 7.28.0
@@ -2332,7 +2330,7 @@ packages:
       - supports-color
     dev: false
 
-  /@typescript-eslint/experimental-utils/4.26.1_hvsn7xyc3cha3odhoi2h7wbqka:
+  /@typescript-eslint/experimental-utils/4.26.1_eslint@7.28.0+typescript@4.3.5:
     resolution: {integrity: sha512-sQHBugRhrXzRCs9PaGg6rowie4i8s/iD/DpTB+EXte8OMDfdCG5TvO73XlO9Wc/zi0uyN4qOmX9hIjQEyhnbmQ==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -2350,7 +2348,7 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/4.26.1_hvsn7xyc3cha3odhoi2h7wbqka:
+  /@typescript-eslint/parser/4.26.1_eslint@7.28.0+typescript@4.3.5:
     resolution: {integrity: sha512-q7F3zSo/nU6YJpPJvQveVlIIzx9/wu75lr6oDbDzoeIRWxpoc/HQ43G4rmMoCc5my/3uSj2VEpg/D83LYZF5HQ==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -2786,8 +2784,6 @@ packages:
       snapdragon-node: 2.1.1
       split-string: 3.1.0
       to-regex: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /braces/3.0.2:
@@ -3201,11 +3197,6 @@ packages:
 
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
     dependencies:
       ms: 2.0.0
     dev: false
@@ -3626,8 +3617,6 @@ packages:
       regex-not: 1.0.2
       snapdragon: 0.8.2
       to-regex: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /expect/27.0.6:
@@ -3682,8 +3671,6 @@ packages:
       regex-not: 1.0.2
       snapdragon: 0.8.2
       to-regex: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /fast-deep-equal/2.0.1:
@@ -3704,8 +3691,6 @@ packages:
       is-glob: 4.0.1
       merge2: 1.4.1
       micromatch: 3.1.10
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /fast-glob/3.2.5:
@@ -3927,8 +3912,6 @@ packages:
       fs-extra: 7.0.1
       globby: 9.2.0
       read-yaml-file: 1.1.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /glob-base/0.3.0:
@@ -4010,8 +3993,6 @@ packages:
       ignore: 4.0.6
       pify: 4.0.1
       slash: 2.0.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /got/11.8.2:
@@ -5400,8 +5381,6 @@ packages:
       regex-not: 1.0.2
       snapdragon: 0.8.2
       to-regex: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /micromatch/4.0.4:
@@ -5503,8 +5482,6 @@ packages:
       regex-not: 1.0.2
       snapdragon: 0.8.2
       to-regex: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /natural-compare/1.4.0:
@@ -6385,8 +6362,6 @@ packages:
       source-map: 0.5.7
       source-map-resolve: 0.5.3
       use: 3.1.1
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /source-map-resolve/0.5.3:

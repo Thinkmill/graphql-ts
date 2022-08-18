@@ -1,5 +1,16 @@
 # @graphql-ts/extend
 
+## 1.0.0
+
+### Minor Changes
+
+- [`012d84e`](https://github.com/Thinkmill/graphql-ts/commit/012d84e04bfe37c18aa0afdc541843586cf768bf) Thanks [@mitchellhamilton](https://github.com/mitchellhamilton)! - Added `exports` field
+
+### Patch Changes
+
+- Updated dependencies [[`012d84e`](https://github.com/Thinkmill/graphql-ts/commit/012d84e04bfe37c18aa0afdc541843586cf768bf)]:
+  - @graphql-ts/schema@0.6.0
+
 ## 0.4.1
 
 ### Patch Changes
