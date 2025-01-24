@@ -4,29 +4,25 @@
   "private": true,
   "repository": "https://github.com/Thinkmill/graphql-ts",
   "license": "MIT",
-  "dependencies": {
+  "packageManager": "pnpm@9.15.4",
+  "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-transform-runtime": "7.14.5",
     "@babel/preset-env": "7.14.7",
     "@babel/preset-typescript": "^7.13.0",
     "@changesets/changelog-github": "^0.4.0",
     "@changesets/cli": "^2.16.0",
-    "@manypkg/cli": "0.18.0",
-    "@preconstruct/cli": "^2.2.1",
-    "@types/decompress": "4.2.4",
+    "@manypkg/cli": "^0.23.0",
+    "@preconstruct/cli": "^2.8.10",
     "@types/jest": "26.0.24",
-    "@types/node-fetch": "2.5.12",
     "@typescript-eslint/eslint-plugin": "^4.26.1",
     "@typescript-eslint/parser": "^4.26.1",
     "babel-jest": "27.0.6",
     "eslint": "^7.28.0",
-    "got": "11.8.2",
     "jest": "27.0.6",
-    "node-fetch": "2.6.1",
-    "package-json": "7.0.0",
     "prettier": "2.3.1",
     "prettier-plugin-jsdoc": "0.3.23",
-    "typescript": "^4.3.5"
+    "typescript": "^5.7.3"
   },
   "scripts": {
     "postinstall": "preconstruct dev && manypkg check",
@@ -42,10 +38,7 @@
     "packages": [
       "packages/*"
     ],
-    "exports": true,
-    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
-      "exports": true
-    }
+    "exports": true
   },
   "manypkg": {
     "defaultBranch": "main"
