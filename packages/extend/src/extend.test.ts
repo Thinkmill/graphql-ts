@@ -419,7 +419,7 @@ test("using an existing object type", () => {
   `);
 });
 
-test("errors when no type ", () => {
+test("errors when no type exists with that name", () => {
   expect(() => {
     extend((base) => ({
       query: {
@@ -525,7 +525,9 @@ test(".scalar works for custom scalars", () => {
       },
     }),
   });
-  const extended = extend((base) => ({
+  const extended = extend<{
+    Something: typeof Something;
+  }>((base) => ({
     query: {
       hello: g.field({
         type: base.scalar("Something"),
