@@ -97,11 +97,11 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  * }
  * ```
  */
-export function extend(
+export function extend<Types extends Record<string, NamedType>>(
   extension:
     | Extension
     | readonly Extension[]
-    | ((base: BaseSchemaMeta) => Extension | readonly Extension[])
+    | ((base: BaseSchemaMeta<Types>) => Extension | readonly Extension[])
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
     const getType = (name: string) => {
@@ -119,8 +119,29 @@ export function extend(
       typeof extension === "function"
         ? extension({
             schema,
+            all(name) {
+              const graphQLType = getType(name as string);
+              if (isObjectType(graphQLType)) {
+                return wrap.object(graphQLType) as any;
+              }
+              if (isInputObjectType(graphQLType)) {
+                return wrap.inputObject(graphQLType) as any;
+              }
+              if (isEnumType(graphQLType)) {
+                return wrap.enum(graphQLType) as any;
+              }
+              if (isInterfaceType(graphQLType)) {
+                return wrap.interface(graphQLType) as any;
+              }
+              if (isScalarType(graphQLType)) {
+                return wrap.scalar(graphQLType) as any;
+              }
+              if (isUnionType(graphQLType)) {
+                return wrap.union(graphQLType) as any;
+              }
+            },
             object(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isObjectType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -128,10 +149,10 @@ export function extend(
                   )} in the schema being extended but it is not an object type`
                 );
               }
-              return wrap.object(graphQLType);
+              return wrap.object(graphQLType) as any;
             },
             inputObject(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isInputObjectType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -139,10 +160,10 @@ export function extend(
                   )} in the schema being extended but it is not an input object type`
                 );
               }
-              return wrap.inputObject(graphQLType);
+              return wrap.inputObject(graphQLType) as any;
             },
             enum(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isEnumType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -150,10 +171,10 @@ export function extend(
                   )} in the schema being extended but it is not an enum type`
                 );
               }
-              return wrap.enum(graphQLType);
+              return wrap.enum(graphQLType) as any;
             },
             interface(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isInterfaceType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -161,15 +182,17 @@ export function extend(
                   )} in the schema being extended but it is not an interface type`
                 );
               }
-              return wrap.interface(graphQLType);
+              return wrap.interface(graphQLType) as any;
             },
             scalar(name) {
-              if (builtinScalars.has(name)) {
+              if (builtinScalars.has(name as string)) {
                 throw new Error(
-                  `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but ${name} was passed`
+                  `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but ${
+                    name as string
+                  } was passed`
                 );
               }
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isScalarType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -177,10 +200,10 @@ export function extend(
                   )} in the schema being extended but it is not a scalar type`
                 );
               }
-              return wrap.scalar(graphQLType);
+              return wrap.scalar(graphQLType) as any;
             },
             union(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isUnionType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -188,7 +211,7 @@ export function extend(
                   )} in the schema being extended but it is not a union type`
                 );
               }
-              return wrap.union(graphQLType);
+              return wrap.union(graphQLType) as any;
             },
           })
         : extension
@@ -434,13 +457,52 @@ export type Extension = {
   //   unreferencedConcreteInterfaceImplementations?: ObjectType<Context, any>[];
 };
 
+export type NamedType =
+  | ObjectType<any, unknown>
+  | InputObjectType<{ [key: string]: Arg<InputType, boolean> }>
+  | EnumType<Record<string, EnumValue<unknown>>>
+  | UnionType<unknown, unknown>
+  | InterfaceType<
+      unknown,
+      Record<string, InterfaceField<any, OutputType<unknown>, unknown>>,
+      unknown
+    >
+  | ScalarType<unknown>;
+
+export type NamedTypes = Record<string & {}, NamedType>;
+
+type TypeOfKind<
+  Types extends Record<string, NamedType>,
+  Kind extends NamedType["kind"]
+> = {
+  [K in keyof Types]: Types extends unknown
+    ? Kind extends Types[K]["kind"]
+      ? K
+      : never
+    : never;
+}[keyof Types];
+
+type OnlyOfKind<
+  Type extends NamedType,
+  Kind extends NamedType["kind"]
+> = Type extends { kind: Kind } ? Type : never;
+
 /**
  * This object contains the schema being extended and functions to get wrapped
  *
  * Note that the just like {@link wrap}, all of the GraphQL types returned
  */
-export type BaseSchemaMeta = {
+export type BaseSchemaMeta<
+  Types extends Record<string, NamedType> = NamedTypes
+> = {
   schema: GraphQLSchema;
+  all<
+    Name extends {
+      [K in keyof Types]: string extends K ? never : K;
+    }[keyof Types]
+  >(
+    name: Name
+  ): Types[Name];
   /**
    * Gets an object type from the existing GraphQL schema and wraps it in an
    * {@link ObjectType}. If there is no object type in the existing schema with
@@ -461,7 +523,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  object(name: string): ObjectType<unknown, unknown>;
+  object<Name extends TypeOfKind<Types, "object">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "object">;
   /**
    * Gets an input object type from the existing GraphQL schema and wraps it in
    * an {@link InputObjectType}. If there is no input object type in the existing
@@ -488,9 +552,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  inputObject(
-    name: string
-  ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }>;
+  inputObject<Name extends TypeOfKind<Types, "input">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "input">;
   /**
    * Gets an enum type from the existing GraphQL schema and wraps it in an
    * {@link EnumType}. If there is no enum type in the existing schema with the
@@ -516,7 +580,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  enum(name: string): EnumType<Record<string, EnumValue<unknown>>>;
+  enum<Name extends TypeOfKind<Types, "enum">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "enum">;
   /**
    * Gets a union type from the existing GraphQL schema and wraps it in an
    * {@link UnionType}. If there is no union type in the existing schema with the
@@ -537,7 +603,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  union(name: string): UnionType<unknown, unknown>;
+  union<Name extends TypeOfKind<Types, "union">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "union">;
   /**
    * Gets an interface type from the existing GraphQL schema and wraps it in an
    * {@link InterfaceType}. If there is no interface type in the existing schema
@@ -558,13 +626,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  interface(
-    name: string
-  ): InterfaceType<
-    unknown,
-    Record<string, InterfaceField<any, OutputType<unknown>, unknown>>,
-    unknown
-  >;
+  interface<Name extends TypeOfKind<Types, "interface">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "interface">;
   /**
    * Gets a scalar type from the existing GraphQL schema and wraps it in an
    * {@link ScalarType}. If there is no scalar type in the existing schema with
@@ -592,7 +656,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  scalar(name: string): ScalarType<unknown>;
+  scalar<Name extends TypeOfKind<Types, "scalar">>(
+    name: Name
+  ): OnlyOfKind<Types[Name], "scalar">;
 };
 
 function getGraphQLJSFieldsFromGraphQLTSFields(
