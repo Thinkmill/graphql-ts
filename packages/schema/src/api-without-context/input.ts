@@ -303,16 +303,15 @@ export function inputObject<
     fields: () => {
       return Object.fromEntries(
         Object.entries(typeof fields === "function" ? fields() : fields).map(
-          ([key, value]) =>
-            [
-              key,
-              {
-                description: value.description,
-                type: value.type.graphQLType as GraphQLInputType,
-                defaultValue: value.defaultValue,
-                deprecationReason: value.deprecationReason,
-              },
-            ] as const
+          ([key, value]) => [
+            key,
+            {
+              description: value.description,
+              type: value.type.graphQLType as GraphQLInputType,
+              defaultValue: value.defaultValue,
+              deprecationReason: value.deprecationReason,
+            },
+          ]
         )
       );
     },

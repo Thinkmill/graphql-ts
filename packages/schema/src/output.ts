@@ -119,7 +119,7 @@ export type ObjectType<Source, Context> = {
   kind: "object";
   graphQLType: GraphQLObjectType;
   __context: (context: Context) => void;
-  __source: Source;
+  __source: (source: Source) => void;
 };
 
 type MaybePromise<T> = Promise<T> | T;
@@ -438,7 +438,7 @@ function buildFields(
 
 export type UnionType<Source, Context> = {
   kind: "union";
-  __source: Source;
+  __source: (source: Source) => void;
   __context: (context: Context) => void;
   graphQLType: GraphQLUnionType;
 };
@@ -450,12 +450,15 @@ export type UnionTypeFunc<Context> = <
   description?: string;
   types: TObjectType[];
   resolveType?: (
-    type: TObjectType["__source"],
+    type: TObjectType extends ObjectType<infer Source, any> ? Source : never,
     context: Context,
     info: GraphQLResolveInfo,
     abstractType: GraphQLUnionType
   ) => string;
-}) => UnionType<TObjectType["__source"], Context>;
+}) => UnionType<
+  TObjectType extends ObjectType<infer Source, any> ? Source : never,
+  Context
+>;
 
 function bindUnionTypeToContext<Context>(): UnionTypeFunc<Context> {
   return function union(config) {

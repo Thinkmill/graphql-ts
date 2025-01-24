@@ -1110,3 +1110,30 @@ function assertCompatible<A, _B extends A>() {}
     },
   });
 }
+{
+  const a = graphql.object<{
+    foo: number;
+  }>()({
+    name: "A",
+    fields: {
+      foo: graphql.field({ type: graphql.Int }),
+    },
+  });
+  const b: graphql.ObjectType<{ foo: number; extra: string }> = a;
+  console.log(b);
+}
+
+{
+  const a = graphql.object<{
+    foo: number;
+    extra: string;
+  }>()({
+    name: "A",
+    fields: {
+      foo: graphql.field({ type: graphql.Int }),
+    },
+  });
+  // @ts-expect-error
+  const b: graphql.ObjectType<{ foo: number }> = a;
+  console.log(b);
+}
