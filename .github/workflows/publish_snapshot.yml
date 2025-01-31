@@ -20,7 +20,7 @@ jobs:
       - uses: ./.github/actions/setup-deps
 
       - name: version packages
-        run: pnpm changeset version --snapshot ${{ inputs.tag }}
+        run: pnpm changeset version --snapshot test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
