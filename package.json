@@ -26,8 +26,7 @@
   },
   "scripts": {
     "postinstall": "preconstruct dev && manypkg check",
-    "release": "preconstruct build && changeset publish",
-    "version": "changeset version && pnpm i --frozen-lockfile=false",
+    "version-packages": "changeset version && pnpm i --frozen-lockfile=false",
     "test": "jest",
     "types": "tsc",
     "lint": "eslint .",
