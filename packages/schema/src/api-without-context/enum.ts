@@ -120,7 +120,7 @@ export function enumValues<Values extends readonly string[]>(
  *     """
  *     thing thing
  *     """
- *     thing @deprecated(reason: "something should be used instead of thing")
+ *     thing @/deprecated(reason: "something should be used instead of thing")
  *   }
  * `;)
  * ```
