@@ -24,7 +24,7 @@
     "graphql": "15 || 16"
   },
   "devDependencies": {
-    "@graphql-ts/schema": "^0.6.0",
+    "@graphql-ts/schema": "workspace:^",
     "graphql": "^16.3.0"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/extend"

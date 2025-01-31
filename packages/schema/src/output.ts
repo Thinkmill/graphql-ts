@@ -114,7 +114,7 @@ export type InferValueFromOutputType<Type extends OutputType<any>> =
       : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
   >;
 
-/** A GraphQL object type which should be created using {@link object `graphql.object`}. */
+/** A GraphQL object type which should be created using {@link object `g.object`}. */
 export type ObjectType<Source, Context> = {
   kind: "object";
   graphQLType: GraphQLObjectType;
@@ -138,7 +138,7 @@ export type FieldResolver<
 
 /**
  * A GraphQL output field for an {@link ObjectType} which should be created using
- * {@link field `graphql.field`}.
+ * {@link field `g.field`}.
  */
 export type Field<
   Source,
@@ -185,11 +185,11 @@ type FieldFuncResolve<
 > =
   // the tuple is here because we _don't_ want this to be distributive
   // if this was distributive then it would optional when it should be required e.g.
-  // graphql.object<{ id: string } | { id: boolean }>()({
+  // g.object<{ id: string } | { id: boolean }>()({
   //   name: "Node",
   //   fields: {
-  //     id: graphql.field({
-  //       type: graphql.nonNull(graphql.ID),
+  //     id: g.field({
+  //       type: g.nonNull(g.ID),
   //     }),
   //   },
   // });
@@ -252,7 +252,7 @@ export type FieldFunc<Context> = <
 function bindFieldToContext<Context>(): FieldFunc<Context> {
   return function field(field) {
     if (!field.type) {
-      throw new Error("A type must be passed to graphql.field()");
+      throw new Error("A type must be passed to g.field()");
     }
     return field as any;
   };
@@ -305,7 +305,7 @@ export type InterfacesToOutputFields<
 /**
  * Creates a GraphQL object type.
  *
- * See the docs of {@link object `graphql.object`} for more details.
+ * See the docs of {@link object `g.object`} for more details.
  */
 export type ObjectTypeFunc<Context> = <
   Source
@@ -332,11 +332,11 @@ export type ObjectTypeFunc<Context> = <
    * ```ts
    * type Person = { name: string };
    *
-   * const Person = graphql.object<Person>()({
+   * const Person = g.object<Person>()({
    *   name: "Person",
    *   description: "A person does things!",
    *   fields: {
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    * // ==
@@ -352,23 +352,23 @@ export type ObjectTypeFunc<Context> = <
    */
   description?: string;
   /**
-   * A number of interfaces that the object type implements. See
-   * `graphql.interface` for more information.
+   * A number of interfaces that the object type implements. See `g.interface`
+   * for more information.
    *
    * ```ts
-   * const Node = graphql.interface<{ kind: string }>()({
+   * const Node = g.interface<{ kind: string }>()({
    *   name: "Node",
    *   resolveType: (source) => source.kind,
    *   fields: {
-   *     id: graphql.interfaceField({ type: graphql.ID }),
+   *     id: g.interfaceField({ type: g.ID }),
    *   },
    * });
    *
-   * const Person = graphql.object<{ kind: "Person"; id: string }>()({
+   * const Person = g.object<{ kind: "Person"; id: string }>()({
    *   name: "Person",
    *   interfaces: [Node],
    *   fields: {
-   *     id: graphql.field({ type: graphql.ID }),
+   *     id: g.field({ type: g.ID }),
    *   },
    * });
    * ```
@@ -592,19 +592,18 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   /**
    * Creates a GraphQL object type.
    *
-   * Note this is an **output** type, if you want an input object, use
-   * `graphql.inputObject`.
+   * Note this is an **output** type, if you want an input object, use `g.inputObject`.
    *
-   * When calling `graphql.object`, you must provide a type parameter that is
-   * the source of the object type. The source is what you receive as the first
+   * When calling `g.object`, you must provide a type parameter that is the
+   * source of the object type. The source is what you receive as the first
    * argument of resolvers on this type and what you must return from resolvers
    * of fields that return this type.
    *
    * ```ts
-   * const Person = graphql.object<{ name: string }>()({
+   * const Person = g.object<{ name: string }>()({
    *   name: "Person",
    *   fields: {
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    * // ==
@@ -624,12 +623,12 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * in the source type and the GraphQL field don't match
    *
    * ```ts
-   * const Person = graphql.object<{ name: string }>()({
+   * const Person = g.object<{ name: string }>()({
    *   name: "Person",
    *   fields: {
-   *     name: graphql.field({ type: graphql.String }),
-   *     excitedName: graphql.field({
-   *       type: graphql.String,
+   *     name: g.field({ type: g.String }),
+   *     excitedName: g.field({
+   *       type: g.String,
    *       resolve(source, args, context, info) {
    *         return `${source.name}!`;
    *       },
@@ -642,20 +641,19 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *
    * GraphQL types will often contain references to themselves and to make
    * TypeScript allow that, you need have an explicit type annotation of
-   * `graphql.ObjectType<Source>` along with making `fields` a function that
-   * returns the object.
+   * `g.ObjectType<Source>` along with making `fields` a function that returns
+   * the object.
    *
    * ```ts
    * type PersonSource = { name: string; friends: PersonSource[] };
    *
-   * const Person: graphql.ObjectType<PersonSource> =
-   *   graphql.object<PersonSource>()({
-   *     name: "Person",
-   *     fields: () => ({
-   *       name: graphql.field({ type: graphql.String }),
-   *       friends: graphql.field({ type: graphql.list(Person) }),
-   *     }),
-   *   });
+   * const Person: g.ObjectType<PersonSource> = g.object<PersonSource>()({
+   *   name: "Person",
+   *   fields: () => ({
+   *     name: g.field({ type: g.String }),
+   *     friends: g.field({ type: g.list(Person) }),
+   *   }),
+   * });
    * ```
    */
   object: ObjectTypeFunc<Context>;
@@ -667,19 +665,19 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * imply having a common set of fields among the member types.
    *
    * ```ts
-   * const A = graphql.object<{ __typename: "A" }>()({
+   * const A = g.object<{ __typename: "A" }>()({
    *   name: "A",
    *   fields: {
-   *     something: graphql.field({ type: graphql.String }),
+   *     something: g.field({ type: g.String }),
    *   },
    * });
-   * const B = graphql.object<{ __typename: "B" }>()({
+   * const B = g.object<{ __typename: "B" }>()({
    *   name: "B",
    *   fields: {
-   *     differentThing: graphql.field({ type: graphql.String }),
+   *     differentThing: g.field({ type: g.String }),
    *   },
    * });
-   * const AOrB = graphql.union({
+   * const AOrB = g.union({
    *   name: "AOrB",
    *   types: [A, B],
    * });
@@ -689,14 +687,13 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   /**
    * Creates a GraphQL field.
    *
-   * These will generally be passed directly to the `fields` object in a
-   * `graphql.object` call.
+   * These will generally be passed directly to the `fields` object in a `g.object` call.
    *
    * ```ts
-   * const Something = graphql.object<{ thing: string }>()({
+   * const Something = g.object<{ thing: string }>()({
    *   name: "Something",
    *   fields: {
-   *     thing: graphql.field({ type: graphql.String }),
+   *     thing: g.field({ type: g.String }),
    *   },
    * });
    * ```
@@ -706,16 +703,16 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * A helper to easily share fields across object and interface types.
    *
    * ```ts
-   * const nodeFields = graphql.fields<{ id: string }>()({
-   *   id: graphql.field({ type: graphql.ID }),
+   * const nodeFields = g.fields<{ id: string }>()({
+   *   id: g.field({ type: g.ID }),
    * });
    *
-   * const Node = graphql.field({
+   * const Node = g.field({
    *   name: "Node",
    *   fields: nodeFields,
    * });
    *
-   * const Person = graphql.object<{
+   * const Person = g.object<{
    *   __typename: "Person";
    *   id: string;
    *   name: string;
@@ -724,12 +721,12 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *   interfaces: [Node],
    *   fields: {
    *     ...nodeFields,
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    * ```
    *
-   * ## Why use `graphql.fields` instead of just creating an object?
+   * ## Why use `g.fields` instead of just creating an object?
    *
    * The definition of Field in `@graphql-ts/schema` has some special things,
    * let's look at the definition of it:
@@ -747,14 +744,14 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * There's two especially notable bits in there which need to be inferred from
    * elsewhere, the `Source` and `Key` type params.
    *
-   * The `Source` is pretty simple and it's quite simple to see why
-   * `graphql.fields` is useful here. You could explicitly write it with
-   * resolvers on the first arg but you'd have to do that on every field which
-   * would get very repetitive and wouldn't work for fields without resolvers.
+   * The `Source` is pretty simple and it's quite simple to see why `g.fields`
+   * is useful here. You could explicitly write it with resolvers on the first
+   * arg but you'd have to do that on every field which would get very
+   * repetitive and wouldn't work for fields without resolvers.
    *
    * ```ts
-   * const someFields = graphql.fields<{ name: string }>()({
-   *   name: graphql.field({ type: graphql.String }),
+   * const someFields = g.fields<{ name: string }>()({
+   *   name: g.field({ type: g.String }),
    * });
    * ```
    *
@@ -766,14 +763,14 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *
    * ```ts
    * // this is allowed
-   * const someFields = graphql.fields<{ name: string }>()({
-   *   name: graphql.field({ type: graphql.String }),
+   * const someFields = g.fields<{ name: string }>()({
+   *   name: g.field({ type: g.String }),
    * });
    *
-   * const someFields = graphql.fields<{ name: string }>()({
-   *   someName: graphql.field({
+   * const someFields = g.fields<{ name: string }>()({
+   *   someName: g.field({
    *     // a resolver is required here since the Source is missing a `someName` property
-   *     type: graphql.String,
+   *     type: g.String,
    *   }),
    * });
    * ```
@@ -787,15 +784,15 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * Creates a GraphQL interface field.
    *
    * These will generally be passed directly to `fields` object in a
-   * {@link interfaceFunc `graphql.interface`} call. Interfaces fields are
-   * similar to {@link Field regular fields} except that they **don't define how
-   * the field is resolved**.
+   * {@link interfaceFunc `g.interface`} call. Interfaces fields are similar to
+   * {@link Field regular fields} except that they **don't define how the field
+   * is resolved**.
    *
    * ```ts
-   * const Entity = graphql.interface()({
+   * const Entity = g.interface()({
    *   name: "Entity",
    *   fields: {
-   *     name: graphql.interfaceField({ type: graphql.String }),
+   *     name: g.interfaceField({ type: g.String }),
    *   },
    * });
    * ```
@@ -810,20 +807,20 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * object and interface types.
    *
    * ```ts
-   * const Entity = graphql.interface()({
+   * const Entity = g.interface()({
    *   name: "Entity",
    *   fields: {
-   *     name: graphql.interfaceField({ type: graphql.String }),
+   *     name: g.interfaceField({ type: g.String }),
    *   },
    * });
    *
    * type PersonSource = { __typename: "Person"; name: string };
    *
-   * const Person = graphql.object<PersonSource>()({
+   * const Person = g.object<PersonSource>()({
    *   name: "Person",
    *   interfaces: [Entity],
    *   fields: {
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    *
@@ -832,11 +829,11 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *   name: string;
    * };
    *
-   * const Organisation = graphql.object<OrganisationSource>()({
+   * const Organisation = g.object<OrganisationSource>()({
    *   name: "Organisation",
    *   interfaces: [Entity],
    *   fields: {
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    * ```
@@ -854,30 +851,30 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *
    * ## Fields vs Interface Fields
    *
-   * You might have noticed that `graphql.interfaceField` was used instead of
-   * `graphql.field` for the fields on the interfaces. This is because
-   * **interfaces aren't defining implementation of fields** which means that
-   * fields on an interface don't need define resolvers.
+   * You might have noticed that `g.interfaceField` was used instead of
+   * `g.field` for the fields on the interfaces. This is because **interfaces
+   * aren't defining implementation of fields** which means that fields on an
+   * interface don't need define resolvers.
    *
    * ## Sharing field implementations
    *
    * Even though interfaces don't contain field implementations, you may still
    * want to share field implementations between interface implementations. You
-   * can use `graphql.fields` to do that. See `graphql.fields` for more
-   * information about why you should use `graphql.fields` instead of just
-   * defining an object the fields and spreading that.
+   * can use `g.fields` to do that. See `g.fields` for more information about
+   * why you should use `g.fields` instead of just defining an object the fields
+   * and spreading that.
    *
    * ```ts
-   * const nodeFields = graphql.fields<{ id: string }>({
-   *   id: graphql.field({ type: graphql.ID }),
+   * const nodeFields = g.fields<{ id: string }>({
+   *   id: g.field({ type: g.ID }),
    * });
    *
-   * const Node = graphql.field({
+   * const Node = g.field({
    *   name: "Node",
    *   fields: nodeFields,
    * });
    *
-   * const Person = graphql.object<{
+   * const Person = g.object<{
    *   __typename: "Person";
    *   id: string;
    *   name: string;
@@ -886,7 +883,7 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *   interfaces: [Node],
    *   fields: {
    *     ...nodeFields,
-   *     name: graphql.field({ type: graphql.String }),
+   *     name: g.field({ type: g.String }),
    *   },
    * });
    * ```

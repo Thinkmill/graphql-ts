@@ -1,5 +1,5 @@
 import {
-  graphql,
+  g,
   bindGraphQLSchemaAPIToContext,
   Arg,
   InferValueFromInputType,
@@ -7,53 +7,53 @@ import {
   ScalarType,
   InferValueFromOutputType,
 } from "@graphql-ts/schema";
-import * as graphqlWithContext from "./schema-api";
+import * as gWithContext from "./schema-api";
 
 // this isn't really right
 function expectType<T>(type: T) {
   console.log(type);
 }
 
-graphqlWithContext.arg({
-  type: graphqlWithContext.Boolean,
+gWithContext.arg({
+  type: gWithContext.Boolean,
 });
 
-const someEnum = graphql.enum({
+const someEnum = g.enum({
   name: "SomeEnum",
-  values: graphql.enumValues(["a", "b"]),
+  values: g.enumValues(["a", "b"]),
 });
 
-const enumArg = graphql.arg({
+const enumArg = g.arg({
   type: someEnum,
 });
 
-const Something = graphql.inputObject({
+const Something = g.inputObject({
   name: "Something",
   fields: {
-    nullableString: graphql.arg({ type: graphql.String }),
-    nullableStringWithDefaultValue: graphql.arg({
-      type: graphql.String,
+    nullableString: g.arg({ type: g.String }),
+    nullableStringWithDefaultValue: g.arg({
+      type: g.String,
       defaultValue: "something",
     }),
-    nonNullableString: graphql.arg({
-      type: graphql.nonNull(graphql.String),
+    nonNullableString: g.arg({
+      type: g.nonNull(g.String),
     }),
-    nonNullableStringWithDefaultValue: graphql.arg({
-      type: graphql.nonNull(graphql.String),
+    nonNullableStringWithDefaultValue: g.arg({
+      type: g.nonNull(g.String),
       defaultValue: "something",
     }),
     enum: enumArg,
   },
 });
 
-type CircularInputType = graphql.InputObjectType<{
-  circular: graphql.Arg<CircularInputType>;
+type CircularInputType = g.InputObjectType<{
+  circular: g.Arg<CircularInputType>;
 }>;
 
-const Circular: CircularInputType = graphql.inputObject({
+const Circular: CircularInputType = g.inputObject({
   name: "Circular",
   fields: () => ({
-    circular: graphql.arg({ type: Circular }),
+    circular: g.arg({ type: Circular }),
   }),
 });
 
@@ -79,17 +79,17 @@ function useType<T>(a?: T) {
 
 {
   // should be unknown
-  type a = graphql.InferValueFromOutputType<graphql.OutputType>;
+  type a = g.InferValueFromOutputType<g.OutputType>;
   useType<a>();
 }
 {
   // should be unknown
-  type a = graphql.InferValueFromInputType<graphql.InputType>;
+  type a = g.InferValueFromInputType<g.InputType>;
   useType<a>();
-  type b = graphql.InferValueFromArg<graphql.Arg<graphql.InputType>>;
+  type b = g.InferValueFromArg<g.Arg<g.InputType>>;
   useType<b>();
   // should be { readonly a: unknown }
-  type c = graphql.InferValueFromArgs<{ a: graphql.Arg<graphql.InputType> }>;
+  type c = g.InferValueFromArgs<{ a: g.Arg<g.InputType> }>;
   useType<c>();
 }
 
@@ -99,11 +99,11 @@ function useType<T>(a?: T) {
     recursive: Arg<RecursiveInput>;
   }>;
 
-  const Recursive: RecursiveInput = graphql.inputObject({
+  const Recursive: RecursiveInput = g.inputObject({
     name: "Recursive",
     fields: () => ({
-      nullableString: graphql.arg({ type: graphql.String }),
-      recursive: graphql.arg({ type: Recursive }),
+      nullableString: g.arg({ type: g.String }),
+      recursive: g.arg({ type: Recursive }),
     }),
   });
 
@@ -121,7 +121,7 @@ function useType<T>(a?: T) {
 
 {
   const nonRecursiveFields = {
-    nullableString: graphql.arg({ type: graphql.String }),
+    nullableString: g.arg({ type: g.String }),
   };
 
   type RecursiveInput = InputObjectType<
@@ -130,11 +130,11 @@ function useType<T>(a?: T) {
     }
   >;
 
-  const Recursive: RecursiveInput = graphql.inputObject({
+  const Recursive: RecursiveInput = g.inputObject({
     name: "Recursive",
     fields: () => ({
       ...nonRecursiveFields,
-      recursive: graphql.arg({ type: Recursive }),
+      recursive: g.arg({ type: Recursive }),
     }),
   });
 
@@ -153,48 +153,48 @@ function useType<T>(a?: T) {
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
 export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof graphql.String>;
-}> = graphql.inputObject({
+  nullableString: Arg<typeof g.String>;
+}> = g.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
-    nullableString: graphql.arg({ type: graphql.String }),
-    another: graphql.arg({ type: graphql.String }),
+    nullableString: g.arg({ type: g.String }),
+    another: g.arg({ type: g.String }),
   }),
 });
 
-graphql.object<{ id: string } | { id: "str" }>()({
+g.object<{ id: string } | { id: "str" }>()({
   name: "Node",
   fields: {
-    id: graphql.field({
-      type: graphql.nonNull(graphql.ID),
+    id: g.field({
+      type: g.nonNull(g.ID),
     }),
   },
 });
 
-graphql.object<{ id: string } | { id: boolean }>()({
+g.object<{ id: string } | { id: boolean }>()({
   name: "Node",
   fields: {
     // @ts-expect-error
-    id: graphql.field({
-      type: graphql.nonNull(graphql.ID),
+    id: g.field({
+      type: g.nonNull(g.ID),
     }),
   },
 });
 
 {
-  const graphql = {
-    ...graphqlWithContext,
+  const g = {
+    ...gWithContext,
     ...bindGraphQLSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
   };
 
-  const SomeOutput = graphql.object<{ thing: boolean }>()({
+  const SomeOutput = g.object<{ thing: boolean }>()({
     name: "Something",
     fields: {
-      thing: graphql.field({ type: graphql.nonNull(graphql.Boolean) }),
+      thing: g.field({ type: g.nonNull(g.Boolean) }),
     },
   });
 
-  const nonNullSomeOutput = graphql.nonNull(SomeOutput);
+  const nonNullSomeOutput = g.nonNull(SomeOutput);
 
   type OutputTypeWithNull = InferValueFromOutputType<typeof SomeOutput>;
 
@@ -207,7 +207,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
 
   expectType<OutputTypeWithoutNull>({ thing: true });
 
-  graphql.field({
+  g.field({
     type: SomeOutput,
     resolve() {
       if (Math.random() > 0.5) {
@@ -217,8 +217,8 @@ graphql.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  graphql.field({
-    type: graphql.nonNull(graphql.list(nonNullSomeOutput)),
+  g.field({
+    type: g.nonNull(g.list(nonNullSomeOutput)),
     resolve() {
       return [{ thing: false }];
     },
@@ -226,20 +226,20 @@ graphql.object<{ id: string } | { id: boolean }>()({
 
   type FieldIdentifier = { listKey: string; fieldPath: string };
 
-  graphql.fields<{ path: string; listKey: string }>()({
-    thing: graphql.field({
+  g.fields<{ path: string; listKey: string }>()({
+    thing: g.field({
       resolve(source) {
         return { fieldPath: source.path, listKey: source.listKey };
       },
-      type: graphql.nonNull(
-        graphql.object<FieldIdentifier>()({
+      type: g.nonNull(
+        g.object<FieldIdentifier>()({
           name: "KeystoneAdminUIFieldMetaListView",
           fields: {
-            fieldMode: graphql.field({
-              type: graphql.nonNull(
-                graphql.enum({
+            fieldMode: g.field({
+              type: g.nonNull(
+                g.enum({
                   name: "KeystoneAdminUIFieldMetaListViewFieldMode",
-                  values: graphql.enumValues(["read", "hidden"]),
+                  values: g.enumValues(["read", "hidden"]),
                 })
               ),
               async resolve(source, args, context) {
@@ -254,11 +254,11 @@ graphql.object<{ id: string } | { id: boolean }>()({
   });
 }
 
-// graphql.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
+// g.interface<{ kind: "one"; id: string } | { kind: "two"; id: boolean }>()({
 //   name: "Node",
 //   fields: {
-//     id: graphql.field({
-//       type: graphql.nonNull(graphql.ID),
+//     id: g.field({
+//       type: g.nonNull(g.ID),
 //       // args: {},
 //       resolve({}, {}) {
 //         return true;
@@ -268,22 +268,22 @@ graphql.object<{ id: string } | { id: boolean }>()({
 // });
 
 {
-  const sharedFields = graphql.fields<{ something: string }>()({
-    something: graphql.field({
-      type: graphql.nonNull(graphql.String),
+  const sharedFields = g.fields<{ something: string }>()({
+    something: g.field({
+      type: g.nonNull(g.String),
     }),
   });
 
-  const sharedFieldsWithUnkownSource = graphql.fields()({
-    other: graphql.field({
-      type: graphql.nonNull(graphql.String),
+  const sharedFieldsWithUnkownSource = g.fields()({
+    other: g.field({
+      type: g.nonNull(g.String),
       resolve() {
         return "";
       },
     }),
   });
 
-  graphql.object<{ something: string; other: string }>()({
+  g.object<{ something: string; other: string }>()({
     name: "",
     fields: {
       ...sharedFields,
@@ -291,12 +291,12 @@ graphql.object<{ id: string } | { id: boolean }>()({
     },
   });
 
-  graphql.object<{ other: string }>()({
+  g.object<{ other: string }>()({
     name: "",
     fields: sharedFieldsWithUnkownSource,
   });
 
-  graphql.object<{ other: string }>()({
+  g.object<{ other: string }>()({
     name: "",
     // @ts-expect-error
     fields: sharedFields,
@@ -315,7 +315,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       name: "",
       fields: {
         thing: typesWithContextA.field({
-          type: graphql.String,
+          type: g.String,
         }),
       },
     });
@@ -324,7 +324,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         // @ts-expect-error
         thing: typesWithContextB.field({
-          type: graphql.String,
+          type: g.String,
         }),
       },
     });
@@ -335,7 +335,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       name: "",
       fields: {
         thing: typesWithContextA.field({
-          type: graphql.String,
+          type: g.String,
         }),
       },
     });
@@ -351,7 +351,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       name: "Something",
       fields: {
         a: typesWithContextA.field({
-          type: graphql.String,
+          type: g.String,
           resolve(source, args, context) {
             console.log(source, args, context);
             expectType<{ something: boolean }>(context);
@@ -391,7 +391,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: graphql.list(fromBWithA),
+          type: g.list(fromBWithA),
           resolve(source, args, context) {
             console.log(source, args, context);
             expectType<{ something: boolean }>(context);
@@ -404,7 +404,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: graphql.list(graphql.list(fromBWithA)),
+          type: g.list(g.list(fromBWithA)),
           resolve(source, args, context) {
             console.log(source, args, context);
             expectType<{ something: boolean }>(context);
@@ -417,7 +417,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: graphql.nonNull(fromBWithA),
+          type: g.nonNull(fromBWithA),
           resolve(source, args, context) {
             console.log(source, args, context);
             expectType<{ something: boolean }>(context);
@@ -430,7 +430,7 @@ graphql.object<{ id: string } | { id: boolean }>()({
       fields: {
         a: typesWithContextA.field({
           // @ts-expect-error
-          type: graphql.list(graphql.nonNull(fromBWithA)),
+          type: g.list(g.nonNull(fromBWithA)),
           resolve(source, args, context) {
             console.log(source, args, context);
             expectType<{ something: boolean }>(context);
@@ -442,78 +442,78 @@ graphql.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const nonNullThing = graphql.nonNull(graphql.String);
-  graphql.nonNull(
+  const nonNullThing = g.nonNull(g.String);
+  g.nonNull(
     // @ts-expect-error
     nonNullThing
   );
 }
 
 {
-  const Node = graphql.interface()({
+  const Node = g.interface()({
     name: "Node",
     fields: {
-      id: graphql.interfaceField({ type: graphql.ID }),
+      id: g.interfaceField({ type: g.ID }),
     },
   });
 
-  graphql.object<{ id: string }>()({
+  g.object<{ id: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
-    fields: { id: graphql.field({ type: graphql.ID }) },
+    fields: { id: g.field({ type: g.ID }) },
   });
 
-  graphql.object<{ thing: string }>()({
+  g.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {},
   });
 
-  graphql.object<{ thing: string }>()({
+  g.object<{ thing: string }>()({
     name: "NodeImpl",
     interfaces: [Node],
     // @ts-expect-error
     fields: {
-      thing: graphql.field({ type: graphql.ID }),
+      thing: g.field({ type: g.ID }),
     },
   });
-  graphql.object<{ id: number }>()({
+  g.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: graphql.field({ type: graphql.Int }),
+      id: g.field({ type: g.Int }),
     },
   });
-  graphql.object<{ id: number }>()({
+  g.object<{ id: number }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: graphql.field({ type: graphql.ID }),
+      id: g.field({ type: g.ID }),
     },
   });
 
   {
-    const NodeAnother = graphql.interface()({
+    const NodeAnother = g.interface()({
       name: "Node",
       fields: {
-        id: graphql.interfaceField({ type: graphql.Int }),
+        id: g.interfaceField({ type: g.Int }),
       },
     });
 
-    graphql.object<{ id: string }>()({
+    g.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, NodeAnother],
       fields: {
         // @ts-expect-error
-        id: graphql.field({ type: graphql.ID }),
+        id: g.field({ type: g.ID }),
       },
     });
   }
 
-  graphql.interface()({
+  g.interface()({
     name: "Node",
     interfaces: [Node],
     // @ts-expect-error
@@ -521,34 +521,34 @@ graphql.object<{ id: string } | { id: boolean }>()({
   });
 
   {
-    const Other = graphql.interface()({
+    const Other = g.interface()({
       name: "Node",
-      fields: { something: graphql.interfaceField({ type: graphql.Int }) },
+      fields: { something: g.interfaceField({ type: g.Int }) },
     });
-    graphql.object<{ id: string; something: number }>()({
+    g.object<{ id: string; something: number }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       fields: {
-        id: graphql.field({ type: graphql.ID }),
-        something: graphql.field({ type: graphql.Int }),
+        id: g.field({ type: g.ID }),
+        something: g.field({ type: g.Int }),
       },
     });
-    graphql.object<{ id: string }>()({
+    g.object<{ id: string }>()({
       name: "NodeImpl",
       interfaces: [Node, Other],
       // @ts-expect-error
       fields: {
-        id: graphql.field({ type: graphql.ID }),
+        id: g.field({ type: g.ID }),
       },
     });
   }
 }
 
-graphql.object()({
+g.object()({
   name: "Something",
   fields: {
-    id: graphql.field({
-      type: graphql.ID,
+    id: g.field({
+      type: g.ID,
 
       resolve(source, args) {
         console.log(source);
@@ -567,9 +567,9 @@ graphql.object()({
 
   const SUPPORTED_IMAGE_EXTENSIONS = ["jpg", "png", "webp", "gif"] as const;
 
-  const ImageExtensionEnum = graphql.enum({
+  const ImageExtensionEnum = g.enum({
     name: "ImageExtension",
-    values: graphql.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
+    values: g.enumValues(SUPPORTED_IMAGE_EXTENSIONS),
   });
 
   type ImageData = {
@@ -580,21 +580,21 @@ graphql.object()({
     width: number;
     height: number;
   };
-  const imageOutputFields = graphql.fields<ImageData>()({
-    id: graphql.field({ type: graphql.nonNull(graphql.ID) }),
-    filesize: graphql.field({ type: graphql.nonNull(graphql.Int) }),
-    height: graphql.field({ type: graphql.nonNull(graphql.Int) }),
-    width: graphql.field({ type: graphql.nonNull(graphql.Int) }),
-    extension: graphql.field({ type: graphql.nonNull(ImageExtensionEnum) }),
-    ref: graphql.field({
-      type: graphql.nonNull(graphql.String),
+  const imageOutputFields = g.fields<ImageData>()({
+    id: g.field({ type: g.nonNull(g.ID) }),
+    filesize: g.field({ type: g.nonNull(g.Int) }),
+    height: g.field({ type: g.nonNull(g.Int) }),
+    width: g.field({ type: g.nonNull(g.Int) }),
+    extension: g.field({ type: g.nonNull(ImageExtensionEnum) }),
+    ref: g.field({
+      type: g.nonNull(g.String),
       resolve(data) {
         console.log(data);
         return "";
       },
     }),
-    src: graphql.field({
-      type: graphql.nonNull(graphql.String),
+    src: g.field({
+      type: g.nonNull(g.String),
       resolve(data, {}, context) {
         console.log(data, context);
         return "";
@@ -602,12 +602,12 @@ graphql.object()({
     }),
   });
 
-  const ImageFieldOutput = graphql.interface()({
+  const ImageFieldOutput = g.interface()({
     name: "ImageFieldOutput",
     fields: imageOutputFields,
   });
 
-  const LocalImageFieldOutput = graphql.object<ImageData>()({
+  const LocalImageFieldOutput = g.object<ImageData>()({
     name: "LocalImageFieldOutput",
     interfaces: [ImageFieldOutput],
     fields: imageOutputFields,
@@ -615,24 +615,24 @@ graphql.object()({
   console.log(LocalImageFieldOutput);
 }
 
-graphql.fields<{ thing: Promise<string>[] }>()({
-  thing: graphql.field({
-    type: graphql.list(graphql.String),
+g.fields<{ thing: Promise<string>[] }>()({
+  thing: g.field({
+    type: g.list(g.String),
   }),
 });
 
-graphql.fields()({
-  thing: graphql.field({
-    type: graphql.list(graphql.String),
+g.fields()({
+  thing: g.field({
+    type: g.list(g.String),
     resolve() {
       return [Promise.resolve("")];
     },
   }),
 });
 
-graphql.fields<{ thing: Promise<string> }>()({
-  thing: graphql.field({
-    type: graphql.String,
+g.fields<{ thing: Promise<string> }>()({
+  thing: g.field({
+    type: g.String,
   }),
 });
 
@@ -640,61 +640,61 @@ graphql.fields<{ thing: Promise<string> }>()({
 // since the type annotation can influence the return type and we don't want that here
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert: g.Arg<typeof g.String, false> = arg;
   console.log(_assert);
 }
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     defaultValue: undefined,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert: g.Arg<typeof g.String, false> = arg;
   console.log(_assert);
 }
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     defaultValue: "",
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert: g.Arg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     defaultValue: null,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert: g.Arg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     defaultValue: null,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert: g.Arg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
 {
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     defaultValue: Math.random() > 0.5 ? "" : null,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert: g.Arg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
@@ -711,20 +711,20 @@ graphql.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     ...x,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  const _assert: g.Arg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert1: g.Arg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert2: g.Arg<typeof g.String, true> = arg;
   console.log(_assert2);
-  const _assert3: (x: graphql.Arg<typeof graphql.String, boolean>) => void = (
+  const _assert3: (x: g.Arg<typeof g.String, boolean>) => void = (
     x: typeof arg
   ) => {
     console.log(x);
@@ -743,18 +743,18 @@ graphql.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     ...x,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  const _assert: g.Arg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert1: g.Arg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert2: g.Arg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
@@ -769,178 +769,178 @@ graphql.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     ...x,
   });
-  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  const _assert: g.Arg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert1: g.Arg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert2: g.Arg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
 {
   const thing: { defaultValue: undefined } | { defaultValue: string } =
     Math.random() > 0.5 ? { defaultValue: undefined } : { defaultValue: "" };
-  const arg = graphql.arg({
-    type: graphql.String,
+  const arg = g.arg({
+    type: g.String,
     ...thing,
   });
 
-  const _assert: graphql.Arg<typeof graphql.String, boolean> = arg;
+  const _assert: g.Arg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: graphql.Arg<typeof graphql.String, false> = arg;
+  const _assert1: g.Arg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: graphql.Arg<typeof graphql.String, true> = arg;
+  const _assert2: g.Arg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
-graphql.arg({
-  type: graphql.String,
+g.arg({
+  type: g.String,
   // @ts-expect-error
   defaultValue: 1,
 });
 
-graphql.arg({
-  type: graphql.String,
+g.arg({
+  type: g.String,
   // @ts-expect-error
   bad: true,
 });
 
-graphql.object<{ thing: (args: { a: string }) => string }>()({
+g.object<{ thing: (args: { a: string }) => string }>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: graphql.field({
-      type: graphql.String,
-      args: { a: graphql.arg({ type: graphql.nonNull(graphql.Int) }) },
+    thing: g.field({
+      type: g.String,
+      args: { a: g.arg({ type: g.nonNull(g.Int) }) },
     }),
   },
 });
 
-graphql.object<{ thing: (args: { a: string }) => string }>()({
+g.object<{ thing: (args: { a: string }) => string }>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
-      args: { a: graphql.arg({ type: graphql.nonNull(graphql.String) }) },
+    thing: g.field({
+      type: g.String,
+      args: { a: g.arg({ type: g.nonNull(g.String) }) },
     }),
   },
 });
 
-graphql.object<{ thing: () => string }>()({
+g.object<{ thing: () => string }>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
-      args: { a: graphql.arg({ type: graphql.nonNull(graphql.String) }) },
+    thing: g.field({
+      type: g.String,
+      args: { a: g.arg({ type: g.nonNull(g.String) }) },
     }),
   },
 });
 
-graphql.object<{ thing: () => Promise<string> }>()({
+g.object<{ thing: () => Promise<string> }>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
     }),
   },
 });
 
 {
   // @ts-expect-error
-  const thing1: graphql.NullableInputType = graphql.list(
-    graphql.object()({
+  const thing1: g.NullableInputType = g.list(
+    g.object()({
       name: "something",
       fields: {},
     })
   );
   // @ts-expect-error
-  const thing2: graphql.NullableInputType = graphql.nonNull(
-    graphql.object()({
+  const thing2: g.NullableInputType = g.nonNull(
+    g.object()({
       name: "something",
       fields: {},
     })
   );
   // @ts-expect-error
-  const thing3: graphql.InputType = graphql.nonNull(
-    graphql.object()({
+  const thing3: g.InputType = g.nonNull(
+    g.object()({
       name: "something",
       fields: {},
     })
   );
 }
 
-graphql.object<{}>()({
+g.object<{}>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
     }),
   },
 });
 
-graphql.object<{ thing?: string }>()({
+g.object<{ thing?: string }>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
     }),
   },
 });
 
-graphql.object<{ thing?: boolean }>()({
-  name: "Thing",
-  fields: {
-    // @ts-expect-error
-    thing: graphql.field({
-      type: graphql.String,
-    }),
-  },
-});
-
-graphql.object<{}>()({
+g.object<{ thing?: boolean }>()({
   name: "Thing",
   fields: {
     // @ts-expect-error
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
     }),
   },
 });
 
-graphql.object<{ thing?: undefined }>()({
+g.object<{}>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
+    // @ts-expect-error
+    thing: g.field({
+      type: g.String,
     }),
   },
 });
 
-graphql.object()({
+g.object<{ thing?: undefined }>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
+    }),
+  },
+});
+
+g.object()({
+  name: "Thing",
+  fields: {
+    thing: g.field({
+      type: g.String,
       // @ts-expect-error
       resolve() {},
     }),
   },
 });
 
-graphql.object()({
+g.object()({
   name: "Thing",
   fields: {
-    thing: graphql.field({
-      type: graphql.String,
+    thing: g.field({
+      type: g.String,
       resolve() {
         return undefined;
       },
@@ -948,10 +948,10 @@ graphql.object()({
   },
 });
 
-graphql.object<any>()({
+g.object<any>()({
   name: "Thing",
   fields: {
-    thing: graphql.field({ type: graphql.String }),
+    thing: g.field({ type: g.String }),
   },
 });
 
@@ -964,18 +964,18 @@ graphql.object<any>()({
     filesize: number;
   };
 
-  const fileFields = graphql.fields<FileData>()({
-    filename: graphql.field({ type: graphql.nonNull(graphql.String) }),
-    filesize: graphql.field({ type: graphql.nonNull(graphql.Int) }),
-    ref: graphql.field({
-      type: graphql.nonNull(graphql.String),
+  const fileFields = g.fields<FileData>()({
+    filename: g.field({ type: g.nonNull(g.String) }),
+    filesize: g.field({ type: g.nonNull(g.Int) }),
+    ref: g.field({
+      type: g.nonNull(g.String),
       resolve(data) {
         console.log(data);
         return "";
       },
     }),
-    src: graphql.field({
-      type: graphql.nonNull(graphql.String),
+    src: g.field({
+      type: g.nonNull(g.String),
       resolve(data, args, context) {
         console.log(data, args, context);
         return "";
@@ -983,13 +983,13 @@ graphql.object<any>()({
     }),
   });
 
-  const FileFieldOutput = graphql.interface<FileData>()({
+  const FileFieldOutput = g.interface<FileData>()({
     name: "FileFieldOutput",
     fields: fileFields,
     resolveType: () => "LocalFileFieldOutput",
   });
 
-  graphql.field({
+  g.field({
     type: FileFieldOutput,
     resolve() {
       return undefined as any as FileData;
@@ -998,14 +998,14 @@ graphql.object<any>()({
 }
 
 {
-  const a = graphql.field({
-    type: graphql.String,
+  const a = g.field({
+    type: g.String,
     resolve() {
       return null;
     },
   });
 
-  graphql.object()({
+  g.object()({
     name: "",
     fields: {
       a,
@@ -1014,16 +1014,16 @@ graphql.object<any>()({
 }
 
 {
-  const a = graphql.fields()({
-    b: graphql.field({
-      type: graphql.String,
+  const a = g.fields()({
+    b: g.field({
+      type: g.String,
       resolve() {
         return null;
       },
     }),
   });
 
-  graphql.object()({
+  g.object()({
     name: "",
     fields: {
       // @ts-expect-error
@@ -1036,11 +1036,11 @@ type Invariant<T> = (t: T) => T;
 function assertCompatible<A, _B extends A>() {}
 
 {
-  graphql.field({
-    type: graphql.Int,
+  g.field({
+    type: g.Int,
     args: {
-      blah: graphql.arg({
-        type: Math.random() > 0.5 ? graphql.nonNull(graphql.Int) : graphql.Int,
+      blah: g.arg({
+        type: Math.random() > 0.5 ? g.nonNull(g.Int) : g.Int,
       }),
     },
     resolve(_, { blah }) {
@@ -1051,11 +1051,11 @@ function assertCompatible<A, _B extends A>() {}
       return 1;
     },
   });
-  graphql.field({
-    type: graphql.Int,
+  g.field({
+    type: g.Int,
     args: {
-      blah: graphql.arg({
-        type: Math.random() > 0.5 ? graphql.String : graphql.Int,
+      blah: g.arg({
+        type: Math.random() > 0.5 ? g.String : g.Int,
       }),
     },
     resolve(_, { blah }) {
@@ -1066,16 +1066,16 @@ function assertCompatible<A, _B extends A>() {}
       return 1;
     },
   });
-  graphql.field({
-    type: graphql.Int,
+  g.field({
+    type: g.Int,
     args: {
       blah:
         Math.random() > 0.5
-          ? graphql.arg({
-              type: graphql.nonNull(graphql.Int),
+          ? g.arg({
+              type: g.nonNull(g.Int),
             })
-          : graphql.arg({
-              type: graphql.Int,
+          : g.arg({
+              type: g.Int,
               defaultValue: 1,
             }),
     },
@@ -1084,21 +1084,21 @@ function assertCompatible<A, _B extends A>() {}
       return 1;
     },
   });
-  graphql.field({
-    type: graphql.Int,
+  g.field({
+    type: g.Int,
     args: {
       blah:
         Math.random() > 0.5
-          ? graphql.arg({
-              type: graphql.nonNull(graphql.Int),
+          ? g.arg({
+              type: g.nonNull(g.Int),
             })
           : Math.random() > 0.5
-          ? graphql.arg({
-              type: graphql.Int,
+          ? g.arg({
+              type: g.Int,
               defaultValue: 1,
             })
-          : graphql.arg({
-              type: graphql.Int,
+          : g.arg({
+              type: g.Int,
             }),
     },
     resolve(_, { blah }) {
