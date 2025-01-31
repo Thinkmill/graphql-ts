@@ -6,6 +6,7 @@ import {
   InputObjectType,
   ScalarType,
   InferValueFromOutputType,
+  graphql,
 } from "@graphql-ts/schema";
 import * as gWithContext from "./schema-api";
 
@@ -1108,5 +1109,37 @@ function assertCompatible<A, _B extends A>() {}
       >();
       return 1;
     },
+  });
+}
+
+// just to ensure the old alias works
+{
+  graphql.object()({
+    name: "Query",
+    fields: {
+      hello: g.field({
+        type: g.String,
+        resolve() {
+          return "something";
+        },
+      }),
+    },
+  });
+  const Something: graphql.ObjectType<{}> = graphql.object<{}>()({
+    name: "Something",
+    fields: () => ({
+      a: graphql.field({
+        type: Something,
+        resolve() {
+          return {};
+        },
+      }),
+      b: graphql.field({
+        type: graphql.String,
+        resolve() {
+          return "something";
+        },
+      }),
+    }),
   });
 }
