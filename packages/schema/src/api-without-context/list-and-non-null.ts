@@ -4,7 +4,7 @@ import { NullableType, Type } from "../type";
 /**
  * Wraps any GraphQL type in a list type.
  *
- * See the documentation of {@link list `graphql.list`} for more information.
+ * See the documentation of {@link list `g.list`} for more information.
  */
 export type ListType<Of extends Type<any>> = {
   kind: "list";
@@ -17,7 +17,7 @@ export type ListType<Of extends Type<any>> = {
  * Wraps any GraphQL type in a {@link ListType}.
  *
  * ```ts
- * const stringListType = graphql.list(graphql.String);
+ * const stringListType = g.list(g.String);
  * // ==
  * graphql`[String]`;
  * ```
@@ -25,9 +25,9 @@ export type ListType<Of extends Type<any>> = {
  * When used as an input type, you will recieve an array of the inner type.
  *
  * ```ts
- * graphql.field({
- *   type: graphql.String,
- *   args: { thing: graphql.arg({ type: graphql.list(graphql.String) }) },
+ * g.field({
+ *   type: g.String,
+ *   args: { thing: g.arg({ type: g.list(g.String) }) },
  *   resolve(source, { thing }) {
  *     const theThing: undefined | null | Array<string | null> = thing;
  *     return "";
@@ -42,8 +42,8 @@ export type ListType<Of extends Type<any>> = {
  * `typeof val === 'object'`.
  *
  * ```ts
- * graphql.field({
- *   type: graphql.list(graphql.String),
+ * g.field({
+ *   type: g.list(g.String),
  *   resolve() {
  *     return [""];
  *   },
@@ -51,8 +51,8 @@ export type ListType<Of extends Type<any>> = {
  * ```
  *
  * ```ts
- * graphql.field({
- *   type: graphql.list(graphql.String),
+ * g.field({
+ *   type: g.list(g.String),
  *   resolve() {
  *     return new Set([""]);
  *   },
@@ -60,8 +60,8 @@ export type ListType<Of extends Type<any>> = {
  * ```
  *
  * ```ts
- * graphql.field({
- *   type: graphql.list(graphql.String),
+ * g.field({
+ *   type: g.list(g.String),
  *   resolve() {
  *     // this will not be allowed
  *     return "some things";
@@ -81,7 +81,7 @@ export function list<Of extends Type<any>>(of: Of): ListType<Of> {
 /**
  * Wraps a {@link NullableType} with a non-null type.
  *
- * See the documentation for {@link nonNull `graphql.nonNull`} for more information.
+ * See the documentation for {@link nonNull `g.nonNull`} for more information.
  */
 export type NonNullType<Of extends NullableType<any>> = {
   kind: "non-null";
@@ -97,7 +97,7 @@ export type NonNullType<Of extends NullableType<any>> = {
  * that a type must always be there, you can use the non-null type.
  *
  * ```ts
- * const nonNullableString = graphql.nonNull(graphql.String);
+ * const nonNullableString = g.nonNull(g.String);
  * // ==
  * graphql`String!`;
  * ```
@@ -107,17 +107,17 @@ export type NonNullType<Of extends NullableType<any>> = {
  * you provide a default value.
  *
  * ```ts
- * graphql.field({
+ * g.field({
  *   args: {
- *     someNonNullAndRequiredArg: graphql.arg({
- *       type: graphql.nonNull(graphql.String),
+ *     someNonNullAndRequiredArg: g.arg({
+ *       type: g.nonNull(g.String),
  *     }),
- *     someNonNullButOptionalArg: graphql.arg({
- *       type: graphql.nonNull(graphql.String),
+ *     someNonNullButOptionalArg: g.arg({
+ *       type: g.nonNull(g.String),
  *       defaultValue: "some default",
  *     }),
  *   },
- *   type: graphql.String,
+ *   type: g.String,
  *   resolve(source, args) {
  *     // both of these will always be a string
  *     args.someNonNullAndRequiredArg;
@@ -151,8 +151,8 @@ export type NonNullType<Of extends NullableType<any>> = {
  * it will never be null in the success case, you should make it nullable.
  *
  * ```ts
- * graphql.field({
- *   type: graphql.nonNull(graphql.String),
+ * g.field({
+ *   type: g.nonNull(g.String),
  *   resolve(source, args) {
  *     return "something";
  *   },
@@ -168,8 +168,8 @@ export type NonNullType<Of extends NullableType<any>> = {
  *
  * ```ts
  * // Argument of type 'NonNullType<ScalarType<string>>'
- * // is not assignable to parameter of type 'TypesExcludingNonNull'.
- * graphql.nonNull(graphql.nonNull(graphql.String));
+ * // is not assignable to parameter of type 'NullableType'.
+ * g.nonNull(g.nonNull(g.String));
  * ```
  */
 export function nonNull<Of extends NullableType<any>>(of: Of): NonNullType<Of> {

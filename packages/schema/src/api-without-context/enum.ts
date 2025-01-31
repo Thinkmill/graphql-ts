@@ -5,8 +5,8 @@ import {
 
 /**
  * An individual enum value in an {@link EnumType enum type} created using
- * {@link enumType `graphql.enum`}. You can use the
- * {@link enumValues `graphql.enumValues`} shorthand to create enum values more easily.
+ * {@link enumType `g.enum`}. You can use the {@link enumValues `g.enumValues`}
+ * shorthand to create enum values more easily.
  *
  * Note the value property/generic here represents the deserialized form of the
  * enum. It does not indicate the name of the enum value that is visible in the
@@ -21,12 +21,12 @@ export type EnumValue<Value> = {
 
 /**
  * A GraphQL enum type which wraps an underlying graphql-js
- * {@link GraphQLEnumType}. This should be created with {@link enumType `graphql.enum`}.
+ * {@link GraphQLEnumType}. This should be created with {@link enumType `g.enum`}.
  *
  * ```ts
- * const MyEnum = graphql.enum({
+ * const MyEnum = g.enum({
  *   name: "MyEnum",
- *   values: graphql.enumValues(["a", "b"]),
+ *   values: g.enumValues(["a", "b"]),
  * });
  * // ==
  * graphql`
@@ -46,21 +46,20 @@ export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
 
 /**
  * A shorthand to easily create {@link EnumValue enum values} to pass to
- * {@link enumType `graphql.enum`}.
+ * {@link enumType `g.enum`}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
- * variant, you should pass values directly to `graphql.enum` without using
- * `graphql.enumValues`.
+ * variant, you should pass values directly to `g.enum` without using `g.enumValues`.
  *
  * ```ts
- * const MyEnum = graphql.enum({
+ * const MyEnum = g.enum({
  *   name: "MyEnum",
- *   values: graphql.enumValues(["a", "b"]),
+ *   values: g.enumValues(["a", "b"]),
  * });
  * ```
  *
  * ```ts
- * const values = graphql.enumValues(["a", "b"]);
+ * const values = g.enumValues(["a", "b"]);
  *
  * assertDeepEqual(values, {
  *   a: { value: "a" },
@@ -78,9 +77,9 @@ export function enumValues<Values extends readonly string[]>(
  * Creates an {@link EnumType enum type} with a number of {@link EnumValue enum values}.
  *
  * ```ts
- * const MyEnum = graphql.enum({
+ * const MyEnum = g.enum({
  *   name: "MyEnum",
- *   values: graphql.enumValues(["a", "b"]),
+ *   values: g.enumValues(["a", "b"]),
  * });
  * // ==
  * graphql`
@@ -92,7 +91,7 @@ export function enumValues<Values extends readonly string[]>(
  * ```
  *
  * ```ts
- * const MyEnum = graphql.enum({
+ * const MyEnum = g.enum({
  *   name: "MyEnum",
  *   description: "My enum does things",
  *   values: {
@@ -120,7 +119,11 @@ export function enumValues<Values extends readonly string[]>(
  *     """
  *     thing thing
  *     """
+ * <<<<<<< Updated upstream
  *     thing @/deprecated(reason: "something should be used instead of thing")
+ * =======
+ *     thing @\deprecated(reason: "something should be used instead of thing")
+ * >>>>>>> Stashed changes
  *   }
  * `;)
  * ```

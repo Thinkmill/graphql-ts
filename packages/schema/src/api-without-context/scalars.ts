@@ -10,16 +10,16 @@ import {
 /**
  * A GraphQL scalar type which wraps an underlying graphql-js
  * `GraphQLScalarType` with a type representing the deserialized form of the
- * scalar. These should be created used {@link scalar `graphql.scalar`}.
+ * scalar. These should be created used {@link scalar `g.scalar`}.
  *
  * ```ts
- * const someScalar = graphql.scalar<string>(new GraphQLScalarType({}));
+ * const someScalar = g.scalar<string>(new GraphQLScalarType({}));
  *
  * // for fields on output types
- * graphql.field({ type: someScalar });
+ * g.field({ type: someScalar });
  *
  * // for args on output fields or fields on input types
- * graphql.arg({ type: someScalar });
+ * g.arg({ type: someScalar });
  * ```
  */
 export type ScalarType<Type> = {
@@ -43,12 +43,12 @@ export type ScalarType<Type> = {
  * from resolvers.
  *
  * ```ts
- * const JSON = graphql.scalar<JSONValue>(GraphQLJSON);
+ * const JSON = g.scalar<JSONValue>(GraphQLJSON);
  * // for fields on output types
- * graphql.field({ type: someScalar });
+ * g.field({ type: someScalar });
  *
  * // for args on output fields or fields on input types
- * graphql.arg({ type: someScalar });
+ * g.arg({ type: someScalar });
  * ```
  */
 export function scalar<Type>(scalar: GraphQLScalarType): ScalarType<Type> {

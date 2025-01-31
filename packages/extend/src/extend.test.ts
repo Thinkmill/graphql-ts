@@ -4,7 +4,7 @@ import {
   graphqlSync,
   printSchema,
 } from "graphql";
-import { graphql } from "@graphql-ts/schema";
+import { g } from "@graphql-ts/schema";
 import { extend } from ".";
 
 const getGql =
@@ -22,11 +22,11 @@ expect.addSnapshotSerializer({
 });
 
 const onlyQuery = new GraphQLSchema({
-  query: graphql.object()({
+  query: g.object()({
     name: "Query",
     fields: {
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
@@ -38,8 +38,8 @@ const onlyQuery = new GraphQLSchema({
 test("basic query", () => {
   const extended = extend({
     query: {
-      hello: graphql.field({
-        type: graphql.String,
+      hello: g.field({
+        type: g.String,
         resolve() {
           return "Hello!";
         },
@@ -71,8 +71,8 @@ test("basic query", () => {
 test("basic mutation with no existing mutations", () => {
   const extended = extend({
     mutation: {
-      something: graphql.field({
-        type: graphql.String,
+      something: g.field({
+        type: g.String,
         resolve() {
           return "";
         },
@@ -104,22 +104,22 @@ test("basic mutation with no existing mutations", () => {
 
 test("basic mutation with existing mutations", () => {
   const queryAndMutation = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        thing: graphql.field({
-          type: graphql.String,
+        thing: g.field({
+          type: g.String,
           resolve() {
             return "Thing";
           },
         }),
       },
     }).graphQLType,
-    mutation: graphql.object()({
+    mutation: g.object()({
       name: "Mutation",
       fields: {
-        thing: graphql.field({
-          type: graphql.String,
+        thing: g.field({
+          type: g.String,
           resolve() {
             return "Thing";
           },
@@ -129,8 +129,8 @@ test("basic mutation with existing mutations", () => {
   });
   const extended = extend({
     mutation: {
-      something: graphql.field({
-        type: graphql.String,
+      something: g.field({
+        type: g.String,
         resolve() {
           return "";
         },
@@ -162,16 +162,16 @@ test("basic mutation with existing mutations", () => {
 });
 
 test("errors when query type is used elsewhere in schema", () => {
-  const Query: graphql.ObjectType<{}> = graphql.object<{}>()({
+  const Query: g.ObjectType<{}> = g.object<{}>()({
     name: "Query",
     fields: () => ({
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
       }),
-      other: graphql.field({
+      other: g.field({
         type: Query,
         resolve() {
           return {};
@@ -185,8 +185,8 @@ test("errors when query type is used elsewhere in schema", () => {
   expect(() => {
     extend({
       mutation: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -200,27 +200,27 @@ test("errors when query type is used elsewhere in schema", () => {
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
-  const Query: graphql.ObjectType<{}> = graphql.object<{}>()({
+  const Query: g.ObjectType<{}> = g.object<{}>()({
     name: "Query",
     fields: () => ({
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
       }),
     }),
   });
-  const Mutation: graphql.ObjectType<{}> = graphql.object<{}>()({
+  const Mutation: g.ObjectType<{}> = g.object<{}>()({
     name: "Mutation",
     fields: () => ({
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
       }),
-      other: graphql.field({
+      other: g.field({
         type: Mutation,
         resolve() {
           return {};
@@ -235,8 +235,8 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
   expect(() => {
     extend({
       mutation: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -250,22 +250,22 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
-  const Query: graphql.ObjectType<{}> = graphql.object<{}>()({
+  const Query: g.ObjectType<{}> = g.object<{}>()({
     name: "Query",
     fields: () => ({
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
       }),
-      other: graphql.field({
+      other: g.field({
         type: Query,
         resolve() {
           return {};
         },
       }),
-      otherBlah: graphql.field({
+      otherBlah: g.field({
         type: Query,
         resolve() {
           return {};
@@ -273,16 +273,16 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
       }),
     }),
   });
-  const Mutation: graphql.ObjectType<{}> = graphql.object<{}>()({
+  const Mutation: g.ObjectType<{}> = g.object<{}>()({
     name: "Mutation",
     fields: () => ({
-      thing: graphql.field({
-        type: graphql.String,
+      thing: g.field({
+        type: g.String,
         resolve() {
           return "Thing";
         },
       }),
-      other: graphql.field({
+      other: g.field({
         type: Mutation,
         resolve() {
           return {};
@@ -297,8 +297,8 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
   expect(() => {
     extend({
       mutation: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -315,10 +315,10 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
 test("basic query with args", () => {
   const extended = extend({
     query: {
-      hello: graphql.field({
-        type: graphql.String,
+      hello: g.field({
+        type: g.String,
         args: {
-          thing: graphql.arg({ type: graphql.String }),
+          thing: g.arg({ type: g.String }),
         },
         resolve(_, { thing }) {
           return thing;
@@ -350,15 +350,15 @@ test("basic query with args", () => {
 
 test("using an existing object type", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.object()({
+        something: g.field({
+          type: g.object()({
             name: "Something",
             fields: {
-              something: graphql.field({
-                type: graphql.String,
+              something: g.field({
+                type: g.String,
                 resolve() {
                   return "Something";
                 },
@@ -374,7 +374,7 @@ test("using an existing object type", () => {
   });
   const extended = extend((base) => ({
     query: {
-      hello: graphql.field({
+      hello: g.field({
         type: base.object("Something"),
         resolve() {
           return {};
@@ -420,7 +420,7 @@ test("errors when no type ", () => {
   expect(() => {
     extend((base) => ({
       query: {
-        hello: graphql.field({
+        hello: g.field({
           type: base.object("Something"),
           resolve() {
             return {};
@@ -435,17 +435,17 @@ test("errors when no type ", () => {
 
 test("errors when the type isn't an object type", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           args: {
-            a: graphql.arg({
-              type: graphql.inputObject({
+            a: g.arg({
+              type: g.inputObject({
                 name: "Something",
                 fields: {
-                  something: graphql.arg({ type: graphql.String }),
+                  something: g.arg({ type: g.String }),
                 },
               }),
             }),
@@ -460,7 +460,7 @@ test("errors when the type isn't an object type", () => {
   expect(() => {
     extend((base) => ({
       query: {
-        hello: graphql.field({
+        hello: g.field({
           type: base.object("Something"),
           resolve() {
             return {};
@@ -475,11 +475,11 @@ test("errors when the type isn't an object type", () => {
 
 test(".scalar throws for built-in scalars", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -490,7 +490,7 @@ test(".scalar throws for built-in scalars", () => {
   expect(() => {
     extend((base) => ({
       query: {
-        hello: graphql.field({
+        hello: g.field({
           type: base.scalar("String"),
           resolve() {
             return {};
@@ -504,16 +504,16 @@ test(".scalar throws for built-in scalars", () => {
 });
 
 test(".scalar works for custom scalars", () => {
-  const Something = graphql.scalar(
+  const Something = g.scalar(
     new GraphQLScalarType({
       name: "Something",
     })
   );
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
+        something: g.field({
           type: Something,
           resolve() {
             return "";
@@ -524,7 +524,7 @@ test(".scalar works for custom scalars", () => {
   });
   const extended = extend((base) => ({
     query: {
-      hello: graphql.field({
+      hello: g.field({
         type: base.scalar("Something"),
         resolve() {
           return "";
@@ -544,11 +544,11 @@ test(".scalar works for custom scalars", () => {
 
 test("a good error when there is already a field with the same name in the original type", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -559,8 +559,8 @@ test("a good error when there is already a field with the same name in the origi
   expect(() => {
     extend({
       query: {
-        something: graphql.field({
-          type: graphql.Int,
+        something: g.field({
+          type: g.Int,
           resolve() {
             return 1;
           },
@@ -578,11 +578,11 @@ test("a good error when there is already a field with the same name in the origi
 
 test("a good error when multiple extensions add a field with the same name", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -594,13 +594,13 @@ test("a good error when multiple extensions add a field with the same name", () 
     extend([
       {
         query: {
-          another: graphql.field({ type: graphql.Int, resolve: () => 1 }),
+          another: g.field({ type: g.Int, resolve: () => 1 }),
         },
       },
       {
         query: {
-          another: graphql.field({
-            type: graphql.Boolean,
+          another: g.field({
+            type: g.Boolean,
             resolve: () => true,
           }),
         },
@@ -617,11 +617,11 @@ test("a good error when multiple extensions add a field with the same name", () 
 
 test("multiple extensions work", () => {
   const initial = new GraphQLSchema({
-    query: graphql.object()({
+    query: g.object()({
       name: "Query",
       fields: {
-        something: graphql.field({
-          type: graphql.String,
+        something: g.field({
+          type: g.String,
           resolve() {
             return "";
           },
@@ -632,13 +632,13 @@ test("multiple extensions work", () => {
   const extended = extend([
     {
       query: {
-        another: graphql.field({ type: graphql.Int, resolve: () => 1 }),
+        another: g.field({ type: g.Int, resolve: () => 1 }),
       },
     },
     {
       query: {
-        alwaysTrue: graphql.field({
-          type: graphql.Boolean,
+        alwaysTrue: g.field({
+          type: g.Boolean,
           resolve: () => true,
         }),
       },
