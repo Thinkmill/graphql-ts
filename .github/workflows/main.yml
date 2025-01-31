@@ -13,16 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@main
-        with:
-          node-version: 22.x
-
-      - name: Install pnpm
-        run: corepack enable pnpm
-
-      - name: Install Dependencies
-        run: pnpm i
+      - uses: ./.github/actions/setup-deps
 
       - name: Check Types
         run: pnpm run types
@@ -32,16 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@main
-        with:
-          node-version: 22.x
-
-      - name: Install pnpm
-        run: corepack enable pnpm
-
-      - name: Install Dependencies
-        run: pnpm i
+      - uses: ./.github/actions/setup-deps
 
       - name: Linting
         run: pnpm run lint
@@ -51,16 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@main
-        with:
-          node-version: 22.x
-
-      - name: Install pnpm
-        run: corepack enable pnpm
-
-      - name: Install Dependencies
-        run: pnpm i
+      - uses: ./.github/actions/setup-deps
 
       - name: Tests
         run: pnpm run test
