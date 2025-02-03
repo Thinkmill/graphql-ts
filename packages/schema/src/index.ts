@@ -39,7 +39,7 @@
  *
  * @module
  */
-export * from "./schema-api-export";
+export * as g from "./schema-api";
 export { bindGraphQLSchemaAPIToContext } from "./output";
 export type {
   Field,
