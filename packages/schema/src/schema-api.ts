@@ -144,7 +144,9 @@
  *
  * @module
  */
-import * as g from ".";
+import type * as gInput from "./api-without-context";
+import type * as gOutput from "./output";
+import type * as gType from "./type";
 export { field, object } from "./api-with-context";
 export {
   arg,
@@ -188,31 +190,35 @@ export { scalar } from "./api-without-context";
  */
 export type Context = unknown;
 
-export type NullableType = g.NullableType<Context>;
-export type Type = g.Type<Context>;
-export type NullableOutputType = g.NullableOutputType<Context>;
-export type OutputType = g.OutputType<Context>;
+export type NullableType = gType.NullableType<Context>;
+export type Type = gType.Type<Context>;
+export type NullableOutputType = gOutput.NullableOutputType<Context>;
+export type OutputType = gOutput.OutputType<Context>;
 export type Field<
   Source,
-  Args extends Record<string, g.Arg<g.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType,
   Key extends string
-> = g.Field<Source, Args, TType, Key, Context>;
+> = gOutput.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
   Source,
-  Args extends Record<string, g.Arg<g.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType
-> = g.FieldResolver<Source, Args, TType, Context>;
-export type ObjectType<Source> = g.ObjectType<Source, Context>;
-export type UnionType<Source> = g.UnionType<Source, Context>;
+> = gOutput.FieldResolver<Source, Args, TType, Context>;
+export type ObjectType<Source> = gOutput.ObjectType<Source, Context>;
+export type UnionType<Source> = gOutput.UnionType<Source, Context>;
 export type InterfaceType<
   Source,
   Fields extends Record<
     string,
-    g.InterfaceField<Record<string, g.Arg<g.InputType>>, OutputType, Context>
+    gOutput.InterfaceField<
+      Record<string, gInput.Arg<gInput.InputType>>,
+      OutputType,
+      Context
+    >
   >
-> = g.InterfaceType<Source, Fields, Context>;
+> = gOutput.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, g.Arg<g.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType
-> = g.InterfaceField<Args, TType, Context>;
+> = gOutput.InterfaceField<Args, TType, Context>;
