@@ -1,5 +1,11 @@
 # @graphql-ts/extend
 
+## 1.0.1
+
+### Patch Changes
+
+- [#19](https://github.com/Thinkmill/graphql-ts/pull/19) [`d79115e1007e6e47b425293122818e7d40edf8b5`](https://github.com/Thinkmill/graphql-ts/commit/d79115e1007e6e47b425293122818e7d40edf8b5) Thanks [@emmatown](https://github.com/emmatown)! - Documentation updates to align with the renaming of the `graphql` export to `g` in `@graphql-ts/schema`
+
 ## 1.0.0
 
 ### Minor Changes
