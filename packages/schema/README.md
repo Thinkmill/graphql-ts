@@ -6,14 +6,14 @@ constructing GraphQL Schemas while avoiding type-generation, [declaration mergin
 and [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
 
 ```ts
-import { graphql } from "@graphql-ts/schema";
-import { GraphQLSchema, graphql as runGraphQL } from "graphql";
+import { g } from "@graphql-ts/schema";
+import { GraphQLSchema, graphql } from "graphql";
 
-const Query = graphql.object()({
+const Query = g.object()({
   name: "Query",
   fields: {
-    hello: graphql.field({
-      type: graphql.String,
+    hello: g.field({
+      type: g.String,
       resolve() {
         return "Hello!";
       },
@@ -25,7 +25,7 @@ const schema = new GraphQLSchema({
   query: Query.graphQLType,
 });
 
-runGraphQL({
+graphql({
   source: `
     query {
       hello

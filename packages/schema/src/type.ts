@@ -1,11 +1,10 @@
-import {
-  NullableInputType,
-  NullableOutputType,
+import type { InputType, NullableInputType } from "./api-without-context/input";
+import type {
+  list,
+  nonNull,
   NonNullType,
-  InputType,
-  OutputType,
-} from ".";
-import { list, nonNull } from "./api-without-context/list-and-non-null";
+} from "./api-without-context/list-and-non-null";
+import type { NullableOutputType, OutputType } from "./output";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   InputType,
@@ -19,7 +18,7 @@ export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
  *
  * You generally won't need this because you'll likely want a nullable
  * {@link NullableInputType input} or {@link NullableOutputType output} type but
- * there are some uses cases for it like {@link nonNull `graphql.nonNull`}.
+ * there are some uses cases for it like {@link nonNull `g.nonNull`}.
  *
  * See also:
  *
@@ -38,7 +37,7 @@ export type NullableType<Context> =
  *
  * You generally won't need this because you'll likely want an
  * {@link InputType input} or {@link InputType output} type but there are some
- * uses cases for it like {@link list `graphql.list`}.
+ * uses cases for it like {@link list `g.list`}.
  *
  * See also:
  *

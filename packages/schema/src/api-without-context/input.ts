@@ -7,7 +7,7 @@ import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
 import type { NullableOutputType, OutputType } from "../output";
 import type { Type } from "../type";
-import { ListType, NonNullType } from "..";
+import { ListType, NonNullType } from "./list-and-non-null";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   NullableOutputType<any>,
@@ -115,15 +115,15 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
   };
 
 /**
- * A GraphQL argument. These should be created with {@link arg `graphql.arg`}
+ * A GraphQL argument. These should be created with {@link arg `g.arg`}
  *
  * Args can can be used as arguments on output fields:
  *
  * ```ts
- * graphql.field({
- *   type: graphql.String,
+ * g.field({
+ *   type: g.String,
  *   args: {
- *     something: graphql.arg({ type: graphql.String }),
+ *     something: g.arg({ type: g.String }),
  *   },
  *   resolve(source, { something }) {
  *     return something || somethingElse;
@@ -136,10 +136,10 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  * Or as fields on input objects:
  *
  * ```ts
- * graphql.inputObject({
+ * g.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: graphql.arg({ type: graphql.String }),
+ *     something: g.arg({ type: g.String }),
  *   },
  * });
  * // ==
@@ -153,10 +153,10 @@ export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
  * When the type of an arg is {@link NonNullType non-null}, the value will always exist.
  *
  * ```ts
- * graphql.field({
- *   type: graphql.String,
+ * g.field({
+ *   type: g.String,
  *   args: {
- *     something: graphql.arg({ type: graphql.nonNull(graphql.String) }),
+ *     something: g.arg({ type: g.nonNull(g.String) }),
  *   },
  *   resolve(source, { something }) {
  *     // `something` will always be a string
@@ -184,10 +184,10 @@ export type Arg<
  * Args can can be used as arguments on output fields:
  *
  * ```ts
- * graphql.field({
- *   type: graphql.String,
+ * g.field({
+ *   type: g.String,
  *   args: {
- *     something: graphql.arg({ type: graphql.String }),
+ *     something: g.arg({ type: g.String }),
  *   },
  *   resolve(source, { something }) {
  *     return something || somethingElse;
@@ -200,10 +200,10 @@ export type Arg<
  * Or as fields on input objects:
  *
  * ```ts
- * const Something = graphql.inputObject({
+ * const Something = g.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: graphql.arg({ type: graphql.String }),
+ *     something: g.arg({ type: g.String }),
  *   },
  * });
  * // ==
@@ -227,7 +227,7 @@ export function arg<
     : { defaultValue: DefaultValue })
 ): Arg<Type, DefaultValue extends undefined ? false : true> {
   if (!arg.type) {
-    throw new Error("A type must be passed to graphql.arg()");
+    throw new Error("A type must be passed to g.arg()");
   }
   return arg as any;
 }
@@ -236,10 +236,10 @@ export function arg<
  * Creates an {@link InputObjectType}
  *
  * ```ts
- * const Something = graphql.inputObject({
+ * const Something = g.inputObject({
  *   name: "Something",
  *   fields: {
- *     something: graphql.arg({ type: graphql.String }),
+ *     something: g.arg({ type: g.String }),
  *   },
  * });
  * // ==
@@ -256,13 +256,13 @@ export function arg<
  * in the type because of TypeScript's limits with circularity.
  *
  * ```ts
- * type SomethingInputType = graphql.InputObjectType<{
- *   something: graphql.Arg<SomethingInputType>;
+ * type SomethingInputType = g.InputObjectType<{
+ *   something: g.Arg<SomethingInputType>;
  * }>;
- * const Something: SomethingInputType = graphql.inputObject({
+ * const Something: SomethingInputType = g.inputObject({
  *   name: "Something",
  *   fields: () => ({
- *     something: graphql.arg({ type: Something }),
+ *     something: g.arg({ type: Something }),
  *   }),
  * });
  * ```
@@ -273,18 +273,18 @@ export function arg<
  *
  * ```ts
  * const nonCircularFields = {
- *   thing: graphql.arg({ type: graphql.String }),
+ *   thing: g.arg({ type: g.String }),
  * };
- * type SomethingInputType = graphql.InputObjectType<
+ * type SomethingInputType = g.InputObjectType<
  *   typeof nonCircularFields & {
- *     something: graphql.Arg<SomethingInputType>;
+ *     something: g.Arg<SomethingInputType>;
  *   }
  * >;
- * const Something: SomethingInputType = graphql.inputObject({
+ * const Something: SomethingInputType = g.inputObject({
  *   name: "Something",
  *   fields: () => ({
  *     ...nonCircularFields,
- *     something: graphql.arg({ type: Something }),
+ *     something: g.arg({ type: Something }),
  *   }),
  * });
  * ```

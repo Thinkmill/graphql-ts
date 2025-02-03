@@ -1,12 +1,12 @@
-import { graphql } from "@graphql-ts/schema";
-import { GraphQLSchema, graphql as runGraphQL } from "graphql";
+import { g } from "@graphql-ts/schema";
+import { GraphQLSchema, graphql } from "graphql";
 
 test("a basic schema works", async () => {
-  const Query = graphql.object()({
+  const Query = g.object()({
     name: "Query",
     fields: {
-      hello: graphql.field({
-        type: graphql.String,
+      hello: g.field({
+        type: g.String,
         resolve() {
           return "something";
         },
@@ -16,7 +16,7 @@ test("a basic schema works", async () => {
   const graphQLSchema = new GraphQLSchema({
     query: Query.graphQLType,
   });
-  const result = await runGraphQL({
+  const result = await graphql({
     schema: graphQLSchema,
     source: "query { hello }",
   });

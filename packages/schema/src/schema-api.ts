@@ -1,18 +1,18 @@
 /**
- * The `graphql` export is the primary entrypoint into `@graphql-ts/schema` that
- * lets you compose GraphQL types into a GraphQL Schema
+ * The `g` export is the primary entrypoint into `@graphql-ts/schema` that lets
+ * you compose GraphQL types into a GraphQL Schema
  *
  * A simple schema with only a query type looks like this.
  *
  * ```ts
- * import { graphql } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
+ * import { g } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
  *
- * const Query = graphql.object()({
+ * const Query = g.object()({
  *   name: "Query",
  *   fields: {
- *     hello: graphql.field({
- *       type: graphql.String,
+ *     hello: g.field({
+ *       type: g.String,
  *       resolve() {
  *         return "Hello!";
  *       },
@@ -24,7 +24,7 @@
  *   query: Query.graphQLType,
  * });
  *
- * runGraphQL({
+ * graphql({
  *   source: `
  *     query {
  *       hello
@@ -41,8 +41,8 @@
  * You can also create a more advanced schema with other object types, args and mutations.
  *
  * ```ts
- * import { graphql } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
+ * import { g } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
  * import { deepEqual } from "assert";
  *
  * type TodoItem = {
@@ -51,18 +51,18 @@
  *
  * const todos: TodoItem[] = [];
  *
- * const Todo = graphql.object<TodoItem>({
+ * const Todo = g.object<TodoItem>({
  *   name: "Todo",
  *   fields: {
- *     title: graphql.field({ type: graphql.String }),
+ *     title: g.field({ type: g.String }),
  *   },
  * });
  *
- * const Query = graphql.object()({
+ * const Query = g.object()({
  *   name: "Query",
  *   fields: {
- *     todos: graphql.field({
- *       type: graphql.list(Todo),
+ *     todos: g.field({
+ *       type: g.list(Todo),
  *       resolve() {
  *         return todos;
  *       },
@@ -70,12 +70,12 @@
  *   },
  * });
  *
- * const Mutation = graphql.object()({
+ * const Mutation = g.object()({
  *   name: "Mutation",
  *   fields: {
- *     createTodo: graphql.field({
+ *     createTodo: g.field({
  *       args: {
- *         title: graphql.arg({ type: graphql.String }),
+ *         title: g.arg({ type: g.String }),
  *       },
  *       type: Todo,
  *       resolve(source, { title }) {
@@ -93,7 +93,7 @@
  * });
  *
  * (async () => {
- *   const result = await runGraphQL({
+ *   const result = await graphql({
  *     source: `
  *       query {
  *         todos {
@@ -105,7 +105,7 @@
  *   });
  *   deepEqual(result, { data: { todos: [] } });
  *
- *   const result = await runGraphQL({
+ *   const result = await graphql({
  *     source: `
  *       mutation {
  *         createTodo(title: "Try @graphql-ts/schema") {
@@ -119,7 +119,7 @@
  *     data: { createTodo: { title: "Try @graphql-ts/schema" } },
  *   });
  *
- *   const result = await runGraphQL({
+ *   const result = await graphql({
  *     source: `
  *       query {
  *         todos {
@@ -137,14 +137,16 @@
  *
  * For information on how to construct other types like input objects, unions,
  * interfaces and enums and more detailed information, see the documentation in
- * the `graphql` export below.
+ * the `g` export below.
  *
  * When using it, you're going to want to create your own version of it bound to
  * your specific `Context` type.
  *
  * @module
  */
-import * as graphql from ".";
+import type * as gInput from "./api-without-context";
+import type * as gOutput from "./output";
+import type * as gType from "./type";
 export { field, object } from "./api-with-context";
 export {
   arg,
@@ -188,35 +190,35 @@ export { scalar } from "./api-without-context";
  */
 export type Context = unknown;
 
-export type NullableType = graphql.NullableType<Context>;
-export type Type = graphql.Type<Context>;
-export type NullableOutputType = graphql.NullableOutputType<Context>;
-export type OutputType = graphql.OutputType<Context>;
+export type NullableType = gType.NullableType<Context>;
+export type Type = gType.Type<Context>;
+export type NullableOutputType = gOutput.NullableOutputType<Context>;
+export type OutputType = gOutput.OutputType<Context>;
 export type Field<
   Source,
-  Args extends Record<string, graphql.Arg<graphql.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType,
   Key extends string
-> = graphql.Field<Source, Args, TType, Key, Context>;
+> = gOutput.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
   Source,
-  Args extends Record<string, graphql.Arg<graphql.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType
-> = graphql.FieldResolver<Source, Args, TType, Context>;
-export type ObjectType<Source> = graphql.ObjectType<Source, Context>;
-export type UnionType<Source> = graphql.UnionType<Source, Context>;
+> = gOutput.FieldResolver<Source, Args, TType, Context>;
+export type ObjectType<Source> = gOutput.ObjectType<Source, Context>;
+export type UnionType<Source> = gOutput.UnionType<Source, Context>;
 export type InterfaceType<
   Source,
   Fields extends Record<
     string,
-    graphql.InterfaceField<
-      Record<string, graphql.Arg<graphql.InputType>>,
+    gOutput.InterfaceField<
+      Record<string, gInput.Arg<gInput.InputType>>,
       OutputType,
       Context
     >
   >
-> = graphql.InterfaceType<Source, Fields, Context>;
+> = gOutput.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, graphql.Arg<graphql.InputType>>,
+  Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType
-> = graphql.InterfaceField<Args, TType, Context>;
+> = gOutput.InterfaceField<Args, TType, Context>;

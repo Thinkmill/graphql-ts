@@ -13,7 +13,9 @@
 import {
   Field,
   OutputType,
-  graphql,
+  // note using the deprecated alias to allow for wider compatibility between @graphql-ts/schema and @graphql-ts/extend versions
+  // in normal projects, you should import `g`
+  graphql as g,
   ObjectType,
   InputObjectType,
   Arg,
@@ -57,8 +59,8 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  *
  * const extendedSchema = extend({
  *   query: {
- *     hello: graphql.field({
- *       type: graphql.String,
+ *     hello: g.field({
+ *       type: g.String,
  *       resolve() {
  *         return "Hello!";
  *       },
@@ -76,7 +78,7 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  *
  * const extendedSchema = extend((base) => ({
  *   query: {
- *     something: graphql.field({
+ *     something: g.field({
  *       type: base.object("Something"),
  *       resolve() {
  *         return { something: true };
@@ -330,13 +332,13 @@ function flattenExtensions(
                 `More than one extension defines a field named ${JSON.stringify(
                   key
                 )} on the ${operation} type.\nThe first field:\n${printFieldOnType(
-                  graphql.object()({
+                  g.object()({
                     name: "ForError",
                     fields: { [key]: val },
                   }).graphQLType,
                   key
                 )}\nThe second field:\n${printFieldOnType(
-                  graphql.object()({
+                  g.object()({
                     name: "ForError",
                     fields: { [key]: resolvedExtension[operation][key] },
                   }).graphQLType,
@@ -365,7 +367,7 @@ function flattenExtensions(
  * - The first `any` used for the `Args` type parameter is used because `Args` is
  *   invariant so only `Record<string, Arg<InputType, boolean>>` would work with
  *   it. The arguable unsafety here doesn't really matter because people will
- *   always use `graphql.field`
+ *   always use `g.field`
  * - The `any` in `OutputType` and the last type argument mean that a field that
  *   requires any context can be provided. This is unsafe, the only way this
  *   could arguably be made more "safe" is by making this unknown which would
@@ -389,8 +391,8 @@ export type Extension = {
    * ```ts
    * const extension: Extension = {
    *   query: {
-   *     isLoggedIn: graphql.field({
-   *       type: graphql.Boolean,
+   *     isLoggedIn: g.field({
+   *       type: g.Boolean,
    *       resolve(source, args, context, info) {
    *         // ...
    *       },
@@ -410,8 +412,8 @@ export type Extension = {
    * ```ts
    * const extension: Extension = {
    *   mutation: {
-   *     createPost: graphql.field({
-   *       type: graphql.Boolean,
+   *     createPost: g.field({
+   *       type: g.Boolean,
    *       resolve(source, args, context, info) {
    *         // ...
    *       },
@@ -451,7 +453,7 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
+   *     something: g.field({
    *       type: base.object("Something"),
    *       resolve() {
    *         return { something: true };
@@ -472,10 +474,10 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
-   *       type: graphql.String,
+   *     something: g.field({
+   *       type: g.String,
    *       args: {
-   *         something: graphql.field({
+   *         something: g.field({
    *           type: base.inputObject("Something"),
    *         }),
    *       },
@@ -501,10 +503,10 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
+   *     something: g.field({
    *       type: base.enum("Something"),
    *       args: {
-   *         something: graphql.field({
+   *         something: g.field({
    *           type: base.enum("Something"),
    *         }),
    *       },
@@ -527,7 +529,7 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
+   *     something: g.field({
    *       type: base.union("Something"),
    *       resolve() {
    *         return { something: true };
@@ -548,7 +550,7 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
+   *     something: g.field({
    *       type: base.interface("Something"),
    *       resolve() {
    *         return { something: true };
@@ -577,10 +579,10 @@ export type BaseSchemaMeta = {
    *
    * const extendedSchema = extend((base) => ({
    *   query: {
-   *     something: graphql.field({
+   *     something: g.field({
    *       type: base.scalar("JSON"),
    *       args: {
-   *         something: graphql.field({
+   *         something: g.field({
    *           type: base.scalar("JSON"),
    *         }),
    *       },
@@ -596,9 +598,9 @@ export type BaseSchemaMeta = {
 };
 
 function getGraphQLJSFieldsFromGraphQLTSFields(
-  fields: Record<string, graphql.Field<any, any, any, any>>
+  fields: Record<string, g.Field<any, any, any, any>>
 ): GraphQLFieldConfigMap<any, any> {
-  return graphql
+  return g
     .object()({
       name: "Something",
       fields,

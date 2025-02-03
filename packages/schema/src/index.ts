@@ -6,14 +6,14 @@
  * and [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
  *
  * ```ts
- * import { graphql } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql as runGraphQL } from "graphql";
+ * import { g } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
  *
- * const Query = graphql.object()({
+ * const Query = g.object()({
  *   name: "Query",
  *   fields: {
- *     hello: graphql.field({
- *       type: graphql.String,
+ *     hello: g.field({
+ *       type: g.String,
  *       resolve() {
  *         return "Hello!";
  *       },
@@ -25,7 +25,7 @@
  *   query: Query.graphQLType,
  * });
  *
- * runGraphQL({
+ * graphql({
  *   source: `
  *     query {
  *       hello
@@ -39,7 +39,7 @@
  *
  * @module
  */
-export * as graphql from "./schema-api";
+export * as g from "./schema-api";
 export { bindGraphQLSchemaAPIToContext } from "./output";
 export type {
   Field,
@@ -76,3 +76,4 @@ export type {
   ScalarType,
 } from "./api-without-context";
 export type { Type, NullableType } from "./type";
+export * from "./schema-api-alias";

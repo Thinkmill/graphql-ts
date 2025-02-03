@@ -38,7 +38,7 @@ import {
  * // this will likely be obtained from some existing GraphQLSchema
  * const someObjectType = new GraphQLObjectType({ ...etc });
  *
- * graphql.field({
+ * g.field({
  *   type: wrap.object(someObjectType),
  *   resolve() {
  *     // ...
@@ -65,10 +65,10 @@ export function object(
  * // this will likely be obtained from some existing GraphQLSchema
  * const someInputObjectType = new GraphQLInputObjectType({ ...etc });
  *
- * graphql.field({
- *   type: graphql.String,
+ * g.field({
+ *   type: g.String,
  *   args: {
- *     something: graphql.arg({ type: someInputObjectType }),
+ *     something: g.arg({ type: someInputObjectType }),
  *   },
  *   resolve(source, { something }) {
  *     console.log(something);
@@ -96,10 +96,10 @@ export function inputObject(
  * // this will likely be obtained from some existing GraphQLSchema
  * const someEnumType = new GraphQLEnumType({ ...etc });
  *
- * graphql.field({
+ * g.field({
  *   type: wrap.enum(someEnumType),
  *   args: {
- *     something: graphql.arg({ type: wrap.enum(someEnumType) }),
+ *     something: g.arg({ type: wrap.enum(someEnumType) }),
  *   },
  *   resolve(source, { something }) {
  *     console.log(something);
@@ -138,7 +138,7 @@ export { enumType as enum };
  * // this will likely be obtained from some existing GraphQLSchema
  * const someUnionType = new GraphQLUnionType({ ...etc });
  *
- * graphql.field({
+ * g.field({
  *   type: wrap.union(someUnionType),
  *   resolve() {
  *     // ...
@@ -165,7 +165,7 @@ export function union(
  * // this will likely be obtained from some existing GraphQLSchema
  * const someInterfaceType = new GraphQLInterfaceType({ ...etc });
  *
- * graphql.field({
+ * g.field({
  *   type: wrap.interface(someInterfaceType),
  *   resolve() {
  *     // ...
