@@ -137,7 +137,7 @@
  *
  * For information on how to construct other types like input objects, unions,
  * interfaces and enums and more detailed information, see the documentation in
- * the `graphql` export below.
+ * the `g` export below.
  *
  * When using it, you're going to want to create your own version of it bound to
  * your specific `Context` type.
