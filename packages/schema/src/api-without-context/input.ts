@@ -7,7 +7,7 @@ import { EnumType } from "./enum";
 import { ScalarType } from "./scalars";
 import type { NullableOutputType, OutputType } from "../output";
 import type { Type } from "../type";
-import { ListType, NonNullType } from "..";
+import { ListType, NonNullType } from "./list-and-non-null";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   NullableOutputType<any>,

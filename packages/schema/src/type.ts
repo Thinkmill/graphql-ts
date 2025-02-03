@@ -1,11 +1,10 @@
-import {
-  NullableInputType,
-  NullableOutputType,
+import type { InputType, NullableInputType } from "./api-without-context/input";
+import type {
+  list,
+  nonNull,
   NonNullType,
-  InputType,
-  OutputType,
-} from ".";
-import { list, nonNull } from "./api-without-context/list-and-non-null";
+} from "./api-without-context/list-and-non-null";
+import type { NullableOutputType, OutputType } from "./output";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   InputType,

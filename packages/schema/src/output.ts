@@ -1,20 +1,22 @@
-import {
+import type {
   GraphQLFieldConfigMap,
   GraphQLFieldExtensions,
   GraphQLInputType,
-  GraphQLInterfaceType,
   GraphQLInterfaceTypeExtensions,
   GraphQLIsTypeOfFn,
   GraphQLList,
-  GraphQLObjectType,
   GraphQLObjectTypeExtensions,
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLTypeResolver,
-  GraphQLUnionType,
   GraphQLType,
 } from "graphql/type/definition";
 import {
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  GraphQLUnionType,
+} from "graphql/type/definition";
+import type {
   Arg,
   InferValueFromArgs,
   InputType,
