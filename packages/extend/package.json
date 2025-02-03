@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/extend",
-  "version": "1.0.0",
+  "version": "0.0.0-test-20250203035839",
   "description": "Utilities to extend existing GraphQL schemas with @graphql-ts/schema",
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
@@ -20,7 +20,7 @@
     "@babel/runtime": "^7.9.2"
   },
   "peerDependencies": {
-    "@graphql-ts/schema": "^0.6.0",
+    "@graphql-ts/schema": "0.0.0-test-20250203035839",
     "graphql": "15 || 16"
   },
   "devDependencies": {
