@@ -492,7 +492,7 @@ export type BaseSchemaMeta = {
    */
   inputObject(
     name: string
-  ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }>;
+  ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }, boolean>;
   /**
    * Gets an enum type from the existing GraphQL schema and wraps it in an
    * {@link EnumType}. If there is no enum type in the existing schema with the

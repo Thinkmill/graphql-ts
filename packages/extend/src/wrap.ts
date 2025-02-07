@@ -79,11 +79,12 @@ export function object(
  */
 export function inputObject(
   graphQLType: GraphQLInputObjectType
-): InputObjectType<{ [key: string]: Arg<InputType, boolean> }> {
+): InputObjectType<{ [key: string]: Arg<InputType, boolean> }, boolean> {
   return {
     kind: "input",
     __context: undefined as any,
     __fields: undefined as any,
+    isOneOf: graphQLType.isOneOf,
     graphQLType,
   };
 }
