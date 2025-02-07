@@ -42,7 +42,7 @@ type InputListType = {
  */
 export type NullableInputType =
   | ScalarType<any>
-  | InputObjectType<any>
+  | InputObjectType<any, boolean>
   | InputListType
   | EnumType<any>;
 
@@ -69,13 +69,35 @@ type InferValueFromInputTypeWithoutAddingNull<Type extends InputType> =
     ? Values[keyof Values]["value"]
     : Type extends InputListTypeForInference<infer Value>
     ? InferValueFromInputType<Value>[]
-    : Type extends InputObjectType<infer Fields>
-    ? InferValueFromArgs<Fields>
+    : Type extends InputObjectType<infer Fields, infer IsOneOf>
+    ? IsOneOf extends true
+      ? InferValueForOneOf<Fields>
+      : InferValueFromArgs<Fields>
     : never;
+
+type Flatten<T> = {
+  [K in keyof T]: T[K];
+} & {};
+
+type InferValueForOneOf<
+  T extends { [key: string]: { type: InputType } },
+  Key extends keyof T = keyof T
+> = Flatten<
+  Key extends unknown
+    ? {
+        readonly [K in Key]: InferValueFromInputTypeWithoutAddingNull<
+          T[K]["type"]
+        >;
+      } &
+        {
+          readonly [K in Exclude<keyof T, Key>]?: never;
+        }
+    : never
+>;
 
 export type InferValueFromArgs<Args extends Record<string, Arg<InputType>>> = {
   readonly [Key in keyof Args]: InferValueFromArg<Args[Key]>;
-};
+} & {};
 
 export type InferValueFromArg<TArg extends Arg<InputType>> =
   // the distribution technically only needs to be around the AddUndefined
@@ -106,13 +128,16 @@ export type InferValueFromInputType<Type extends InputType> =
     ? InferValueFromInputTypeWithoutAddingNull<Value>
     : InferValueFromInputTypeWithoutAddingNull<Type> | null;
 
-export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
-  {
-    kind: "input";
-    __fields: Fields;
-    __context: (context: unknown) => void;
-    graphQLType: GraphQLInputObjectType;
-  };
+export type InputObjectType<
+  Fields extends { [key: string]: Arg<InputType> },
+  IsOneOf extends boolean = false
+> = {
+  kind: "input";
+  __fields: Fields;
+  __context: (context: unknown) => void;
+  isOneOf: IsOneOf;
+  graphQLType: GraphQLInputObjectType;
+};
 
 /**
  * A GraphQL argument. These should be created with {@link arg `g.arg`}
@@ -232,6 +257,10 @@ export function arg<
   return arg as any;
 }
 
+type SupportsIsOneOf = "isOneOf" extends keyof GraphQLInputObjectType
+  ? true
+  : false;
+
 /**
  * Creates an {@link InputObjectType}
  *
@@ -290,16 +319,25 @@ export function arg<
  * ```
  */
 export function inputObject<
-  Fields extends { [key: string]: Arg<InputType> }
->(config: {
-  name: string;
-  description?: string;
-  fields: (() => Fields) | Fields;
-}): InputObjectType<Fields> {
+  Fields extends {
+    [key: string]: IsOneOf extends true
+      ? Arg<NullableInputType, false>
+      : Arg<InputType>;
+  },
+  IsOneOf extends SupportsIsOneOf extends true ? boolean : false = false
+>(
+  config: {
+    name: string;
+    description?: string;
+    fields: (() => Fields) | Fields;
+    isOneOf?: IsOneOf;
+  } & (true extends IsOneOf ? { isOneOf: unknown } : unknown)
+): InputObjectType<Fields, IsOneOf> {
   const fields = config.fields;
   const graphQLType = new GraphQLInputObjectType({
     name: config.name,
     description: config.description,
+    isOneOf: config.isOneOf,
     fields: () => {
       return Object.fromEntries(
         Object.entries(typeof fields === "function" ? fields() : fields).map(
@@ -321,6 +359,7 @@ export function inputObject<
     kind: "input",
     __fields: undefined as any,
     __context: undefined as any,
+    isOneOf: (config.isOneOf ?? false) as IsOneOf,
     graphQLType,
   };
 }

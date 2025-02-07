@@ -12,7 +12,6 @@
 
 import {
   ObjectType,
-  InputObjectType,
   EnumType,
   EnumValue,
   Arg,
@@ -29,6 +28,7 @@ import {
   GraphQLObjectType,
   GraphQLUnionType,
 } from "graphql";
+import { InputObjectType } from "./input-object-type";
 
 /**
  * Wraps an existing {@link GraphQLObjectType} into a {@link ObjectType} so that
@@ -79,11 +79,12 @@ export function object(
  */
 export function inputObject(
   graphQLType: GraphQLInputObjectType
-): InputObjectType<{ [key: string]: Arg<InputType, boolean> }> {
+): InputObjectType<{ [key: string]: Arg<InputType, boolean> }, boolean> {
   return {
     kind: "input",
     __context: undefined as any,
     __fields: undefined as any,
+    isOneOf: graphQLType.isOneOf,
     graphQLType,
   };
 }
