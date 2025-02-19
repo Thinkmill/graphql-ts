@@ -37,7 +37,10 @@
     "packages": [
       "packages/*"
     ],
-    "exports": true
+    "exports": true,
+    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+      "importsConditions": true
+    }
   },
   "manypkg": {
     "defaultBranch": "main"

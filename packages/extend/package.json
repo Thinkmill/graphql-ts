@@ -6,6 +6,7 @@
   "module": "dist/graphql-ts-extend.esm.js",
   "exports": {
     ".": {
+      "types": "./dist/graphql-ts-extend.cjs.js",
       "module": "./dist/graphql-ts-extend.esm.js",
       "default": "./dist/graphql-ts-extend.cjs.js"
     },
