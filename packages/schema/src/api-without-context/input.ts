@@ -106,13 +106,12 @@ export type InferValueFromInputType<Type extends InputType> =
     ? InferValueFromInputTypeWithoutAddingNull<Value>
     : InferValueFromInputTypeWithoutAddingNull<Type> | null;
 
-export type InputObjectType<Fields extends { [key: string]: Arg<InputType> }> =
-  {
-    kind: "input";
-    __fields: Fields;
-    __context: (context: unknown) => void;
-    graphQLType: GraphQLInputObjectType;
-  };
+export type InputObjectType<Fields> = {
+  kind: "input";
+  __fields: Fields;
+  __context: (context: unknown) => void;
+  graphQLType: GraphQLInputObjectType;
+};
 
 /**
  * A GraphQL argument. These should be created with {@link arg `g.arg`}
