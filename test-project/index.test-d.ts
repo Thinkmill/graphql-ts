@@ -1143,3 +1143,229 @@ function assertCompatible<A, _B extends A>() {}
     }),
   });
 }
+
+const someInputFields = {
+  a: g.arg({ type: g.String }),
+  b: g.arg({ type: g.String }),
+};
+
+{
+  const Something = g.inputObject({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: true,
+  });
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, true>>,
+    Invariant<typeof Something>
+  >();
+  g.field({
+    args: {
+      something: g.arg({ type: g.nonNull(Something) }),
+    },
+    type: g.String,
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<
+          | {
+              readonly a: string;
+              readonly b?: undefined;
+            }
+          | {
+              readonly b: string;
+              readonly a?: undefined;
+            }
+        >,
+        Invariant<typeof something>
+      >();
+
+      return "";
+    },
+  });
+}
+
+{
+  const Something = g.inputObject({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: Math.random() > 0.5,
+  });
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+  g.field({
+    args: {
+      something: g.arg({ type: g.nonNull(Something) }),
+    },
+    type: g.String,
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<
+          | {
+              readonly a: string | null | undefined;
+              readonly b: string | null | undefined;
+            }
+          | {
+              readonly a: string;
+              readonly b?: undefined;
+            }
+          | {
+              readonly b: string;
+              readonly a?: undefined;
+            }
+        >,
+        Invariant<typeof something>
+      >();
+
+      return "";
+    },
+  });
+}
+
+{
+  const Something = g.inputObject({
+    name: "Something",
+    fields: someInputFields,
+  });
+
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<typeof Something>
+  >();
+
+  g.field({
+    args: {
+      something: g.arg({ type: g.nonNull(Something) }),
+    },
+    type: g.String,
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<{
+          readonly a: string | null | undefined;
+          readonly b: string | null | undefined;
+        }>,
+        Invariant<typeof something>
+      >();
+
+      return "";
+    },
+  });
+}
+
+{
+  const Something = g.inputObject({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: false,
+  });
+
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  const Something = g.inputObject<typeof someInputFields>({
+    name: "Something",
+    fields: someInputFields,
+  });
+
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  g.inputObject<typeof someInputFields, true>(
+    // @ts-expect-error
+    {
+      name: "Something",
+      fields: someInputFields,
+    }
+  );
+}
+
+{
+  g.inputObject<typeof someInputFields, true>({
+    name: "Something",
+    fields: someInputFields,
+    // @ts-expect-error
+    isOneOf: false,
+  });
+}
+
+{
+  g.inputObject<typeof someInputFields, false>({
+    name: "Something",
+    fields: someInputFields,
+    // @ts-expect-error
+    isOneOf: true,
+  });
+}
+
+{
+  const Something = g.inputObject<typeof someInputFields, boolean>({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: true,
+  });
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  const Something = g.inputObject<typeof someInputFields, boolean>({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: false,
+  });
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  const Something = g.inputObject<typeof someInputFields, boolean>({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: Math.random() > 0.5,
+  });
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  g.inputObject<typeof someInputFields, boolean>(
+    // @ts-expect-error
+    {
+      name: "Something",
+      fields: someInputFields,
+    }
+  );
+}
+
+{
+  const Something = g.inputObject({
+    name: "Something",
+    fields: someInputFields,
+    isOneOf: undefined,
+  });
+  // arguably "bad" that it infers to boolean vs false but this makes no sense to write
+  // could be "fixed" by making inputObject do (true extends IsOneOf ? { isOneOf: IsOneOf } : unknown)
+  // instead of (true extends IsOneOf ? { isOneOf: unknown } : unknown)
+  // but idk, using unknown feels conceptually closer to the behavior i'm going for
+  // this would also be banned under exactOptionalPropertyTypes
+  // which again feels conceptually correct rather than banning when not using exactOptionalPropertyTypes
+  assertCompatible<
+    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+}
