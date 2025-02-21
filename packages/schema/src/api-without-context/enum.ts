@@ -119,11 +119,7 @@ export function enumValues<Values extends readonly string[]>(
  *     """
  *     thing thing
  *     """
- * <<<<<<< Updated upstream
- *     thing @/deprecated(reason: "something should be used instead of thing")
- * =======
  *     thing @\deprecated(reason: "something should be used instead of thing")
- * >>>>>>> Stashed changes
  *   }
  * `;)
  * ```
