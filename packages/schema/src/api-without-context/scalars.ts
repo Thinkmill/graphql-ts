@@ -1,4 +1,7 @@
-import { GraphQLScalarType } from "graphql/type/definition";
+import {
+  GraphQLScalarType,
+  GraphQLScalarTypeConfig,
+} from "graphql/type/definition";
 import {
   GraphQLID,
   GraphQLString,
@@ -22,12 +25,10 @@ import {
  * g.arg({ type: someScalar });
  * ```
  */
-export type ScalarType<Type> = {
-  kind: "scalar";
-  __type: Type;
-  __context: (context: unknown) => void;
-  graphQLType: GraphQLScalarType;
-};
+export type ScalarType<Internal, External = Internal> = GraphQLScalarType<
+  Internal,
+  External
+>;
 
 /**
  * Creates a {@link ScalarType} from a graphql-js {@link GraphQLScalarType}.
@@ -51,17 +52,14 @@ export type ScalarType<Type> = {
  * g.arg({ type: someScalar });
  * ```
  */
-export function scalar<Type>(scalar: GraphQLScalarType): ScalarType<Type> {
-  return {
-    kind: "scalar",
-    __type: undefined as any,
-    __context: undefined as any,
-    graphQLType: scalar,
-  };
+export function scalar<Internal, External = Internal>(
+  config: GraphQLScalarTypeConfig<Internal, External>
+): ScalarType<Internal, External> {
+  return new GraphQLScalarType(config);
 }
 
-export const ID: ScalarType<string> = scalar<string>(GraphQLID);
-export const String: ScalarType<string> = scalar<string>(GraphQLString);
-export const Float: ScalarType<number> = scalar<number>(GraphQLFloat);
-export const Int: ScalarType<number> = scalar<number>(GraphQLInt);
-export const Boolean: ScalarType<boolean> = scalar<boolean>(GraphQLBoolean);
+export const ID = GraphQLID;
+export const String = GraphQLString;
+export const Float = GraphQLFloat;
+export const Int = GraphQLInt;
+export const Boolean = GraphQLBoolean;
