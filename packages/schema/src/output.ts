@@ -145,22 +145,23 @@ export type FieldResolver<
  */
 export type Field<
   Source,
-  Args extends Record<string, Arg<InputType>>,
-  TType extends OutputType<Context>,
-  Key extends string,
+  Args extends { [Key in keyof Args]: Arg<InputType> },
+  Type extends OutputType<Context>,
+  SourceAtKey,
   Context,
 > = {
   args?: Args;
-  type: TType;
-  __key: (key: Key) => void;
-  __source: (source: Source) => void;
-  __context: (context: Context) => void;
-  resolve?: FieldResolver<Source, Args, TType, Context>;
+  type: Type;
+  resolve?: FieldResolver<
+    Source,
+    SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+    Type,
+    Context
+  >;
   deprecationReason?: string;
   description?: string;
-  extensions?: Readonly<
-    GraphQLFieldExtensions<Source, Context, InferValueFromArgs<Args>>
-  >;
+  extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+  __sourceAtKey?: (arg: SourceAtKey) => void;
 };
 
 export type InterfaceField<
@@ -179,46 +180,22 @@ export type InterfaceField<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
-// this type alias exists to hide the fact that this is `{}` in type errors
-// to not confuse users into thinking they should provide an object as the resolver
-// (the reason it is `{}` is since `resolve` already exists on the object with the correct type
-// but it's optional and `FieldFuncResolve` just determines if it's required or not)
-type RequiredFieldResolver = {};
-
-type FieldFuncResolve<
-  Source,
+type ImpliedResolver<
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
   Context,
 > =
-  // the tuple is here because we _don't_ want this to be distributive
-  // if this was distributive then it would optional when it should be required e.g.
-  // g.object<{ id: string } | { id: boolean }>()({
-  //   name: "Node",
-  //   fields: {
-  //     id: g.field({
-  //       type: g.nonNull(g.ID),
-  //     }),
-  //   },
-  // });
-  [Key] extends [keyof Source]
-    ? Source[Key] extends
-        | InferValueFromOutputType<Type>
-        | ((
-            args: InferValueFromArgs<Args>,
-            context: Context,
-            info: GraphQLResolveInfo
-          ) => InferValueFromOutputType<Type>)
-      ? {}
-      : { resolve: RequiredFieldResolver }
-    : { resolve: RequiredFieldResolver };
+  | InferValueFromOutputType<Type>
+  | ((
+      args: InferValueFromArgs<Args>,
+      context: Context,
+      info: GraphQLResolveInfo
+    ) => InferValueFromOutputType<Type>);
 
-type FieldFuncArgs<
+export type FieldFuncArgs<
   Source,
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
   Context,
 > = {
   args?: Args;
@@ -232,16 +209,24 @@ type FieldFuncArgs<
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
-} & FieldFuncResolve<Source, Args, Type, Key, Context>;
+};
 
 export type FieldFunc<Context> = <
   Source,
   Type extends OutputType<Context>,
-  Key extends string,
+  Resolve,
   Args extends { [Key in keyof Args]: Arg<InputType> } = {},
 >(
-  field: FieldFuncArgs<Source, Args, Type, Key, Context>
-) => Field<Source, Args, Type, Key, Context>;
+  field: FieldFuncArgs<Source, Args, Type, Context> & {
+    resolve?: Resolve;
+  } & (Resolve extends {} ? { resolve: Resolve } : unknown)
+) => Field<
+  Source,
+  Args,
+  Type,
+  Resolve extends {} ? unknown : ImpliedResolver<Args, Type, Context>,
+  Context
+>;
 
 function bindFieldToContext<Context>(): FieldFunc<Context> {
   return function field(field) {
@@ -259,15 +244,20 @@ export type InterfaceToInterfaceFields<
 
 type InterfaceFieldsToOutputFields<
   Source,
-  Context,
-  Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> },
+  Fields extends { [key: string]: InterfaceField<any, any, any> },
 > = {
   [Key in keyof Fields]: Fields[Key] extends InterfaceField<
     infer Args,
     infer OutputType,
-    Context
+    infer Context
   >
-    ? Field<Source, Args, OutputType, Key & string, Context>
+    ? Field<
+        Source,
+        Args,
+        OutputType,
+        Key extends keyof Source ? Source[Key] : unknown,
+        Context
+      >
     : never;
 };
 
@@ -276,21 +266,20 @@ type _InterfacesToOutputFields<
   Source,
   Context,
   Interfaces extends readonly InterfaceType<Source, any, Context>[],
-> = InterfacesToOutputFields<Source, Context, Interfaces>;
+> = InterfacesToOutputFields<Source, Interfaces>;
 export type { _InterfacesToOutputFields as InterfacesToOutputFields };
 
 type InterfacesToOutputFields<
   Source,
-  Context,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[],
+  Interfaces extends readonly InterfaceType<Source, any, any>[],
 > = MergeTuple<
   {
     [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
       Source,
       infer Fields,
-      Context
+      any
     >
-      ? InterfaceFieldsToOutputFields<Source, Context, Fields>
+      ? InterfaceFieldsToOutputFields<Source, Fields>
       : never;
   },
   {}
@@ -330,10 +319,13 @@ export type ObjectTypeFunc<Context> = <
       Source,
       any,
       any,
-      Extract<Key, string>,
+      Key extends keyof Source ? Source[Key] : unknown,
       Context
     >;
-  } & InterfacesToOutputFields<Source, Context, Interfaces>,
+  } & InterfaceFieldsToOutputFields<
+    Source,
+    InterfacesToInterfaceFields<Interfaces>
+  >,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
 >(config: {
   name: string;
@@ -490,12 +482,15 @@ export type FieldsFunc<Context> = <
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
-  Fields extends {
-    [Key in keyof Fields]: Field<
+  Fields extends Record<
+    string,
+    Field<Source, any, OutputType<Context>, any, Context>
+  > & {
+    [Key in keyof Source]?: Field<
       Source,
       any,
-      any,
-      Extract<Key, string>,
+      OutputType<Context>,
+      Source[Key],
       Context
     >;
   },

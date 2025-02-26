@@ -932,6 +932,7 @@ g.object<{ thing?: undefined }>()({
 g.object()({
   name: "Thing",
   fields: {
+    // @ts-expect-error
     thing: g.field({
       type: g.String,
       // @ts-expect-error
@@ -1030,7 +1031,6 @@ g.object<any>()({
   g.object()({
     name: "",
     fields: {
-      // @ts-expect-error
       a: a.b,
     },
   });
