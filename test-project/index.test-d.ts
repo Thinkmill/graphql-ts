@@ -7,6 +7,9 @@ import {
   ScalarType,
   InferValueFromOutputType,
   graphql,
+  OutputType,
+  Field,
+  InputType,
 } from "@graphql-ts/schema";
 import * as gWithContext from "./schema-api";
 
@@ -932,6 +935,7 @@ g.object<{ thing?: undefined }>()({
 g.object()({
   name: "Thing",
   fields: {
+    // @ts-expect-error
     thing: g.field({
       type: g.String,
       // @ts-expect-error
@@ -1030,7 +1034,6 @@ g.object<any>()({
   g.object()({
     name: "",
     fields: {
-      // @ts-expect-error
       a: a.b,
     },
   });
@@ -1437,6 +1440,8 @@ const someInputFields = {
   };
   g.object()({
     name: "Thing",
+    // TODO: see if we can remove this error (but the error above should still exist)
+    // @ts-expect-error
     fields: {
       ...a,
     },
@@ -1646,10 +1651,7 @@ const someInputFields = {
 
 {
   const nodeFields = {
-    id: g.field(
-      // @ts-expect-error
-      { type: g.ID }
-    ),
+    id: g.field({ type: g.ID }),
   };
   const Node = g.interface<{ id: string }>()({
     name: "Node",
@@ -1668,4 +1670,88 @@ const someInputFields = {
     },
   });
   console.log(Person);
+}
+
+{
+  g.field<unknown, typeof g.String, (arg: unknown) => string, {}>(
+    // @ts-expect-error
+    { type: g.String }
+  );
+  g.field<unknown, typeof g.String, undefined, {}>({
+    type: g.String,
+  });
+  g.field<unknown, typeof g.String, (arg: unknown) => string | undefined, {}>(
+    // @ts-expect-error
+    { type: g.String }
+  );
+  g.field<unknown, typeof g.String, (arg: unknown) => string, {}>({
+    type: g.String,
+    resolve() {
+      return "";
+    },
+  });
+}
+
+{
+  type Something = {
+    something: string;
+  };
+
+  const Something = g.object<Something>()({
+    name: "Something",
+    fields: {
+      something: g.field({
+        type: g.String,
+        async resolve(parent) {
+          const { something } = parent;
+          assertCompatible<
+            Invariant<{
+              something: string;
+            }>,
+            Invariant<typeof parent>
+          >();
+          return something;
+        },
+      }),
+    },
+  });
+}
+
+{
+  type Context = {
+    x?: any;
+  };
+
+  let discriminantField!: Field<
+    { value: unknown },
+    Record<string, Arg<InputType, boolean>>,
+    OutputType<Context>,
+    unknown,
+    Context
+  >;
+  type SourceType = { discriminant: string };
+
+  const g = bindGraphQLSchemaAPIToContext<Context>();
+
+  const interfaceType = g.interface<SourceType>()({
+    name: "a",
+    fields: () => ({
+      discriminant: discriminantField,
+    }),
+  });
+
+  const field = g.field({
+    type: gWithContext.String,
+    resolve(x: SourceType) {
+      return x.discriminant as string;
+    },
+  });
+
+  g.object<SourceType>()({
+    name: "SomeName",
+    interfaces: [interfaceType],
+    fields: {
+      discriminant: field,
+    },
+  });
 }

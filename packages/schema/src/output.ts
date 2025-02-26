@@ -146,21 +146,19 @@ export type FieldResolver<
 export type Field<
   Source,
   Args extends Record<string, Arg<InputType>>,
-  TType extends OutputType<Context>,
-  Key extends string,
+  Type extends OutputType<Context>,
+  SourceAtKey,
   Context,
 > = {
   args?: Args;
-  type: TType;
-  __key: (key: Key) => void;
-  __source: (source: Source) => void;
-  __context: (context: Context) => void;
-  resolve?: FieldResolver<Source, Args, TType, Context>;
+  type: Type;
+  resolve?: FieldResolver<Source, Args, Type, Context>;
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<
     GraphQLFieldExtensions<Source, Context, InferValueFromArgs<Args>>
   >;
+  __missingResolve?: (arg: SourceAtKey) => void;
 };
 
 export type InterfaceField<
@@ -179,61 +177,22 @@ export type InterfaceField<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
-type FieldFuncResolve<
-  Source,
+type ImpliedResolver<
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
   Context,
 > =
-  // the tuple is here because we _don't_ want this to be distributive
-  // if this was distributive then it would optional when it should be required e.g.
-  // g.object<{ id: string } | { id: boolean }>()({
-  //   name: "Node",
-  //   fields: {
-  //     id: g.field({
-  //       type: g.nonNull(g.ID),
-  //     }),
-  //   },
-  // });
-  [Key] extends [keyof Source]
-    ? Source[Key] extends
-        | InferValueFromOutputType<Type>
-        | ((
-            args: InferValueFromArgs<Args>,
-            context: Context,
-            info: GraphQLResolveInfo
-          ) => InferValueFromOutputType<Type>)
-      ? {
-          resolve?: FieldResolver<
-            Source,
-            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-            Type,
-            Context
-          >;
-        }
-      : {
-          resolve: FieldResolver<
-            Source,
-            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-            Type,
-            Context
-          >;
-        }
-    : {
-        resolve: FieldResolver<
-          Source,
-          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-          Type,
-          Context
-        >;
-      };
+  | InferValueFromOutputType<Type>
+  | ((
+      args: InferValueFromArgs<Args>,
+      context: Context,
+      info: GraphQLResolveInfo
+    ) => InferValueFromOutputType<Type>);
 
-type FieldFuncArgs<
+export type FieldFuncArgs<
   Source,
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
   Context,
 > = {
   args?: Args;
@@ -241,16 +200,54 @@ type FieldFuncArgs<
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
-} & FieldFuncResolve<Source, Args, Type, Key, Context>;
+};
 
 export type FieldFunc<Context> = <
   Source,
   Type extends OutputType<Context>,
-  Key extends string,
+  Resolve extends
+    | undefined
+    | ((
+        source: Source,
+        args: InferValueFromArgs<
+          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+        >,
+        context: Context,
+        info: GraphQLResolveInfo
+      ) => InferValueFromOutputType<Type>),
   Args extends { [Key in keyof Args]: Arg<InputType> } = {},
 >(
-  field: FieldFuncArgs<Source, Args, Type, Key, Context>
-) => Field<Source, Args, Type, Key, Context>;
+  field: FieldFuncArgs<Source, Args, Type, Context> &
+    (Resolve extends {}
+      ? {
+          resolve: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        }
+      : {
+          resolve?: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        })
+) => Field<
+  Source,
+  Args,
+  Type,
+  undefined extends Resolve ? ImpliedResolver<Args, Type, Context> : unknown,
+  Context
+>;
 
 function bindFieldToContext<Context>(): FieldFunc<Context> {
   return function field(field) {
@@ -269,14 +266,20 @@ export type InterfaceToInterfaceFields<
 type InterfaceFieldsToOutputFields<
   Source,
   Context,
-  Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> },
+  Fields extends { [key: string]: InterfaceField<any, any, any> },
 > = {
   [Key in keyof Fields]: Fields[Key] extends InterfaceField<
     infer Args,
     infer OutputType,
-    Context
+    any
   >
-    ? Field<Source, Args, OutputType, Key & string, Context>
+    ? Field<
+        Source,
+        Args,
+        OutputType,
+        Key extends keyof Source ? Source[Key] : unknown,
+        Context
+      >
     : never;
 };
 
@@ -291,13 +294,13 @@ export type { _InterfacesToOutputFields as InterfacesToOutputFields };
 type InterfacesToOutputFields<
   Source,
   Context,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[],
+  Interfaces extends readonly InterfaceType<Source, any, any>[],
 > = MergeTuple<
   {
     [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
       Source,
       infer Fields,
-      Context
+      any
     >
       ? InterfaceFieldsToOutputFields<Source, Context, Fields>
       : never;
@@ -339,10 +342,14 @@ export type ObjectTypeFunc<Context> = <
       Source,
       any,
       any,
-      Extract<Key, string>,
+      Key extends keyof Source ? Source[Key] : unknown,
       Context
     >;
-  } & InterfacesToOutputFields<Source, Context, Interfaces>,
+  } & InterfaceFieldsToOutputFields<
+    Source,
+    Context,
+    InterfacesToInterfaceFields<Interfaces>
+  >,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
 >(config: {
   name: string;
@@ -499,12 +506,15 @@ export type FieldsFunc<Context> = <
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
-  Fields extends {
-    [Key in keyof Fields]: Field<
+  Fields extends Record<
+    string,
+    Field<Source, any, OutputType<Context>, any, Context>
+  > & {
+    [Key in keyof Source]?: Field<
       Source,
       any,
-      any,
-      Extract<Key, string>,
+      OutputType<Context>,
+      Source[Key],
       Context
     >;
   },
@@ -722,85 +732,37 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    */
   field: FieldFunc<Context>;
   /**
-   * A helper to easily share fields across object and interface types.
+   * A helper to declare fields while providing the source type a single time
+   * rather than in every resolver.
    *
    * ```ts
    * const nodeFields = g.fields<{ id: string }>()({
    *   id: g.field({ type: g.ID }),
-   * });
-   *
-   * const Node = g.field({
-   *   name: "Node",
-   *   fields: nodeFields,
+   *   relatedIds: g.field({
+   *     type: g.list(g.ID),
+   *     resolve(source) {
+   *       return loadRelatedIds(source.id);
+   *     },
+   *   }),
+   *   otherRelatedIds: g.field({
+   *     type: g.list(g.ID),
+   *     resolve(source) {
+   *       return loadOtherRelatedIds(source.id);
+   *     },
+   *   }),
    * });
    *
    * const Person = g.object<{
-   *   __typename: "Person";
    *   id: string;
    *   name: string;
    * }>()({
    *   name: "Person",
-   *   interfaces: [Node],
    *   fields: {
    *     ...nodeFields,
    *     name: g.field({ type: g.String }),
    *   },
    * });
    * ```
-   *
-   * ## Why use `g.fields` instead of just creating an object?
-   *
-   * The definition of Field in `@graphql-ts/schema` has some special things,
-   * let's look at the definition of it:
-   *
-   * ```ts
-   * type Field<
-   *   Source,
-   *   Args extends Record<string, Arg<InputType>>,
-   *   TType extends OutputType<Context>,
-   *   Key extends string,
-   *   Context
-   * > = ...;
-   * ```
-   *
-   * There's two especially notable bits in there which need to be inferred from
-   * elsewhere, the `Source` and `Key` type params.
-   *
-   * The `Source` is pretty simple and it's quite simple to see why `g.fields`
-   * is useful here. You could explicitly write it with resolvers on the first
-   * arg but you'd have to do that on every field which would get very
-   * repetitive and wouldn't work for fields without resolvers.
-   *
-   * ```ts
-   * const someFields = g.fields<{ name: string }>()({
-   *   name: g.field({ type: g.String }),
-   * });
-   * ```
-   *
-   * The `Key` type param might seem a bit more strange though. What it's saying
-   * is that _the key that a field is at is part of its TypeScript type_.
-   *
-   * This is important to be able to represent the fact that a resolver is
-   * optional if the `Source` has a property at the `Key` that matches the
-   * output type.
-   *
-   * ```ts
-   * // this is allowed
-   * const someFields = g.fields<{ name: string }>()({
-   *   name: g.field({ type: g.String }),
-   * });
-   *
-   * const someFields = g.fields<{ name: string }>()({
-   *   someName: g.field({
-   *     // a resolver is required here since the Source is missing a `someName` property
-   *     type: g.String,
-   *   }),
-   * });
-   * ```
-   *
-   * Note that there is no similar function for {@link Arg args} since they don't
-   * need special type parameters like {@link Field} does so you can create a
-   * regular object and put {@link Arg args} in it if you want to share them.
    */
   fields: FieldsFunc<Context>;
   /**
