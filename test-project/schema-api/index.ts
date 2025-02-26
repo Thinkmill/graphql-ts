@@ -19,8 +19,8 @@ export type Field<
   Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType,
-  Key extends string
-> = graphqltsSchema.Field<Source, Args, TType, Key, Context>;
+  SourceOnField
+> = graphqltsSchema.Field<Source, Args, TType, SourceOnField, Context>;
 export type FieldResolver<
   Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,

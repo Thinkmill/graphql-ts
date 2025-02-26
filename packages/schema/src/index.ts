@@ -49,7 +49,7 @@ export type {
   InferValueFromOutputType,
   InterfaceField,
   InterfaceFieldFunc,
-  InterfaceToInterfaceFields,
+  InterfaceToRequiredFields as InterfaceToInterfaceFields,
   InterfaceType,
   InterfaceTypeFunc,
   InterfacesToOutputFields,

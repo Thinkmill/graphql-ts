@@ -376,7 +376,7 @@ function flattenExtensions(
  *   type would immediately be thrown away, it would be pretty much pointless.
  */
 type FieldsOnAnything = {
-  [key: string]: Field<unknown, any, OutputType<any>, string, any>;
+  [key: string]: Field<unknown, any, OutputType<any>, unknown, any>;
 };
 
 /**

@@ -142,25 +142,22 @@ export type FieldResolver<
  * A GraphQL output field for an {@link ObjectType} which should be created using
  * {@link field `g.field`}.
  */
-export type Field<
-  Source,
-  Args extends Record<string, Arg<InputType>>,
-  TType extends OutputType<Context>,
-  Key extends string,
-  Context
-> = {
-  args?: Args;
-  type: TType;
-  __key: (key: Key) => void;
-  __source: (source: Source) => void;
-  __context: (context: Context) => void;
-  resolve?: FieldResolver<Source, Args, TType, Context>;
-  deprecationReason?: string;
-  description?: string;
-  extensions?: Readonly<
-    GraphQLFieldExtensions<Source, Context, InferValueFromArgs<Args>>
-  >;
-};
+// export type Field<
+//   Source,
+//   Args extends Record<string, Arg<InputType>>,
+//   TType extends OutputType<Context>,
+//   SourceOnField,
+//   Context
+// > = {
+//   args?: Args;
+//   type: TType;
+//   resolve?: FieldResolver<Source, Args, TType, SourceOnField, Context>;
+//   deprecationReason?: string;
+//   description?: string;
+//   extensions?: Readonly<
+//     GraphQLFieldExtensions<Source, Context, InferValueFromArgs<Args>>
+//   >;
+// };
 
 export type InterfaceField<
   Args extends Record<string, Arg<InputType>>,
@@ -178,46 +175,23 @@ export type InterfaceField<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
-// this type alias exists to hide the fact that this is `{}` in type errors
-// to not confuse users into thinking they should provide an object as the resolver
-// (the reason it is `{}` is since `resolve` already exists on the object with the correct type
-// but it's optional and `FieldFuncResolve` just determines if it's required or not)
-type RequiredFieldResolver = {};
-
-type FieldFuncResolve<
-  Source,
+type ImpliedResolver<
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
   Context
 > =
-  // the tuple is here because we _don't_ want this to be distributive
-  // if this was distributive then it would optional when it should be required e.g.
-  // g.object<{ id: string } | { id: boolean }>()({
-  //   name: "Node",
-  //   fields: {
-  //     id: g.field({
-  //       type: g.nonNull(g.ID),
-  //     }),
-  //   },
-  // });
-  [Key] extends [keyof Source]
-    ? Source[Key] extends
-        | InferValueFromOutputType<Type>
-        | ((
-            args: InferValueFromArgs<Args>,
-            context: Context,
-            info: GraphQLResolveInfo
-          ) => InferValueFromOutputType<Type>)
-      ? {}
-      : { resolve: RequiredFieldResolver }
-    : { resolve: RequiredFieldResolver };
+  | InferValueFromOutputType<Type>
+  | ((
+      args: InferValueFromArgs<Args>,
+      context: Context,
+      info: GraphQLResolveInfo
+    ) => InferValueFromOutputType<Type>);
 
-type FieldFuncArgs<
+export type Field<
   Source,
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Key extends string,
+  SourceOnField,
   Context
 > = {
   args?: Args;
@@ -231,16 +205,44 @@ type FieldFuncArgs<
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
-} & FieldFuncResolve<Source, Args, Type, Key, Context>;
+  __sourceOnField?: (arg: SourceOnField) => void;
+};
+
+export type FieldFuncArgs<
+  Source,
+  Args extends { [Key in keyof Args]: Arg<InputType> },
+  Type extends OutputType<Context>,
+  Context
+> = {
+  args?: Args;
+  type: Type;
+  resolve?: FieldResolver<
+    Source,
+    SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+    Type,
+    Context
+  >;
+  deprecationReason?: string;
+  description?: string;
+  extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+};
 
 export type FieldFunc<Context> = <
   Source,
   Type extends OutputType<Context>,
-  Key extends string,
+  Resolve extends unknown,
   Args extends { [Key in keyof Args]: Arg<InputType> } = {}
 >(
-  field: FieldFuncArgs<Source, Args, Type, Key, Context>
-) => Field<Source, Args, Type, Key, Context>;
+  field: FieldFuncArgs<Source, Args, Type, Context> & {
+    resolve?: Resolve;
+  } & (Resolve extends {} ? { resolve: Resolve } : unknown)
+) => Field<
+  Source,
+  Args,
+  Type,
+  Resolve extends {} ? unknown : ImpliedResolver<Args, Type, Context>,
+  Context
+>;
 
 function bindFieldToContext<Context>(): FieldFunc<Context> {
   return function field(field) {
@@ -251,31 +253,15 @@ function bindFieldToContext<Context>(): FieldFunc<Context> {
   };
 }
 
-export type InterfaceToInterfaceFields<
+type RequiredInterfaceField = {};
+
+export type InterfaceToRequiredFields<
   Interface extends InterfaceType<any, any, any>
-> = Interface extends InterfaceType<any, infer Fields, any> ? Fields : never;
-
-type InterfaceFieldToOutputField<
-  Source,
-  Context,
-  TField extends InterfaceField<any, any, Context>,
-  Key extends string
-> = TField extends InterfaceField<infer Args, infer OutputType, Context>
-  ? Field<Source, Args, OutputType, Key, Context>
+> = Interface extends InterfaceType<any, infer Fields, any>
+  ? {
+      [Key in keyof Fields]: RequiredInterfaceField;
+    }
   : never;
-
-type InterfaceFieldsToOutputFields<
-  Source,
-  Context,
-  Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> }
-> = {
-  [Key in keyof Fields]: InterfaceFieldToOutputField<
-    Source,
-    Context,
-    Fields[Key],
-    Extract<Key, string>
-  >;
-};
 
 type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
   x: infer R
@@ -284,16 +270,10 @@ type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
   : never;
 
 export type InterfacesToOutputFields<
-  Source,
-  Context,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[]
-> = UnionToIntersection<
-  InterfaceFieldsToOutputFields<
-    Source,
-    Context,
-    InterfaceToInterfaceFields<Interfaces[number]>
-  >
->;
+  Interfaces extends readonly InterfaceType<any, any, any>[]
+> = UnionToIntersection<InterfaceToRequiredFields<Interfaces[number]>>;
+
+type OrFunc<T> = T | (() => T);
 
 /**
  * Creates a GraphQL object type.
@@ -310,15 +290,15 @@ export type ObjectTypeFunc<Context> = <
       Source,
       any,
       any,
-      Extract<Key, string>,
+      Key extends keyof Source ? Source[Key] : unknown,
       Context
     >;
   } &
-    InterfacesToOutputFields<Source, Context, Interfaces>,
+    InterfacesToOutputFields<Interfaces>,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = []
 >(config: {
   name: string;
-  fields: Fields | (() => Fields);
+  fields: OrFunc<Fields>;
   /**
    * A description of the object type that is visible when introspected.
    *
@@ -471,15 +451,19 @@ export type FieldsFunc<Context> = <
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
-  Fields extends {
-    [Key in keyof Fields]: Field<
-      Source,
-      any,
-      any,
-      Extract<Key, string>,
-      Context
-    >;
-  }
+  Fields extends Record<
+    string,
+    Field<Source, any, OutputType<Context>, any, Context>
+  > &
+    {
+      [Key in keyof Source]?: Field<
+        Source,
+        any,
+        OutputType<Context>,
+        Source[Key],
+        Context
+      >;
+    }
 >(
   fields: Fields
 ) => Fields;
@@ -542,7 +526,7 @@ export type InterfaceTypeFunc<Context> = <
   Fields extends {
     [Key in keyof Fields]: InterfaceField<any, OutputType<Context>, Context>;
   } &
-    UnionToIntersection<InterfaceToInterfaceFields<Interfaces[number]>>,
+    UnionToIntersection<InterfaceToRequiredFields<Interfaces[number]>>,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = []
 >(config: {
   name: string;
