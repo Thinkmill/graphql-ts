@@ -483,6 +483,7 @@ g.object<{ id: string } | { id: boolean }>()({
     name: "NodeImpl",
     interfaces: [Node],
     fields: {
+      // @ts-expect-error
       id: g.field({ type: g.Int }),
     },
   });
@@ -507,6 +508,7 @@ g.object<{ id: string } | { id: boolean }>()({
       name: "NodeImpl",
       interfaces: [Node, NodeAnother],
       fields: {
+        // @ts-expect-error
         id: g.field({ type: g.ID }),
       },
     });
@@ -927,7 +929,6 @@ g.object<{ thing?: undefined }>()({
 g.object()({
   name: "Thing",
   fields: {
-    // @ts-expect-error
     thing: g.field({
       type: g.String,
       // @ts-expect-error
@@ -1026,6 +1027,7 @@ g.object<any>()({
   g.object()({
     name: "",
     fields: {
+      // @ts-expect-error
       a: a.b,
     },
   });

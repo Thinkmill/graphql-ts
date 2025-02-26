@@ -205,7 +205,7 @@ export type Field<
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
-  __sourceOnField?: (arg: SourceOnField) => void;
+  __sourceOnField?(arg: SourceOnField): void;
 };
 
 export type FieldFuncArgs<
@@ -235,7 +235,7 @@ export type FieldFunc<Context> = <
 >(
   field: FieldFuncArgs<Source, Args, Type, Context> & {
     resolve?: Resolve;
-  } & (Resolve extends {} ? { resolve: Resolve } : unknown)
+  } & (Resolve extends {} ? { resolve: {} } : unknown)
 ) => Field<
   Source,
   Args,
@@ -271,9 +271,54 @@ type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
 
 export type InterfacesToOutputFields<
   Interfaces extends readonly InterfaceType<any, any, any>[]
-> = UnionToIntersection<InterfaceToRequiredFields<Interfaces[number]>>;
+> = {
+  [Key in keyof Interfaces]: Interfaces[Key]["__fields"];
+};
+
+type a = {
+  a: {
+    a?: string;
+  };
+  [k: string]: {
+    a: string;
+  };
+};
+
+function blah(a: {
+  a: (a: string | undefined) => void;
+  [k: string]: (a: string) => void;
+}) {}
+
+blah({
+  a: {},
+  b: {
+    a: "",
+  },
+});
+
+type SuperTypeOfOutput<Type> =
+  | Type
+  | (Type extends NullableType<any> ? NonNullType<Type> : never)
+  | (Type extends ListType<infer Of> ? ListType<SuperTypeOfOutput<Of>> : never);
+
+type MergeArrayElements<T, Current = unknown> = T extends [
+  infer U,
+  ...infer Rest
+]
+  ? MergeArrayElements<Rest, U & Current>
+  : Pretty<Current>;
+
+type Pretty<T> = {
+  [Key in keyof T]: T[Key];
+} & {};
+
+type X = MergeArrayElements<[{ a: 1 }, { b: 2 }]>;
 
 type OrFunc<T> = T | (() => T);
+type x = {
+  a: Field<unknown, any, OutputType<unknown>, string, unknown>;
+  [key: string]: Field<unknown, any, OutputType<unknown>, unknown, unknown>;
+};
 
 /**
  * Creates a GraphQL object type.
@@ -285,20 +330,22 @@ export type ObjectTypeFunc<Context> = <
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
-  Fields extends {
-    [Key in keyof Fields]: Field<
-      Source,
-      any,
-      any,
-      Key extends keyof Source ? Source[Key] : unknown,
-      Context
-    >;
-  } &
-    InterfacesToOutputFields<Interfaces>,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = []
 >(config: {
   name: string;
-  fields: OrFunc<Fields>;
+  fields: OrFunc<
+    {
+      [Key in keyof Source]?: Field<
+        Source,
+        any,
+        OutputType<Context>,
+        Source[Key],
+        Context
+      >;
+    } & {
+      [key: string]: Field<Source, any, OutputType<Context>, unknown, Context>;
+    }
+  >;
   /**
    * A description of the object type that is visible when introspected.
    *
