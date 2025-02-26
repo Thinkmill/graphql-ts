@@ -1,5 +1,15 @@
 # @graphql-ts/schema
 
+## 0.6.2
+
+### Patch Changes
+
+- [#24](https://github.com/Thinkmill/graphql-ts/pull/24) [`2dc7f48a07f4e235261891dd0ff3bc4ca2ec9858`](https://github.com/Thinkmill/graphql-ts/commit/2dc7f48a07f4e235261891dd0ff3bc4ca2ec9858) Thanks [@emmatown](https://github.com/emmatown)! - Add support for `isOneOf` in input object types
+
+- [#25](https://github.com/Thinkmill/graphql-ts/pull/25) [`974bdd8f2d1ca72b04dfde471fa4e119b2d1a7b1`](https://github.com/Thinkmill/graphql-ts/commit/974bdd8f2d1ca72b04dfde471fa4e119b2d1a7b1) Thanks [@emmatown](https://github.com/emmatown)! - Simplify internal `FieldFuncResolve` type
+
+- [`65f914c83a6438e8b326047c0dc3d83d47ba110c`](https://github.com/Thinkmill/graphql-ts/commit/65f914c83a6438e8b326047c0dc3d83d47ba110c) Thanks [@emmatown](https://github.com/emmatown)! - Simplify the build files in `dist`
+
 ## 0.6.1
 
 ### Patch Changes
