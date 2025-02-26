@@ -178,6 +178,12 @@ export type InterfaceField<
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
+// this type alias exists to hide the fact that this is `{}` in type errors
+// to not confuse users into thinking they should provide an object as the resolver
+// (the reason it is `{}` is since `resolve` already exists on the object with the correct type
+// but it's optional and `FieldFuncResolve` just determines if it's required or not)
+type RequiredFieldResolver = {};
+
 type FieldFuncResolve<
   Source,
   Args extends { [Key in keyof Args]: Arg<InputType> },
@@ -203,30 +209,9 @@ type FieldFuncResolve<
             context: Context,
             info: GraphQLResolveInfo
           ) => InferValueFromOutputType<Type>)
-      ? {
-          resolve?: FieldResolver<
-            Source,
-            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-            Type,
-            Context
-          >;
-        }
-      : {
-          resolve: FieldResolver<
-            Source,
-            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-            Type,
-            Context
-          >;
-        }
-    : {
-        resolve: FieldResolver<
-          Source,
-          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-          Type,
-          Context
-        >;
-      };
+      ? {}
+      : { resolve: RequiredFieldResolver }
+    : { resolve: RequiredFieldResolver };
 
 type FieldFuncArgs<
   Source,
@@ -237,6 +222,12 @@ type FieldFuncArgs<
 > = {
   args?: Args;
   type: Type;
+  resolve?: FieldResolver<
+    Source,
+    SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+    Type,
+    Context
+  >;
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
