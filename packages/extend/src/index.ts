@@ -52,7 +52,8 @@ export { wrap };
 const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
 
 /**
- * `extend` allows you to extend a {@link GraphQLSchema} with `@graphql-ts/schema`.
+ * `extend` allows you to extend a {@link GraphQLSchema} with
+ * `@graphql-ts/schema`.
  *
  * ```ts
  * const originalSchema = new GraphQLSchema({ ...etc });
@@ -572,7 +573,8 @@ export type BaseSchemaMeta = {
    * {@link ScalarType}. If there is no scalar type in the existing schema with
    * the name passed, an error will be thrown.
    *
-   * If the name of a built-in scalar type is passed, an error will also be thrown.
+   * If the name of a built-in scalar type is passed, an error will also be
+   * thrown.
    *
    * ```ts
    * const originalSchema = new GraphQLSchema({ ...etc });

@@ -19,12 +19,12 @@ export type Field<
   Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
   TType extends OutputType,
-  Key extends string
+  Key extends string,
 > = graphqltsSchema.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
   Source,
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
-  TType extends OutputType
+  TType extends OutputType,
 > = graphqltsSchema.FieldResolver<Source, Args, TType, Context>;
 export type ObjectType<Source> = graphqltsSchema.ObjectType<Source, Context>;
 export type UnionType<Source> = graphqltsSchema.UnionType<Source, Context>;
@@ -33,9 +33,9 @@ export type InterfaceType<
   Fields extends Record<
     string,
     graphqltsSchema.InterfaceField<any, OutputType, Context>
-  >
+  >,
 > = graphqltsSchema.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
   Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
-  TType extends OutputType
+  TType extends OutputType,
 > = graphqltsSchema.InterfaceField<Args, TType, Context>;

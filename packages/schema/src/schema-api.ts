@@ -36,9 +36,11 @@
  * });
  * ```
  *
- * You can use pass the `graphQLSchema` to `ApolloServer` and other GraphQL servers.
+ * You can use pass the `graphQLSchema` to `ApolloServer` and other GraphQL
+ * servers.
  *
- * You can also create a more advanced schema with other object types, args and mutations.
+ * You can also create a more advanced schema with other object types, args and
+ * mutations.
  *
  * ```ts
  * import { g } from "@graphql-ts/schema";
@@ -198,12 +200,12 @@ export type Field<
   Source,
   Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType,
-  Key extends string
+  Key extends string,
 > = gOutput.Field<Source, Args, TType, Key, Context>;
 export type FieldResolver<
   Source,
   Args extends Record<string, gInput.Arg<gInput.InputType>>,
-  TType extends OutputType
+  TType extends OutputType,
 > = gOutput.FieldResolver<Source, Args, TType, Context>;
 export type ObjectType<Source> = gOutput.ObjectType<Source, Context>;
 export type UnionType<Source> = gOutput.UnionType<Source, Context>;
@@ -216,9 +218,9 @@ export type InterfaceType<
       OutputType,
       Context
     >
-  >
+  >,
 > = gOutput.InterfaceType<Source, Fields, Context>;
 export type InterfaceField<
   Args extends Record<string, gInput.Arg<gInput.InputType>>,
-  TType extends OutputType
+  TType extends OutputType,
 > = gOutput.InterfaceField<Args, TType, Context>;
