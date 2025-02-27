@@ -252,50 +252,68 @@ function bindFieldToContext<Context>(): FieldFunc<Context> {
   };
 }
 
+/** @deprecated */
 export type InterfaceToInterfaceFields<
   Interface extends InterfaceType<any, any, any>,
 > = Interface extends InterfaceType<any, infer Fields, any> ? Fields : never;
-
-type InterfaceFieldToOutputField<
-  Source,
-  Context,
-  TField extends InterfaceField<any, any, Context>,
-  Key extends string,
-> =
-  TField extends InterfaceField<infer Args, infer OutputType, Context>
-    ? Field<Source, Args, OutputType, Key, Context>
-    : never;
 
 type InterfaceFieldsToOutputFields<
   Source,
   Context,
   Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> },
 > = {
-  [Key in keyof Fields]: InterfaceFieldToOutputField<
-    Source,
-    Context,
-    Fields[Key],
-    Extract<Key, string>
-  >;
+  [Key in keyof Fields]: Fields[Key] extends InterfaceField<
+    infer Args,
+    infer OutputType,
+    Context
+  >
+    ? Field<Source, Args, OutputType, Key & string, Context>
+    : never;
 };
 
-type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
-  x: infer R
-) => any
-  ? R
-  : never;
-
-export type InterfacesToOutputFields<
+/** @deprecated */
+type _InterfacesToOutputFields<
   Source,
   Context,
   Interfaces extends readonly InterfaceType<Source, any, Context>[],
-> = UnionToIntersection<
-  InterfaceFieldsToOutputFields<
-    Source,
-    Context,
-    InterfaceToInterfaceFields<Interfaces[number]>
-  >
+> = InterfacesToOutputFields<Source, Context, Interfaces>;
+export type { _InterfacesToOutputFields as InterfacesToOutputFields };
+
+type InterfacesToOutputFields<
+  Source,
+  Context,
+  Interfaces extends readonly InterfaceType<Source, any, Context>[],
+> = MergeTuple<
+  {
+    [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
+      Source,
+      infer Fields,
+      Context
+    >
+      ? InterfaceFieldsToOutputFields<Source, Context, Fields>
+      : never;
+  },
+  {}
 >;
+
+type InterfacesToInterfaceFields<
+  Interfaces extends readonly InterfaceType<any, any, any>[],
+> = MergeTuple<
+  {
+    [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
+      any,
+      infer Fields,
+      any
+    >
+      ? Fields
+      : never;
+  },
+  {}
+>;
+
+type MergeTuple<T, Merged> = T extends readonly [infer U, ...infer Rest]
+  ? MergeTuple<Rest, Merged & U>
+  : Merged;
 
 /**
  * Creates a GraphQL object type.
@@ -542,7 +560,7 @@ export type InterfaceTypeFunc<Context> = <
 }) => <
   Fields extends {
     [Key in keyof Fields]: InterfaceField<any, OutputType<Context>, Context>;
-  } & UnionToIntersection<InterfaceToInterfaceFields<Interfaces[number]>>,
+  } & InterfacesToInterfaceFields<Interfaces>,
   Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
 >(config: {
   name: string;

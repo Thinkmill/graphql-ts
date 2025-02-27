@@ -50,10 +50,8 @@ export type {
   InferValueFromOutputType,
   InterfaceField,
   InterfaceFieldFunc,
-  InterfaceToInterfaceFields,
   InterfaceType,
   InterfaceTypeFunc,
-  InterfacesToOutputFields,
   NullableOutputType,
   ObjectType,
   ObjectTypeFunc,
@@ -78,3 +76,7 @@ export type {
 } from "./api-without-context";
 export type { Type, NullableType } from "./type";
 export * from "./schema-api-alias";
+export type {
+  InterfaceToInterfaceFields,
+  InterfacesToOutputFields,
+} from "./output";
