@@ -11,7 +11,8 @@ import {
  * Note the value property/generic here represents the deserialized form of the
  * enum. It does not indicate the name of the enum value that is visible in the
  * GraphQL schema. The value can be anything, not necessarily a string. Usually
- * though, it will be a string which is equal to the key where the value is used.
+ * though, it will be a string which is equal to the key where the value is
+ * used.
  */
 export type EnumValue<Value> = {
   description?: string;
@@ -21,7 +22,8 @@ export type EnumValue<Value> = {
 
 /**
  * A GraphQL enum type which wraps an underlying graphql-js
- * {@link GraphQLEnumType}. This should be created with {@link enumType `g.enum`}.
+ * {@link GraphQLEnumType}. This should be created with
+ * {@link enumType `g.enum`}.
  *
  * ```ts
  * const MyEnum = g.enum({
@@ -49,7 +51,8 @@ export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
  * {@link enumType `g.enum`}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
- * variant, you should pass values directly to `g.enum` without using `g.enumValues`.
+ * variant, you should pass values directly to `g.enum` without using
+ * `g.enumValues`.
  *
  * ```ts
  * const MyEnum = g.enum({
@@ -74,7 +77,8 @@ export function enumValues<Values extends readonly string[]>(
 }
 
 /**
- * Creates an {@link EnumType enum type} with a number of {@link EnumValue enum values}.
+ * Creates an {@link EnumType enum type} with a number of
+ * {@link EnumValue enum values}.
  *
  * ```ts
  * const MyEnum = g.enum({

@@ -305,11 +305,14 @@ g.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA =
-    bindGraphQLSchemaAPIToContext<{ something: boolean }>();
+  const typesWithContextA = bindGraphQLSchemaAPIToContext<{
+    something: boolean;
+  }>();
 
-  const typesWithContextB =
-    bindGraphQLSchemaAPIToContext<{ something: boolean; other: string }>();
+  const typesWithContextB = bindGraphQLSchemaAPIToContext<{
+    something: boolean;
+    other: string;
+  }>();
 
   {
     typesWithContextB.object<{ thing: string }>()({
@@ -1094,13 +1097,13 @@ function assertCompatible<A, _B extends A>() {}
               type: g.nonNull(g.Int),
             })
           : Math.random() > 0.5
-          ? g.arg({
-              type: g.Int,
-              defaultValue: 1,
-            })
-          : g.arg({
-              type: g.Int,
-            }),
+            ? g.arg({
+                type: g.Int,
+                defaultValue: 1,
+              })
+            : g.arg({
+                type: g.Int,
+              }),
     },
     resolve(_, { blah }) {
       assertCompatible<

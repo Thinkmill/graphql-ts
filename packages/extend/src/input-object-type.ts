@@ -12,5 +12,5 @@ import type {
  */
 export type InputObjectType<
   Fields extends { [key: string]: Arg<InputType> },
-  IsOneOf extends boolean
+  IsOneOf extends boolean,
 > = Omit<_InputObjectType<Fields>, "isOneOf"> & { isOneOf: IsOneOf };

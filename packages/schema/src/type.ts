@@ -10,7 +10,7 @@ export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   InputType,
   OutputType<any>,
   typeof list,
-  typeof nonNull
+  typeof nonNull,
 ];
 
 /**

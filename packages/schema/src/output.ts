@@ -37,11 +37,12 @@ export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   typeof field,
   typeof object,
   NullableType<any>,
-  Type<any>
+  Type<any>,
 ];
 
 /**
- * Any output list type. This type only exists because of limitations in circular types.
+ * Any output list type. This type only exists because of limitations in
+ * circular types.
  *
  * If you want to represent any list input type, you should do
  * `ListType<OutputType<Context>>`.
@@ -89,22 +90,22 @@ type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
   Type extends ScalarType<infer Value>
     ? Value
     : Type extends EnumType<infer Values>
-    ? Values[keyof Values]["value"]
-    : Type extends OutputListTypeForInference<infer Value>
-    ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
-      // which means that things like `string` won't be allowed
-      // (which is probably a good thing because returning a string from a resolver that needs
-      // a graphql list of strings is almost definitely not what you want and if it is, use Array.from)
-      // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
-      // (though tbh, i think the chance of that causing problems is quite low)
-      object & Iterable<InferValueFromOutputType<Value>>
-    : Type extends ObjectType<infer Source, any>
-    ? Source
-    : Type extends UnionType<infer Source, any>
-    ? Source
-    : Type extends InterfaceType<infer Source, any, any>
-    ? Source
-    : never;
+      ? Values[keyof Values]["value"]
+      : Type extends OutputListTypeForInference<infer Value>
+        ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
+          // which means that things like `string` won't be allowed
+          // (which is probably a good thing because returning a string from a resolver that needs
+          // a graphql list of strings is almost definitely not what you want and if it is, use Array.from)
+          // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
+          // (though tbh, i think the chance of that causing problems is quite low)
+          object & Iterable<InferValueFromOutputType<Value>>
+        : Type extends ObjectType<infer Source, any>
+          ? Source
+          : Type extends UnionType<infer Source, any>
+            ? Source
+            : Type extends InterfaceType<infer Source, any, any>
+              ? Source
+              : never;
 
 type OutputNonNullTypeForInference<Of extends NullableOutputType<any>> =
   NonNullType<Of>;
@@ -130,7 +131,7 @@ export type FieldResolver<
   Source,
   Args extends Record<string, Arg<InputType>>,
   TType extends OutputType<Context>,
-  Context
+  Context,
 > = (
   source: Source,
   args: InferValueFromArgs<Args>,
@@ -147,7 +148,7 @@ export type Field<
   Args extends Record<string, Arg<InputType>>,
   TType extends OutputType<Context>,
   Key extends string,
-  Context
+  Context,
 > = {
   args?: Args;
   type: TType;
@@ -165,7 +166,7 @@ export type Field<
 export type InterfaceField<
   Args extends Record<string, Arg<InputType>>,
   Type extends OutputType<Context>,
-  Context
+  Context,
 > = {
   args?: Args;
   type: Type;
@@ -189,7 +190,7 @@ type FieldFuncResolve<
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
   Key extends string,
-  Context
+  Context,
 > =
   // the tuple is here because we _don't_ want this to be distributive
   // if this was distributive then it would optional when it should be required e.g.
@@ -218,7 +219,7 @@ type FieldFuncArgs<
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
   Key extends string,
-  Context
+  Context,
 > = {
   args?: Args;
   type: Type;
@@ -237,7 +238,7 @@ export type FieldFunc<Context> = <
   Source,
   Type extends OutputType<Context>,
   Key extends string,
-  Args extends { [Key in keyof Args]: Arg<InputType> } = {}
+  Args extends { [Key in keyof Args]: Arg<InputType> } = {},
 >(
   field: FieldFuncArgs<Source, Args, Type, Key, Context>
 ) => Field<Source, Args, Type, Key, Context>;
@@ -252,22 +253,23 @@ function bindFieldToContext<Context>(): FieldFunc<Context> {
 }
 
 export type InterfaceToInterfaceFields<
-  Interface extends InterfaceType<any, any, any>
+  Interface extends InterfaceType<any, any, any>,
 > = Interface extends InterfaceType<any, infer Fields, any> ? Fields : never;
 
 type InterfaceFieldToOutputField<
   Source,
   Context,
   TField extends InterfaceField<any, any, Context>,
-  Key extends string
-> = TField extends InterfaceField<infer Args, infer OutputType, Context>
-  ? Field<Source, Args, OutputType, Key, Context>
-  : never;
+  Key extends string,
+> =
+  TField extends InterfaceField<infer Args, infer OutputType, Context>
+    ? Field<Source, Args, OutputType, Key, Context>
+    : never;
 
 type InterfaceFieldsToOutputFields<
   Source,
   Context,
-  Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> }
+  Fields extends { [Key in keyof Fields]: InterfaceField<any, any, Context> },
 > = {
   [Key in keyof Fields]: InterfaceFieldToOutputField<
     Source,
@@ -286,7 +288,7 @@ type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
 export type InterfacesToOutputFields<
   Source,
   Context,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[]
+  Interfaces extends readonly InterfaceType<Source, any, Context>[],
 > = UnionToIntersection<
   InterfaceFieldsToOutputFields<
     Source,
@@ -301,7 +303,7 @@ export type InterfacesToOutputFields<
  * See the docs of {@link object `g.object`} for more details.
  */
 export type ObjectTypeFunc<Context> = <
-  Source
+  Source,
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
@@ -313,9 +315,8 @@ export type ObjectTypeFunc<Context> = <
       Extract<Key, string>,
       Context
     >;
-  } &
-    InterfacesToOutputFields<Source, Context, Interfaces>,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[] = []
+  } & InterfacesToOutputFields<Source, Context, Interfaces>,
+  Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
 >(config: {
   name: string;
   fields: Fields | (() => Fields);
@@ -437,7 +438,7 @@ export type UnionType<Source, Context> = {
 };
 
 export type UnionTypeFunc<Context> = <
-  TObjectType extends ObjectType<any, Context>
+  TObjectType extends ObjectType<any, Context>,
 >(config: {
   name: string;
   description?: string;
@@ -467,7 +468,7 @@ function bindUnionTypeToContext<Context>(): UnionTypeFunc<Context> {
 }
 
 export type FieldsFunc<Context> = <
-  Source
+  Source,
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
@@ -479,7 +480,7 @@ export type FieldsFunc<Context> = <
       Extract<Key, string>,
       Context
     >;
-  }
+  },
 >(
   fields: Fields
 ) => Fields;
@@ -496,7 +497,7 @@ type InterfaceFieldFuncArgs<
   Source,
   Args extends { [Key in keyof Args]: Arg<InputType> },
   Type extends OutputType<Context>,
-  Context
+  Context,
 > = {
   args?: Args;
   type: Type;
@@ -508,7 +509,7 @@ type InterfaceFieldFuncArgs<
 export type InterfaceFieldFunc<Context> = <
   Source,
   Type extends OutputType<Context>,
-  Args extends { [Key in keyof Args]: Arg<InputType> } = {}
+  Args extends { [Key in keyof Args]: Arg<InputType> } = {},
 >(
   field: InterfaceFieldFuncArgs<Source, Args, Type, Context>
 ) => InterfaceField<Args, Type, Context>;
@@ -525,7 +526,7 @@ export type InterfaceType<
     string,
     InterfaceField<any, OutputType<Context>, Context>
   >,
-  Context
+  Context,
 > = {
   kind: "interface";
   __source: (source: Source) => void;
@@ -535,15 +536,14 @@ export type InterfaceType<
 };
 
 export type InterfaceTypeFunc<Context> = <
-  Source
+  Source,
 >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
   youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
 }) => <
   Fields extends {
     [Key in keyof Fields]: InterfaceField<any, OutputType<Context>, Context>;
-  } &
-    UnionToIntersection<InterfaceToInterfaceFields<Interfaces[number]>>,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[] = []
+  } & UnionToIntersection<InterfaceToInterfaceFields<Interfaces[number]>>,
+  Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
 >(config: {
   name: string;
   description?: string;
@@ -585,7 +585,8 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   /**
    * Creates a GraphQL object type.
    *
-   * Note this is an **output** type, if you want an input object, use `g.inputObject`.
+   * Note this is an **output** type, if you want an input object, use
+   * `g.inputObject`.
    *
    * When calling `g.object`, you must provide a type parameter that is the
    * source of the object type. The source is what you receive as the first
@@ -680,7 +681,8 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   /**
    * Creates a GraphQL field.
    *
-   * These will generally be passed directly to the `fields` object in a `g.object` call.
+   * These will generally be passed directly to the `fields` object in a
+   * `g.object` call.
    *
    * ```ts
    * const Something = g.object<{ thing: string }>()({
@@ -749,10 +751,11 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * ```
    *
    * The `Key` type param might seem a bit more strange though. What it's saying
-   * is that *the key that a field is at is part of its TypeScript type*.
+   * is that _the key that a field is at is part of its TypeScript type_.
    *
    * This is important to be able to represent the fact that a resolver is
-   * optional if the `Source` has a property at the `Key` that matches the output type.
+   * optional if the `Source` has a property at the `Key` that matches the
+   * output type.
    *
    * ```ts
    * // this is allowed
@@ -792,7 +795,8 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    *
    * Note that {@link Field regular fields} are assignable to
    * {@link InterfaceField interface fields} but the opposite is not true. This
-   * means that you can use a regular field in an {@link InterfaceType interface type}.
+   * means that you can use a regular field in an
+   * {@link InterfaceType interface type}.
    */
   interfaceField: InterfaceFieldFunc<Context>;
   /**
@@ -885,7 +889,7 @@ export type GraphQLSchemaAPIWithContext<Context> = {
 };
 
 export function bindGraphQLSchemaAPIToContext<
-  Context
+  Context,
 >(): GraphQLSchemaAPIWithContext<Context> {
   return {
     object: bindObjectTypeToContext<Context>(),

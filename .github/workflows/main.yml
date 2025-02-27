@@ -17,8 +17,8 @@ jobs:
 
       - name: Check Types
         run: pnpm run types
-  eslint:
-    name: ESLint
+  linting:
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
