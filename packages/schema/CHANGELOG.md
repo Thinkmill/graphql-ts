@@ -1,5 +1,13 @@
 # @graphql-ts/schema
 
+## 0.6.3
+
+### Patch Changes
+
+- [`24d358694593e4cc8f2b2e3d37869a63ca5733a9`](https://github.com/Thinkmill/graphql-ts/commit/24d358694593e4cc8f2b2e3d37869a63ca5733a9) Thanks [@emmatown](https://github.com/emmatown)! - Improve types that enforce correct fields are provided when `interfaces` are passed to `g.object`/`g.interface`
+
+- [`24d358694593e4cc8f2b2e3d37869a63ca5733a9`](https://github.com/Thinkmill/graphql-ts/commit/24d358694593e4cc8f2b2e3d37869a63ca5733a9) Thanks [@emmatown](https://github.com/emmatown)! - Deprecate `InterfaceToInterfaceFields` and `InterfacesToOutputFields` types.
+
 ## 0.6.2
 
 ### Patch Changes
