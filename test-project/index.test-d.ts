@@ -1395,3 +1395,133 @@ const someInputFields = {
     },
   });
 }
+
+{
+  type Thing = {
+    something?: string;
+  };
+
+  g.object<Thing>()({
+    name: "Something",
+    fields: {
+      something: g.field({
+        type: g.String,
+        resolve(parent) {
+          assertCompatible<Invariant<Thing>, Invariant<typeof parent>>();
+          return parent.something;
+        },
+      }),
+    },
+  });
+}
+
+{
+  const a = {
+    something: g.field({
+      type: g.String,
+      args: {
+        a: g.arg({ type: g.nonNull(g.String) }),
+      },
+      resolve() {
+        return "something";
+      },
+    }),
+    other: g.field({
+      type: g.String,
+      args: {
+        b: g.arg({ type: g.nonNull(g.String) }),
+      },
+      // @ts-expect-error
+      resolve() {},
+    }),
+  };
+  g.object()({
+    name: "Thing",
+    fields: {
+      ...a,
+    },
+  });
+}
+
+{
+  const A = g.object<{
+    __typename: "A";
+  }>()({
+    name: "A",
+    fields: {
+      something: g.field({
+        type: g.nonNull(g.String),
+        resolve() {
+          return "A";
+        },
+      }),
+    },
+  });
+  const B = g.object<{
+    __typename: "B";
+  }>()({
+    name: "B",
+    fields: {
+      something: g.field({
+        type: g.nonNull(g.String),
+        resolve() {
+          return "B";
+        },
+      }),
+    },
+  });
+
+  const Something = g.union({
+    name: "Something",
+    types: [A, B],
+  });
+  assertCompatible<
+    Invariant<
+      g.UnionType<
+        | {
+            __typename: "A";
+          }
+        | {
+            __typename: "B";
+          }
+      >
+    >,
+    Invariant<typeof Something>
+  >();
+  g.field({
+    type: Something,
+    // @ts-expect-error
+    resolve() {
+      if (Math.random() > 0.5) {
+        return { __typename: "Ad" };
+      }
+      return { __typename: "B" };
+    },
+  });
+  g.field({
+    type: Something,
+    args: {
+      a: g.arg({ type: g.nonNull(g.String) }),
+    },
+    resolve(_, args) {
+      console.log(args);
+      if (Math.random() > 0.5) {
+        return { __typename: "A" };
+      }
+      return { __typename: "B" };
+    },
+  });
+  g.field({
+    type: Something,
+    args: {
+      a: g.arg({ type: g.nonNull(g.String) }),
+    },
+    async resolve(_, args) {
+      console.log(args);
+      if (Math.random() > 0.5) {
+        return { __typename: "A" };
+      }
+      return { __typename: "B" };
+    },
+  });
+}
