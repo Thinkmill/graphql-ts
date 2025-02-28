@@ -1,4 +1,21 @@
-import * as graphqltsSchema from "@graphql-ts/schema";
+import {
+  InferValueFromArgs,
+  InferValueFromOutputType,
+} from "@graphql-ts/schema";
+import {
+  GArg,
+  GField,
+  GInputType,
+  GInterfaceField,
+  GInterfaceType,
+  GNonNull,
+  GNullableType,
+  GObjectType,
+  GOutputType,
+  GType,
+  GUnionType,
+} from "@graphql-ts/schema/definition";
+import { GraphQLFieldResolver } from "graphql/type/definition";
 export * from "@graphql-ts/schema/api-without-context";
 export {
   field,
@@ -11,31 +28,36 @@ export {
 
 export type Context = unknown;
 
-export type NullableType = graphqltsSchema.NullableType<Context>;
-export type Type = graphqltsSchema.Type<Context>;
-export type NullableOutputType = graphqltsSchema.NullableOutputType<Context>;
-export type OutputType = graphqltsSchema.OutputType<Context>;
+export type NullableType = GNullableType;
+export type Type = GType;
+export type NullableOutputType = Exclude<GOutputType<Context>, GNonNull<any>>;
+export type OutputType = GOutputType<Context>;
 export type Field<
   Source,
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+  Args extends Record<string, GArg<GInputType>>,
   TType extends OutputType,
   SourceAtKey,
-> = graphqltsSchema.Field<Source, Args, TType, SourceAtKey, Context>;
+> = GField<Source, Args, TType, SourceAtKey, Context>;
 export type FieldResolver<
   Source,
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
-  TType extends OutputType,
-> = graphqltsSchema.FieldResolver<Source, Args, TType, Context>;
-export type ObjectType<Source> = graphqltsSchema.ObjectType<Source, Context>;
-export type UnionType<Source> = graphqltsSchema.UnionType<Source, Context>;
+  Args extends Record<string, GArg<GInputType>>,
+  Type extends OutputType,
+> = GraphQLFieldResolver<
+  Source,
+  Context,
+  InferValueFromArgs<Args>,
+  InferValueFromOutputType<Type>
+>;
+export type ObjectType<Source> = GObjectType<Source, Context>;
+export type UnionType<Source> = GUnionType<Source, Context>;
 export type InterfaceType<
   Source,
   Fields extends Record<
     string,
-    graphqltsSchema.InterfaceField<any, OutputType, Context>
+    InterfaceField<Record<string, GArg<GInputType>>, OutputType>
   >,
-> = graphqltsSchema.InterfaceType<Source, Fields, Context>;
+> = GInterfaceType<Source, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, graphqltsSchema.Arg<graphqltsSchema.InputType>>,
+  Args extends Record<string, GArg<GInputType>>,
   TType extends OutputType,
-> = graphqltsSchema.InterfaceField<Args, TType, Context>;
+> = GInterfaceField<Args, TType, Context>;

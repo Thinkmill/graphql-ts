@@ -1,0 +1,4 @@
+{
+  "main": "dist/graphql-ts-schema-definition.cjs.js",
+  "module": "dist/graphql-ts-schema-definition.esm.js"
+}
