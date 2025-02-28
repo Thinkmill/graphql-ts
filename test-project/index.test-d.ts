@@ -12,6 +12,7 @@ import {
   GInputType,
   GOutputType,
   GScalarType,
+  GUnionType,
 } from "@graphql-ts/schema/definition";
 
 // this isn't really right
@@ -1373,6 +1374,54 @@ const someInputFields = {
   // which again feels conceptually correct rather than banning when not using exactOptionalPropertyTypes
   assertCompatible<
     Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  const A = g.object<{
+    __typename: "A";
+  }>()({
+    name: "A",
+    fields: {
+      something: g.field({
+        type: g.nonNull(g.String),
+        resolve() {
+          return "A";
+        },
+      }),
+    },
+  });
+  const B = g.object<{
+    __typename: "B";
+  }>()({
+    name: "B",
+    fields: {
+      something: g.field({
+        type: g.nonNull(g.String),
+        resolve() {
+          return "B";
+        },
+      }),
+    },
+  });
+
+  const Something = g.union({
+    name: "Something",
+    types: [A, B],
+  });
+  assertCompatible<
+    Invariant<
+      GUnionType<
+        | {
+            __typename: "A";
+          }
+        | {
+            __typename: "B";
+          },
+        unknown
+      >
+    >,
     Invariant<typeof Something>
   >();
 }

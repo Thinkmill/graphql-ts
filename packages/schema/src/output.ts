@@ -8,6 +8,7 @@ import type {
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLUnionType,
+  GraphQLUnionTypeConfig,
 } from "graphql/type/definition";
 import type { InferValueFromArgs } from "./api-without-context";
 import type {
@@ -28,7 +29,6 @@ import {
   GObjectType,
   GOutputType,
   GUnionType,
-  GUnionTypeConfig,
 } from "./definition";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
@@ -293,9 +293,22 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * });
    * ```
    */
-  union: <Source>(
-    config: GUnionTypeConfig<Source, Context>
-  ) => GUnionType<Source, Context>;
+  union: <Type extends GObjectType<any, Context>>(
+    config: Flatten<
+      Omit<
+        GraphQLUnionTypeConfig<
+          Type extends GObjectType<infer Source, Context> ? Source : never,
+          Context
+        >,
+        "types"
+      > & {
+        types: readonly Type[] | (() => readonly Type[]);
+      }
+    >
+  ) => GUnionType<
+    Type extends GObjectType<infer Source, Context> ? Source : never,
+    Context
+  >;
   /**
    * Creates a GraphQL field.
    *
@@ -596,3 +609,7 @@ export function bindGraphQLSchemaAPIToContext<
     },
   };
 }
+
+type Flatten<T> = {
+  [Key in keyof T]: T[Key];
+} & {};

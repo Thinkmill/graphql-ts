@@ -122,14 +122,8 @@ export class GObjectType<Source, Context> extends GraphQLObjectType<
   }
 }
 
-export type GUnionTypeConfig<Source, Context> = Flatten<
-  Omit<GraphQLUnionTypeConfig<Source, Context>, "types"> & {
-    types: OrFunc<readonly GObjectType<Source, Context>[]>;
-  }
->;
-
 export class GUnionType<Source, Context> extends GraphQLUnionType {
-  constructor(config: Readonly<GUnionTypeConfig<Source, Context>>) {
+  constructor(config: Readonly<GraphQLUnionTypeConfig<Source, Context>>) {
     super(config);
   }
   declare resolveType: Maybe<GraphQLTypeResolver<Source, Context>>;
