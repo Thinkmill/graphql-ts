@@ -1,14 +1,34 @@
 import {
   g,
   bindGraphQLSchemaAPIToContext,
-  Arg,
   InferValueFromInputType,
-  InputObjectType,
-  ScalarType,
   InferValueFromOutputType,
   graphql,
 } from "@graphql-ts/schema";
 import * as gWithContext from "./schema-api";
+import {
+  GArg,
+  GEnumType,
+  GInputObjectType,
+  GInputType,
+  GInterfaceType,
+  GList,
+  GNonNull,
+  GObjectType,
+  GOutputType,
+  GScalarType,
+  GUnionType,
+} from "@graphql-ts/schema/definition";
+import {
+  GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLUnionType,
+} from "graphql";
 
 // this isn't really right
 function expectType<T>(type: T) {
@@ -79,25 +99,25 @@ function useType<T>(a?: T) {
 }
 
 {
-  // should be unknown
-  type a = g.InferValueFromOutputType<g.OutputType>;
+  // should be unknown for G* types but for GraphQLOutputType, it is any
+  type a = InferValueFromOutputType<GOutputType<any>>;
   useType<a>();
 }
 {
   // should be unknown
-  type a = g.InferValueFromInputType<g.InputType>;
+  type a = g.InferValueFromInputType<GInputType>;
   useType<a>();
-  type b = g.InferValueFromArg<g.Arg<g.InputType>>;
+  type b = g.InferValueFromArg<GArg<GInputType>>;
   useType<b>();
   // should be { readonly a: unknown }
-  type c = g.InferValueFromArgs<{ a: g.Arg<g.InputType> }>;
+  type c = g.InferValueFromArgs<{ a: GArg<GInputType> }>;
   useType<c>();
 }
 
 {
-  type RecursiveInput = InputObjectType<{
-    nullableString: Arg<ScalarType<string>>;
-    recursive: Arg<RecursiveInput>;
+  type RecursiveInput = GInputObjectType<{
+    nullableString: GArg<GScalarType<string>>;
+    recursive: GArg<RecursiveInput>;
   }>;
 
   const Recursive: RecursiveInput = g.inputObject({
@@ -125,9 +145,9 @@ function useType<T>(a?: T) {
     nullableString: g.arg({ type: g.String }),
   };
 
-  type RecursiveInput = InputObjectType<
+  type RecursiveInput = GInputObjectType<
     typeof nonRecursiveFields & {
-      recursive: Arg<RecursiveInput, any>;
+      recursive: GArg<RecursiveInput, any>;
     }
   >;
 
@@ -153,8 +173,8 @@ function useType<T>(a?: T) {
 
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
-export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof g.String>;
+export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: GInputObjectType<{
+  nullableString: GArg<typeof g.String>;
 }> = g.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
@@ -1543,6 +1563,122 @@ const someInputFields = {
   g.field<unknown, typeof g.String, (arg: unknown) => string, {}>({
     type: g.String,
     resolve() {
+      return "";
+    },
+  });
+}
+
+{
+  assertCompatible<
+    Invariant<GScalarType<string, string>>,
+    Invariant<GraphQLScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GObjectType<{ something: string }, { context: "something" }>>,
+    Invariant<
+      GraphQLObjectType<{ something: string }, { context: "something" }>
+    >
+  >();
+
+  assertCompatible<
+    Invariant<GUnionType<{ something: string }, { context: "something" }>>,
+    Invariant<GraphQLUnionType>
+  >();
+
+  assertCompatible<
+    Invariant<
+      GInterfaceType<{ something: string }, any, { context: "something" }>
+    >,
+    Invariant<GraphQLInterfaceType>
+  >();
+
+  assertCompatible<
+    Invariant<GEnumType<Record<string, unknown>>>,
+    Invariant<GraphQLEnumType>
+  >();
+
+  assertCompatible<
+    Invariant<GEnumType<{ a: "a"; b: "b" }>>,
+    // @ts-expect-error
+    Invariant<GraphQLEnumType>
+  >();
+  assertCompatible<
+    GEnumType<{ a: "a"; b: "b" }>,
+    // @ts-expect-error
+    GraphQLEnumType
+  >();
+  assertCompatible<GraphQLEnumType, GEnumType<{ a: "a"; b: "b" }>>();
+
+  assertCompatible<
+    Invariant<GNonNull<GScalarType<string, string>>>,
+    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
+    // without this, GNonNull would be assignable to GList which is the stricter getter exists
+    // @ts-expect-error
+    Invariant<GraphQLNonNull<GScalarType<string, string>>>
+  >();
+  assertCompatible<
+    GraphQLNonNull<GScalarType<string, string>>,
+    GNonNull<GScalarType<string, string>>
+  >();
+  assertCompatible<
+    GNonNull<GScalarType<string, string>>,
+    // @ts-expect-error
+    GraphQLNonNull<GScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GList<GScalarType<string, string>>>,
+    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
+    // without this, GNonNull would be assignable to GList which is the stricter getter exists
+    // @ts-expect-error
+    Invariant<GraphQLList<GScalarType<string, string>>>
+  >();
+  assertCompatible<
+    GraphQLList<GScalarType<string, string>>,
+    GList<GScalarType<string, string>>
+  >();
+  assertCompatible<
+    GList<GScalarType<string, string>>,
+    // @ts-expect-error
+    GraphQLList<GScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GInputObjectType<Record<string, GArg<any>>, boolean>>,
+    Invariant<GraphQLInputObjectType>
+  >();
+
+  assertCompatible<
+    Invariant<GInputObjectType<Record<string, GArg<GInputType>>, boolean>>,
+    // the error essentially ... makes sense due to the non null/list differences
+    // @ts-expect-error
+    Invariant<GraphQLInputObjectType>
+  >();
+  assertCompatible<
+    GraphQLInputObjectType,
+    GInputObjectType<Record<string, GArg<GInputType>>, boolean>
+  >();
+  assertCompatible<
+    GInputObjectType<Record<string, GArg<GInputType>>, boolean>,
+    // @ts-expect-error
+    GraphQLInputObjectType
+  >();
+
+  const x: GInputObjectType<Record<string, GArg<any>>, boolean> = undefined!;
+
+  g.field({
+    type: g.String,
+    args: {
+      a: g.arg({ type: x }),
+    },
+    resolve(_, args) {
+      assertCompatible<
+        Invariant<{
+          a: { readonly [x: string]: unknown } | null | undefined;
+        }>,
+        Invariant<typeof args>
+      >();
       return "";
     },
   });

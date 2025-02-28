@@ -10,6 +10,11 @@
       "module": "./dist/graphql-ts-schema.esm.js",
       "default": "./dist/graphql-ts-schema.cjs.js"
     },
+    "./definition": {
+      "types": "./definition/dist/graphql-ts-schema-definition.cjs.js",
+      "module": "./definition/dist/graphql-ts-schema-definition.esm.js",
+      "default": "./definition/dist/graphql-ts-schema-definition.cjs.js"
+    },
     "./api-with-context": {
       "types": "./api-with-context/dist/graphql-ts-schema-api-with-context.cjs.js",
       "module": "./api-with-context/dist/graphql-ts-schema-api-with-context.esm.js",
@@ -26,6 +31,7 @@
     "dist",
     "api-without-context",
     "api-with-context",
+    "definition",
     "src"
   ],
   "license": "MIT",
@@ -43,7 +49,8 @@
     "entrypoints": [
       "index.ts",
       "api-with-context/index.ts",
-      "api-without-context/index.ts"
+      "api-without-context/index.ts",
+      "definition.ts"
     ]
   }
 }

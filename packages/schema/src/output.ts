@@ -1,97 +1,50 @@
 import type {
-  GraphQLFieldConfigMap,
+  GraphQLEnumType,
   GraphQLFieldExtensions,
-  GraphQLInputType,
-  GraphQLInterfaceTypeExtensions,
-  GraphQLIsTypeOfFn,
-  GraphQLList,
-  GraphQLObjectTypeExtensions,
+  GraphQLObjectTypeConfig,
   GraphQLOutputType,
   GraphQLResolveInfo,
-  GraphQLTypeResolver,
-  GraphQLType,
-} from "graphql/type/definition";
-import {
+  GraphQLScalarType,
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLUnionType,
+  GraphQLUnionTypeConfig,
 } from "graphql/type/definition";
-import type {
-  Arg,
-  InferValueFromArgs,
-  InputType,
-  ScalarType,
-  EnumType,
-  ListType,
-  NonNullType,
-} from "./api-without-context";
-import type { NullableType, Type } from "./type";
+import type { InferValueFromArgs } from "./api-without-context";
 import type {
   object,
   field,
   interface as interfaceFunc,
 } from "./api-with-context";
+import {
+  GArg,
+  GEnumType,
+  GField,
+  GInputType,
+  GInterfaceField,
+  GInterfaceType,
+  GInterfaceTypeConfig,
+  GList,
+  GNonNull,
+  GObjectType,
+  GOutputType,
+  GUnionType,
+} from "./definition";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   typeof interfaceFunc,
   typeof field,
   typeof object,
-  NullableType<any>,
-  Type<any>,
 ];
 
-/**
- * Any output list type. This type only exists because of limitations in
- * circular types.
- *
- * If you want to represent any list input type, you should do
- * `ListType<OutputType<Context>>`.
- */
-type OutputListType<Context> = {
-  kind: "list";
-  of: OutputType<Context>;
-  graphQLType: GraphQLList<GraphQLType>;
-  __context: (context: Context) => void;
-};
-
-/**
- * Any nullable GraphQL **output** type for a given `Context`.
- *
- * See also:
- *
- * - {@link NullableType}
- * - {@link InputType}
- * - {@link OutputType}
- */
-export type NullableOutputType<Context> =
-  | ScalarType<any>
-  | ObjectType<any, Context>
-  | UnionType<any, Context>
-  | InterfaceType<any, any, Context>
-  | EnumType<any>
-  | OutputListType<Context>;
-
-/**
- * Any GraphQL **output** type for a given `Context`.
- *
- * See also:
- *
- * - {@link Type}
- * - {@link InputType}
- * - {@link NullableOutputType}
- */
-export type OutputType<Context> =
-  | NullableOutputType<Context>
-  | NonNullType<NullableOutputType<Context>>;
-
-type OutputListTypeForInference<Of extends OutputType<any>> = ListType<Of>;
-
-type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
-  Type extends ScalarType<infer Value>
+type InferValueFromOutputTypeWithoutAddingNull<Type extends GraphQLOutputType> =
+  Type extends GraphQLScalarType<infer Value>
     ? Value
-    : Type extends EnumType<infer Values>
-      ? Values[keyof Values]["value"]
-      : Type extends OutputListTypeForInference<infer Value>
+    : Type extends GraphQLEnumType
+      ? Type extends GEnumType<infer Values>
+        ? Values[keyof Values]
+        : never
+      : Type extends GList<infer Value extends GOutputType<any>>
         ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
           // which means that things like `string` won't be allowed
           // (which is probably a good thing because returning a string from a resolver that needs
@@ -99,38 +52,31 @@ type InferValueFromOutputTypeWithoutAddingNull<Type extends OutputType<any>> =
           // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
           // (though tbh, i think the chance of that causing problems is quite low)
           object & Iterable<InferValueFromOutputType<Value>>
-        : Type extends ObjectType<infer Source, any>
+        : Type extends GraphQLObjectType<infer Source, any>
           ? Source
-          : Type extends UnionType<infer Source, any>
-            ? Source
-            : Type extends InterfaceType<infer Source, any, any>
+          : Type extends GraphQLUnionType | GraphQLInterfaceType
+            ? Type extends
+                | GUnionType<infer Source, any>
+                | GInterfaceType<infer Source, any, any>
               ? Source
-              : never;
+              : unknown
+            : never;
 
-type OutputNonNullTypeForInference<Of extends NullableOutputType<any>> =
-  NonNullType<Of>;
-
-export type InferValueFromOutputType<Type extends OutputType<any>> =
+export type InferValueFromOutputType<Type extends GOutputType<any>> =
   MaybePromise<
-    Type extends OutputNonNullTypeForInference<infer Value>
+    Type extends GNonNull<
+      infer Value extends Exclude<GOutputType<any>, GNonNull<any>>
+    >
       ? InferValueFromOutputTypeWithoutAddingNull<Value>
       : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
   >;
-
-/** A GraphQL object type which should be created using {@link object `g.object`}. */
-export type ObjectType<Source, Context> = {
-  kind: "object";
-  graphQLType: GraphQLObjectType;
-  __context: (context: Context) => void;
-  __source: Source;
-};
 
 type MaybePromise<T> = Promise<T> | T;
 
 export type FieldResolver<
   Source,
-  Args extends Record<string, Arg<InputType>>,
-  TType extends OutputType<Context>,
+  Args extends Record<string, GArg<GInputType>>,
+  TType extends GOutputType<Context>,
   Context,
 > = (
   source: Source,
@@ -139,47 +85,11 @@ export type FieldResolver<
   info: GraphQLResolveInfo
 ) => InferValueFromOutputType<TType>;
 
-/**
- * A GraphQL output field for an {@link ObjectType} which should be created using
- * {@link field `g.field`}.
- */
-export type Field<
-  Source,
-  Args extends Record<string, Arg<InputType>>,
-  Type extends OutputType<Context>,
-  SourceAtKey,
-  Context,
-> = {
-  args?: Args;
-  type: Type;
-  resolve?: FieldResolver<Source, Args, Type, Context>;
-  deprecationReason?: string;
-  description?: string;
-  extensions?: Readonly<
-    GraphQLFieldExtensions<Source, Context, InferValueFromArgs<Args>>
-  >;
-  __missingResolve?: (arg: SourceAtKey) => void;
-};
-
-export type InterfaceField<
-  Args extends Record<string, Arg<InputType>>,
-  Type extends OutputType<Context>,
-  Context,
-> = {
-  args?: Args;
-  type: Type;
-  deprecationReason?: string;
-  description?: string;
-  extensions?: Readonly<
-    GraphQLFieldExtensions<any, any, InferValueFromArgs<Args>>
-  >;
-};
-
 type SomeTypeThatIsntARecordOfArgs = string;
 
 type ImpliedResolver<
-  Args extends { [Key in keyof Args]: Arg<InputType> },
-  Type extends OutputType<Context>,
+  Args extends { [Key in keyof Args]: GArg<GInputType> },
+  Type extends GOutputType<Context>,
   Context,
 > =
   | InferValueFromOutputType<Type>
@@ -191,8 +101,8 @@ type ImpliedResolver<
 
 export type FieldFuncArgs<
   Source,
-  Args extends { [Key in keyof Args]: Arg<InputType> },
-  Type extends OutputType<Context>,
+  Args extends { [Key in keyof Args]: GArg<GInputType> },
+  Type extends GOutputType<Context>,
   Context,
 > = {
   args?: Args;
@@ -204,7 +114,7 @@ export type FieldFuncArgs<
 
 export type FieldFunc<Context> = <
   Source,
-  Type extends OutputType<Context>,
+  Type extends GOutputType<Context>,
   Resolve extends
     | undefined
     | ((
@@ -215,7 +125,7 @@ export type FieldFunc<Context> = <
         context: Context,
         info: GraphQLResolveInfo
       ) => InferValueFromOutputType<Type>),
-  Args extends { [Key in keyof Args]: Arg<InputType> } = {},
+  Args extends { [Key in keyof Args]: GArg<GInputType> } = {},
 >(
   field: FieldFuncArgs<Source, Args, Type, Context> &
     (Resolve extends {}
@@ -241,7 +151,7 @@ export type FieldFunc<Context> = <
           ) => InferValueFromOutputType<Type>) &
             Resolve;
         })
-) => Field<
+) => GField<
   Source,
   Args,
   Type,
@@ -249,30 +159,21 @@ export type FieldFunc<Context> = <
   Context
 >;
 
-function bindFieldToContext<Context>(): FieldFunc<Context> {
-  return function field(field) {
-    if (!field.type) {
-      throw new Error("A type must be passed to g.field()");
-    }
-    return field as any;
-  };
-}
-
 /** @deprecated */
 export type InterfaceToInterfaceFields<
-  Interface extends InterfaceType<any, any, any>,
-> = Interface extends InterfaceType<any, infer Fields, any> ? Fields : never;
+  Interface extends GInterfaceType<any, any, any>,
+> = Interface extends GInterfaceType<any, infer Fields, any> ? Fields : never;
 
 type InterfaceFieldsToOutputFields<
   Source,
-  Fields extends { [key: string]: InterfaceField<any, any, any> },
+  Fields extends { [key: string]: GInterfaceField<any, any, any> },
 > = {
-  [Key in keyof Fields]: Fields[Key] extends InterfaceField<
+  [Key in keyof Fields]: Fields[Key] extends GInterfaceField<
     infer Args,
     infer OutputType,
     infer Context
   >
-    ? Field<
+    ? GField<
         Source,
         Args,
         OutputType,
@@ -282,20 +183,12 @@ type InterfaceFieldsToOutputFields<
     : never;
 };
 
-/** @deprecated */
-type _InterfacesToOutputFields<
+export type InterfacesToOutputFields<
   Source,
-  Context,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[],
-> = InterfacesToOutputFields<Source, Interfaces>;
-export type { _InterfacesToOutputFields as InterfacesToOutputFields };
-
-type InterfacesToOutputFields<
-  Source,
-  Interfaces extends readonly InterfaceType<Source, any, any>[],
+  Interfaces extends readonly GInterfaceType<Source, any, any>[],
 > = MergeTuple<
   {
-    [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
+    [Key in keyof Interfaces]: Interfaces[Key] extends GInterfaceType<
       Source,
       infer Fields,
       any
@@ -306,11 +199,11 @@ type InterfacesToOutputFields<
   {}
 >;
 
-type InterfacesToInterfaceFields<
-  Interfaces extends readonly InterfaceType<any, any, any>[],
+export type InterfacesToInterfaceFields<
+  Interfaces extends readonly GInterfaceType<any, any, any>[],
 > = MergeTuple<
   {
-    [Key in keyof Interfaces]: Interfaces[Key] extends InterfaceType<
+    [Key in keyof Interfaces]: Interfaces[Key] extends GInterfaceType<
       any,
       infer Fields,
       any
@@ -325,295 +218,17 @@ type MergeTuple<T, Merged> = T extends readonly [infer U, ...infer Rest]
   ? MergeTuple<Rest, Merged & U>
   : Merged;
 
-/**
- * Creates a GraphQL object type.
- *
- * See the docs of {@link object `g.object`} for more details.
- */
-export type ObjectTypeFunc<Context> = <
-  Source,
->(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
-  youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
-}) => <
-  Fields extends {
-    [Key in keyof Fields]: Field<
-      Source,
-      any,
-      any,
-      Key extends keyof Source ? Source[Key] : unknown,
-      Context
-    >;
-  } & InterfaceFieldsToOutputFields<
-    Source,
-    InterfacesToInterfaceFields<Interfaces>
-  >,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
->(config: {
-  name: string;
-  fields: Fields | (() => Fields);
-  /**
-   * A description of the object type that is visible when introspected.
-   *
-   * ```ts
-   * type Person = { name: string };
-   *
-   * const Person = g.object<Person>()({
-   *   name: "Person",
-   *   description: "A person does things!",
-   *   fields: {
-   *     name: g.field({ type: g.String }),
-   *   },
-   * });
-   * // ==
-   * graphql`
-   *   """
-   *   A person does things!
-   *   """
-   *   type Person {
-   *     name: String
-   *   }
-   * `;
-   * ```
-   */
-  description?: string;
-  /**
-   * A number of interfaces that the object type implements. See `g.interface`
-   * for more information.
-   *
-   * ```ts
-   * const Node = g.interface<{ kind: string }>()({
-   *   name: "Node",
-   *   resolveType: (source) => source.kind,
-   *   fields: {
-   *     id: g.interfaceField({ type: g.ID }),
-   *   },
-   * });
-   *
-   * const Person = g.object<{ kind: "Person"; id: string }>()({
-   *   name: "Person",
-   *   interfaces: [Node],
-   *   fields: {
-   *     id: g.field({ type: g.ID }),
-   *   },
-   * });
-   * ```
-   */
-  interfaces?: [...Interfaces];
-  isTypeOf?: GraphQLIsTypeOfFn<unknown, Context>;
-  extensions?: Readonly<GraphQLObjectTypeExtensions<Source, Context>>;
-}) => ObjectType<Source, Context>;
-
-function bindObjectTypeToContext<Context>(): ObjectTypeFunc<Context> {
-  return function object() {
-    return function objectInner(config) {
-      return {
-        kind: "object",
-        name: config.name,
-        graphQLType: new GraphQLObjectType({
-          name: config.name,
-          description: config.description,
-          isTypeOf: config.isTypeOf,
-          interfaces: config.interfaces?.map((x) => x.graphQLType),
-          fields: () => {
-            const fields =
-              typeof config.fields === "function"
-                ? config.fields()
-                : config.fields;
-            return buildFields(fields);
-          },
-          extensions: config.extensions,
-        }),
-        __source: undefined as any,
-        __context: undefined as any,
-      };
-    };
-  };
-}
-
-function buildFields(
-  fields: Record<
-    string,
-    Field<any, Record<string, Arg<InputType>>, OutputType<any>, any, any>
-  >
-): GraphQLFieldConfigMap<any, any> {
-  return Object.fromEntries(
-    Object.entries(fields).map(([key, val]) => [
-      key,
-      {
-        type: val.type.graphQLType as GraphQLOutputType,
-        resolve: val.resolve,
-        deprecationReason: val.deprecationReason,
-        description: val.description,
-        args: Object.fromEntries(
-          Object.entries(val.args || {}).map(([key, val]) => [
-            key,
-            {
-              type: val.type.graphQLType as GraphQLInputType,
-              description: val.description,
-              defaultValue: val.defaultValue,
-              deprecationReason: val.deprecationReason,
-            },
-          ])
-        ),
-        extensions: val.extensions,
-      },
-    ])
-  );
-}
-
-export type UnionType<Source, Context> = {
-  kind: "union";
-  __source: Source;
-  __context: (context: Context) => void;
-  graphQLType: GraphQLUnionType;
-};
-
-export type UnionTypeFunc<Context> = <
-  TObjectType extends ObjectType<any, Context>,
->(config: {
-  name: string;
-  description?: string;
-  types: TObjectType[];
-  resolveType?: (
-    type: TObjectType["__source"],
-    context: Context,
-    info: GraphQLResolveInfo,
-    abstractType: GraphQLUnionType
-  ) => string;
-}) => UnionType<TObjectType["__source"], Context>;
-
-function bindUnionTypeToContext<Context>(): UnionTypeFunc<Context> {
-  return function union(config) {
-    return {
-      kind: "union",
-      graphQLType: new GraphQLUnionType({
-        name: config.name,
-        description: config.description,
-        types: config.types.map((x) => x.graphQLType),
-        resolveType: config.resolveType as any,
-      }),
-      __source: undefined as any,
-      __context: undefined as any,
-    };
-  };
-}
-
-export type FieldsFunc<Context> = <
-  Source,
->(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
-  youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
-}) => <
-  Fields extends Record<
-    string,
-    Field<Source, any, OutputType<Context>, any, Context>
-  > & {
-    [Key in keyof Source]?: Field<
-      Source,
-      any,
-      OutputType<Context>,
-      Source[Key],
-      Context
-    >;
-  },
->(
-  fields: Fields
-) => Fields;
-
-function bindFieldsToContext<Context>(): FieldsFunc<Context> {
-  return function fields() {
-    return function fieldsInner(fields) {
-      return fields;
-    };
-  };
-}
-
 type InterfaceFieldFuncArgs<
-  Source,
-  Args extends { [Key in keyof Args]: Arg<InputType> },
-  Type extends OutputType<Context>,
+  Args extends { [Key in keyof Args]: GArg<GInputType> },
+  Type extends GOutputType<Context>,
   Context,
 > = {
   args?: Args;
   type: Type;
   deprecationReason?: string;
   description?: string;
-  extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+  extensions?: Readonly<GraphQLFieldExtensions<any, Context>>;
 };
-
-export type InterfaceFieldFunc<Context> = <
-  Source,
-  Type extends OutputType<Context>,
-  Args extends { [Key in keyof Args]: Arg<InputType> } = {},
->(
-  field: InterfaceFieldFuncArgs<Source, Args, Type, Context>
-) => InterfaceField<Args, Type, Context>;
-
-function bindInterfaceFieldToContext<Context>(): InterfaceFieldFunc<Context> {
-  return function interfaceField(field) {
-    return field as any;
-  };
-}
-
-export type InterfaceType<
-  Source,
-  Fields extends Record<
-    string,
-    InterfaceField<any, OutputType<Context>, Context>
-  >,
-  Context,
-> = {
-  kind: "interface";
-  __source: (source: Source) => void;
-  __context: (context: Context) => void;
-  __fields: Fields;
-  graphQLType: GraphQLInterfaceType;
-};
-
-export type InterfaceTypeFunc<Context> = <
-  Source,
->(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
-  youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
-}) => <
-  Fields extends {
-    [Key in keyof Fields]: InterfaceField<any, OutputType<Context>, Context>;
-  } & InterfacesToInterfaceFields<Interfaces>,
-  Interfaces extends readonly InterfaceType<Source, any, Context>[] = [],
->(config: {
-  name: string;
-  description?: string;
-  deprecationReason?: string;
-  interfaces?: [...Interfaces];
-  resolveType?: GraphQLTypeResolver<Source, Context>;
-  fields: Fields | (() => Fields);
-  extensions?: Readonly<GraphQLInterfaceTypeExtensions>;
-}) => InterfaceType<Source, Fields, Context>;
-
-function bindInterfaceTypeToContext<Context>(): InterfaceTypeFunc<Context> {
-  return function interfaceType() {
-    return function interfaceInner(config) {
-      return {
-        kind: "interface",
-        graphQLType: new GraphQLInterfaceType({
-          name: config.name,
-          description: config.description,
-          resolveType: config.resolveType,
-          interfaces: config.interfaces?.map((x) => x.graphQLType),
-          extensions: config.extensions,
-          fields: () => {
-            const fields =
-              typeof config.fields === "function"
-                ? config.fields()
-                : config.fields;
-            return buildFields(fields as any);
-          },
-        }),
-        __source: undefined as any,
-        __context: undefined as any,
-        __fields: undefined as any,
-      };
-    };
-  };
-}
 
 export type GraphQLSchemaAPIWithContext<Context> = {
   /**
@@ -684,7 +299,34 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * });
    * ```
    */
-  object: ObjectTypeFunc<Context>;
+  object: <
+    Source,
+  >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
+    youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
+  }) => <
+    Fields extends {
+      [Key in keyof Fields]: GField<
+        Source,
+        any,
+        any,
+        Key extends keyof Source ? Source[Key] : unknown,
+        Context
+      >;
+    } & InterfaceFieldsToOutputFields<
+      Source,
+      InterfacesToInterfaceFields<Interfaces>
+    >,
+    const Interfaces extends readonly GInterfaceType<
+      Source,
+      any,
+      Context
+    >[] = [],
+  >(
+    config: {
+      fields: Fields;
+      interfaces?: [...Interfaces];
+    } & Omit<GraphQLObjectTypeConfig<Source, Context>, "fields" | "interfaces">
+  ) => GObjectType<Source, Context>;
   /**
    * Create a GraphQL union type.
    *
@@ -711,7 +353,22 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * });
    * ```
    */
-  union: UnionTypeFunc<Context>;
+  union: <Type extends GObjectType<any, Context>>(
+    config: Flatten<
+      Omit<
+        GraphQLUnionTypeConfig<
+          Type extends GObjectType<infer Source, Context> ? Source : never,
+          Context
+        >,
+        "types"
+      > & {
+        types: readonly Type[] | (() => readonly Type[]);
+      }
+    >
+  ) => GUnionType<
+    Type extends GObjectType<infer Source, Context> ? Source : never,
+    Context
+  >;
   /**
    * Creates a GraphQL field.
    *
@@ -727,7 +384,43 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * });
    * ```
    */
-  field: FieldFunc<Context>;
+  field: <
+    Source,
+    Type extends GOutputType<Context>,
+    Resolve,
+    Args extends { [Key in keyof Args]: GArg<GInputType> } = {},
+  >(
+    field: FieldFuncArgs<Source, Args, Type, Context> &
+      (Resolve extends {}
+        ? {
+            resolve: ((
+              source: Source,
+              args: InferValueFromArgs<
+                SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+              >,
+              context: Context,
+              info: GraphQLResolveInfo
+            ) => InferValueFromOutputType<Type>) &
+              Resolve;
+          }
+        : {
+            resolve?: ((
+              source: Source,
+              args: InferValueFromArgs<
+                SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+              >,
+              context: Context,
+              info: GraphQLResolveInfo
+            ) => InferValueFromOutputType<Type>) &
+              Resolve;
+          })
+  ) => GField<
+    Source,
+    Args,
+    Type,
+    Resolve extends {} ? unknown : ImpliedResolver<Args, Type, Context>,
+    Context
+  >;
   /**
    * A helper to easily share fields across object and interface types.
    *
@@ -809,7 +502,26 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * need special type parameters like {@link Field} does so you can create a
    * regular object and put {@link Arg args} in it if you want to share them.
    */
-  fields: FieldsFunc<Context>;
+  fields: <
+    Source,
+  >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
+    youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
+  }) => <
+    Fields extends Record<
+      string,
+      GField<Source, any, GOutputType<Context>, any, Context>
+    > & {
+      [Key in keyof Source]?: GField<
+        Source,
+        any,
+        GOutputType<Context>,
+        Source[Key],
+        Context
+      >;
+    },
+  >(
+    fields: Fields
+  ) => Fields;
   /**
    * Creates a GraphQL interface field.
    *
@@ -832,7 +544,12 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * means that you can use a regular field in an
    * {@link InterfaceType interface type}.
    */
-  interfaceField: InterfaceFieldFunc<Context>;
+  interfaceField: <
+    Args extends { [Key in keyof Args]: GArg<GInputType> },
+    Type extends GOutputType<Context>,
+  >(
+    field: InterfaceFieldFuncArgs<Args, Type, Context>
+  ) => GInterfaceField<Args, Type, Context>;
   /**
    * Creates a GraphQL interface type that can be implemented by other GraphQL
    * object and interface types.
@@ -919,18 +636,65 @@ export type GraphQLSchemaAPIWithContext<Context> = {
    * });
    * ```
    */
-  interface: InterfaceTypeFunc<Context>;
+  interface: <
+    Source,
+  >(youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction?: {
+    youOnlyNeedToPassATypeParameterToThisFunctionYouPassTheActualRuntimeArgsOnTheResultOfThisFunction: true;
+  }) => <
+    Fields extends {
+      [Key in keyof Fields]: GInterfaceField<
+        any,
+        GOutputType<Context>,
+        Context
+      >;
+    } & InterfacesToInterfaceFields<Interfaces>,
+    const Interfaces extends readonly GInterfaceType<
+      Source,
+      any,
+      Context
+    >[] = [],
+  >(
+    config: GInterfaceTypeConfig<Source, Fields, Interfaces, Context>
+  ) => GInterfaceType<Source, Fields, Context>;
 };
 
 export function bindGraphQLSchemaAPIToContext<
   Context,
 >(): GraphQLSchemaAPIWithContext<Context> {
   return {
-    object: bindObjectTypeToContext<Context>(),
-    union: bindUnionTypeToContext<Context>(),
-    field: bindFieldToContext<Context>(),
-    fields: bindFieldsToContext<Context>(),
-    interfaceField: bindInterfaceFieldToContext<Context>(),
-    interface: bindInterfaceTypeToContext<Context>(),
+    object() {
+      return function objectInner(config) {
+        return new GObjectType(config);
+      };
+    },
+    union(config) {
+      return new GUnionType(config);
+    },
+    field(field) {
+      if (!field.type) {
+        throw new Error("A type must be passed to g.field()");
+      }
+      return field as any;
+    },
+    fields() {
+      return function fieldsInner(fields) {
+        return fields;
+      };
+    },
+    interfaceField(field) {
+      if (!field.type) {
+        throw new Error("A type must be passed to g.interfaceField()");
+      }
+      return field as any;
+    },
+    interface() {
+      return function interfaceInner(config) {
+        return new GInterfaceType(config);
+      };
+    },
   };
 }
+
+type Flatten<T> = {
+  [Key in keyof T]: T[Key];
+} & {};
