@@ -1,20 +1,7 @@
-import {
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLNullableType,
-  GraphQLType,
-} from "graphql/type/definition";
-import { NullableType, Type } from "../type";
+import { GList, GNonNull, GNullableType, GType } from "../definition";
 
 /**
- * Wraps any GraphQL type in a list type.
- *
- * See the documentation of {@link list `g.list`} for more information.
- */
-export type ListType<Of extends GraphQLType> = GraphQLList<Of>;
-
-/**
- * Wraps any GraphQL type in a {@link ListType}.
+ * Wraps any GraphQL type in a {@link GList}.
  *
  * ```ts
  * const stringListType = g.list(g.String);
@@ -69,16 +56,9 @@ export type ListType<Of extends GraphQLType> = GraphQLList<Of>;
  * });
  * ```
  */
-export function list<Of extends Type<any>>(of: Of): ListType<Of> {
-  return new GraphQLList(of.graphQLType);
+export function list<Of extends GType>(of: Of): GList<Of> {
+  return new GList(of);
 }
-
-/**
- * Wraps a {@link NullableType} with a non-null type.
- *
- * See the documentation for {@link nonNull `g.nonNull`} for more information.
- */
-export type NonNullType<Of extends GraphQLNullableType> = GraphQLNonNull<Of>;
 
 /**
  * Wraps a {@link NullableType} with a {@link NonNullType}.
@@ -162,6 +142,6 @@ export type NonNullType<Of extends GraphQLNullableType> = GraphQLNonNull<Of>;
  * g.nonNull(g.nonNull(g.String));
  * ```
  */
-export function nonNull<Of extends NullableType<any>>(of: Of): NonNullType<Of> {
-  return new GraphQLNonNull(of);
+export function nonNull<Of extends GNullableType>(of: Of): GNonNull<Of> {
+  return new GNonNull(of);
 }

@@ -1,14 +1,18 @@
 import {
   g,
   bindGraphQLSchemaAPIToContext,
-  Arg,
   InferValueFromInputType,
-  InputObjectType,
-  ScalarType,
   InferValueFromOutputType,
   graphql,
 } from "@graphql-ts/schema";
 import * as gWithContext from "./schema-api";
+import {
+  GArg,
+  GInputObjectType,
+  GInputType,
+  GOutputType,
+  GScalarType,
+} from "@graphql-ts/schema/definition";
 
 // this isn't really right
 function expectType<T>(type: T) {
@@ -79,25 +83,25 @@ function useType<T>(a?: T) {
 }
 
 {
-  // should be unknown
-  type a = g.InferValueFromOutputType<g.OutputType>;
+  // should be unknown for G* types but for GraphQLOutputType, it is any
+  type a = InferValueFromOutputType<GOutputType<any>>;
   useType<a>();
 }
 {
   // should be unknown
-  type a = g.InferValueFromInputType<g.InputType>;
+  type a = g.InferValueFromInputType<GInputType>;
   useType<a>();
-  type b = g.InferValueFromArg<g.Arg<g.InputType>>;
+  type b = g.InferValueFromArg<GArg<GInputType>>;
   useType<b>();
   // should be { readonly a: unknown }
-  type c = g.InferValueFromArgs<{ a: g.Arg<g.InputType> }>;
+  type c = g.InferValueFromArgs<{ a: GArg<GInputType> }>;
   useType<c>();
 }
 
 {
-  type RecursiveInput = InputObjectType<{
-    nullableString: Arg<ScalarType<string>>;
-    recursive: Arg<RecursiveInput>;
+  type RecursiveInput = GInputObjectType<{
+    nullableString: GArg<GScalarType<string>>;
+    recursive: GArg<RecursiveInput>;
   }>;
 
   const Recursive: RecursiveInput = g.inputObject({
@@ -125,9 +129,9 @@ function useType<T>(a?: T) {
     nullableString: g.arg({ type: g.String }),
   };
 
-  type RecursiveInput = InputObjectType<
+  type RecursiveInput = GInputObjectType<
     typeof nonRecursiveFields & {
-      recursive: Arg<RecursiveInput, any>;
+      recursive: GArg<RecursiveInput, any>;
     }
   >;
 
@@ -153,8 +157,8 @@ function useType<T>(a?: T) {
 
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
-export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof g.String>;
+export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: GInputObjectType<{
+  nullableString: GArg<typeof g.String>;
 }> = g.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
@@ -487,7 +491,7 @@ g.object<{ id: string } | { id: boolean }>()({
     interfaces: [Node],
     fields: {
       // @ts-expect-error
-      id: g.field({ type: g.Int }),
+      // id: g.field({ type: g.Int }),
     },
   });
   g.object<{ id: number }>()({

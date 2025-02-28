@@ -1,53 +1,7 @@
-import {
-  GraphQLEnumType,
-  GraphQLEnumTypeExtensions,
-} from "graphql/type/definition";
+import { GEnumType, GEnumTypeConfig, GEnumValueConfig } from "../definition";
 
 /**
- * An individual enum value in an {@link EnumType enum type} created using
- * {@link enumType `g.enum`}. You can use the {@link enumValues `g.enumValues`}
- * shorthand to create enum values more easily.
- *
- * Note the value property/generic here represents the deserialized form of the
- * enum. It does not indicate the name of the enum value that is visible in the
- * GraphQL schema. The value can be anything, not necessarily a string. Usually
- * though, it will be a string which is equal to the key where the value is
- * used.
- */
-export type EnumValue<Value> = {
-  description?: string;
-  deprecationReason?: string;
-  value: Value;
-};
-
-/**
- * A GraphQL enum type which wraps an underlying graphql-js
- * {@link GraphQLEnumType}. This should be created with
- * {@link enumType `g.enum`}.
- *
- * ```ts
- * const MyEnum = g.enum({
- *   name: "MyEnum",
- *   values: g.enumValues(["a", "b"]),
- * });
- * // ==
- * graphql`
- *   enum MyEnum {
- *     a
- *     b
- *   }
- * `;
- * ```
- */
-export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
-  kind: "enum";
-  values: Values;
-  graphQLType: GraphQLEnumType;
-  __context: (context: unknown) => void;
-};
-
-/**
- * A shorthand to easily create {@link EnumValue enum values} to pass to
+ * A shorthand to easily create {@link GEnumValueConfig enum values} to pass to
  * {@link enumType `g.enum`}.
  *
  * If you need to set a `description` or `deprecationReason` for an enum
@@ -70,15 +24,17 @@ export type EnumType<Values extends Record<string, EnumValue<unknown>>> = {
  * });
  * ```
  */
-export function enumValues<Values extends readonly string[]>(
+export function enumValues<const Values extends readonly string[]>(
   values: readonly [...Values]
-): Record<Values[number], EnumValue<Values[number]>> {
+): {
+  [Key in Values[number]]: GEnumValueConfig<Key>;
+} {
   return Object.fromEntries(values.map((value) => [value, { value }])) as any;
 }
 
 /**
- * Creates an {@link EnumType enum type} with a number of
- * {@link EnumValue enum values}.
+ * Creates an {@link GEnumType enum type} with a number of
+ * {@link GEnumValueConfig enum values}.
  *
  * ```ts
  * const MyEnum = g.enum({
@@ -128,24 +84,10 @@ export function enumValues<Values extends readonly string[]>(
  * `;)
  * ```
  */
-function enumType<Values extends Record<string, EnumValue<unknown>>>(config: {
-  name: string;
-  description?: string;
-  extensions?: Readonly<GraphQLEnumTypeExtensions>;
-  values: Values;
-}): EnumType<Values> {
-  const graphQLType = new GraphQLEnumType({
-    name: config.name,
-    description: config.description,
-    extensions: config.extensions,
-    values: config.values,
-  });
-  return {
-    kind: "enum",
-    values: config.values,
-    graphQLType,
-    __context: undefined as any,
-  };
+function enumType<Values extends Record<string, unknown>>(
+  config: GEnumTypeConfig<Values>
+): GEnumType<Values> {
+  return new GEnumType(config);
 }
 
 export { enumType as enum };

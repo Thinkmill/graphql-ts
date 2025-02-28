@@ -1,7 +1,4 @@
-import {
-  GraphQLScalarType,
-  GraphQLScalarTypeConfig,
-} from "graphql/type/definition";
+import { GraphQLScalarTypeConfig } from "graphql/type/definition";
 import {
   GraphQLID,
   GraphQLString,
@@ -9,29 +6,10 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from "graphql/type/scalars";
+import { GScalarType } from "../definition";
 
 /**
- * A GraphQL scalar type which wraps an underlying graphql-js
- * `GraphQLScalarType` with a type representing the deserialized form of the
- * scalar. These should be created used {@link scalar `g.scalar`}.
- *
- * ```ts
- * const someScalar = g.scalar<string>(new GraphQLScalarType({}));
- *
- * // for fields on output types
- * g.field({ type: someScalar });
- *
- * // for args on output fields or fields on input types
- * g.arg({ type: someScalar });
- * ```
- */
-export type ScalarType<Internal, External = Internal> = GraphQLScalarType<
-  Internal,
-  External
->;
-
-/**
- * Creates a {@link ScalarType} from a graphql-js {@link GraphQLScalarType}.
+ * Creates a {@link GScalarType}.
  *
  * You should provide a type as a type parameter which is the type of the scalar
  * value. Note, while graphql-js allows you to express scalar types like the
@@ -54,8 +32,8 @@ export type ScalarType<Internal, External = Internal> = GraphQLScalarType<
  */
 export function scalar<Internal, External = Internal>(
   config: GraphQLScalarTypeConfig<Internal, External>
-): ScalarType<Internal, External> {
-  return new GraphQLScalarType(config);
+): GScalarType<Internal, External> {
+  return new GScalarType(config);
 }
 
 export const ID = GraphQLID;

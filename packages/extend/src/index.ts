@@ -11,21 +11,18 @@
  */
 
 import {
-  Field,
-  OutputType,
-  // note using the deprecated alias to allow for wider compatibility between @graphql-ts/schema and @graphql-ts/extend versions
-  // in normal projects, you should import `g`
-  graphql as g,
-  ObjectType,
-  Arg,
-  InputType,
-  EnumType,
-  EnumValue,
-  UnionType,
-  InterfaceType,
-  InterfaceField,
-  ScalarType,
-} from "@graphql-ts/schema";
+  GField,
+  GObjectType,
+  GArg,
+  GInputType,
+  GEnumType,
+  GUnionType,
+  GInterfaceType,
+  GInterfaceField,
+  GScalarType,
+  GOutputType,
+  GInputObjectType,
+} from "@graphql-ts/schema/definition";
 import {
   GraphQLSchema,
   isInterfaceType,
@@ -44,10 +41,7 @@ import {
   print,
 } from "graphql";
 
-import * as wrap from "./wrap";
-import { InputObjectType } from "./input-object-type";
-
-export { wrap };
+import { g } from "@graphql-ts/schema";
 
 const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
 
@@ -131,7 +125,7 @@ export function extend(
                   )} in the schema being extended but it is not an object type`
                 );
               }
-              return wrap.object(graphQLType);
+              return graphQLType;
             },
             inputObject(name) {
               const graphQLType = getType(name);
@@ -142,7 +136,10 @@ export function extend(
                   )} in the schema being extended but it is not an input object type`
                 );
               }
-              return wrap.inputObject(graphQLType);
+              return graphQLType as GInputObjectType<
+                Record<string, GArg<GInputType, boolean>>,
+                boolean
+              >;
             },
             enum(name) {
               const graphQLType = getType(name);
@@ -153,7 +150,7 @@ export function extend(
                   )} in the schema being extended but it is not an enum type`
                 );
               }
-              return wrap.enum(graphQLType);
+              return graphQLType as GEnumType<Record<string, unknown>>;
             },
             interface(name) {
               const graphQLType = getType(name);
@@ -164,7 +161,14 @@ export function extend(
                   )} in the schema being extended but it is not an interface type`
                 );
               }
-              return wrap.interface(graphQLType);
+              return graphQLType as GInterfaceType<
+                unknown,
+                Record<
+                  string,
+                  GInterfaceField<any, GOutputType<unknown>, unknown>
+                >,
+                unknown
+              >;
             },
             scalar(name) {
               if (builtinScalars.has(name)) {
@@ -180,7 +184,7 @@ export function extend(
                   )} in the schema being extended but it is not a scalar type`
                 );
               }
-              return wrap.scalar(graphQLType);
+              return graphQLType;
             },
             union(name) {
               const graphQLType = getType(name);
@@ -191,7 +195,7 @@ export function extend(
                   )} in the schema being extended but it is not a union type`
                 );
               }
-              return wrap.union(graphQLType);
+              return graphQLType;
             },
           })
         : extension
@@ -277,9 +281,7 @@ function extendObjectType<ExistingType extends undefined | null = never>(
   const newFields: GraphQLFieldConfigMap<any, any> = {
     ...existingTypeConfig?.fields,
   };
-  for (const [key, val] of Object.entries(
-    getGraphQLJSFieldsFromGraphQLTSFields(fieldsToAdd)
-  )) {
+  for (const [key, val] of Object.entries(fieldsToAdd)) {
     if (newFields[key]) {
       throw new Error(
         `The schema extension defines a field ${JSON.stringify(
@@ -336,13 +338,13 @@ function flattenExtensions(
                   g.object()({
                     name: "ForError",
                     fields: { [key]: val },
-                  }).graphQLType,
+                  }),
                   key
                 )}\nThe second field:\n${printFieldOnType(
                   g.object()({
                     name: "ForError",
                     fields: { [key]: resolvedExtension[operation][key] },
-                  }).graphQLType,
+                  }),
                   key
                 )}`
               );
@@ -377,7 +379,7 @@ function flattenExtensions(
  *   type would immediately be thrown away, it would be pretty much pointless.
  */
 type FieldsOnAnything = {
-  [key: string]: Field<unknown, any, OutputType<any>, unknown, any>;
+  [key: string]: GField<unknown, any, GOutputType<any>, unknown, any>;
 };
 
 /**
@@ -464,7 +466,7 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  object(name: string): ObjectType<unknown, unknown>;
+  object(name: string): GObjectType<unknown, unknown>;
   /**
    * Gets an input object type from the existing GraphQL schema and wraps it in
    * an {@link InputObjectType}. If there is no input object type in the existing
@@ -493,7 +495,7 @@ export type BaseSchemaMeta = {
    */
   inputObject(
     name: string
-  ): InputObjectType<{ [key: string]: Arg<InputType, boolean> }, boolean>;
+  ): GInputObjectType<{ [key: string]: GArg<GInputType, boolean> }, boolean>;
   /**
    * Gets an enum type from the existing GraphQL schema and wraps it in an
    * {@link EnumType}. If there is no enum type in the existing schema with the
@@ -519,7 +521,7 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  enum(name: string): EnumType<Record<string, EnumValue<unknown>>>;
+  enum(name: string): GEnumType<Record<string, unknown>>;
   /**
    * Gets a union type from the existing GraphQL schema and wraps it in an
    * {@link UnionType}. If there is no union type in the existing schema with the
@@ -540,7 +542,7 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  union(name: string): UnionType<unknown, unknown>;
+  union(name: string): GUnionType<unknown, unknown>;
   /**
    * Gets an interface type from the existing GraphQL schema and wraps it in an
    * {@link InterfaceType}. If there is no interface type in the existing schema
@@ -563,9 +565,9 @@ export type BaseSchemaMeta = {
    */
   interface(
     name: string
-  ): InterfaceType<
+  ): GInterfaceType<
     unknown,
-    Record<string, InterfaceField<any, OutputType<unknown>, unknown>>,
+    Record<string, GInterfaceField<any, GOutputType<unknown>, unknown>>,
     unknown
   >;
   /**
@@ -596,19 +598,8 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  scalar(name: string): ScalarType<unknown>;
+  scalar(name: string): GScalarType<unknown>;
 };
-
-function getGraphQLJSFieldsFromGraphQLTSFields(
-  fields: Record<string, g.Field<any, any, any, any>>
-): GraphQLFieldConfigMap<any, any> {
-  return g
-    .object()({
-      name: "Something",
-      fields,
-    })
-    .graphQLType.toConfig().fields as GraphQLFieldConfigMap<any, any>;
-}
 
 function findObjectTypeUsages(
   schema: GraphQLSchema,
