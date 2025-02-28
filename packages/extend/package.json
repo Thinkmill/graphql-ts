@@ -21,7 +21,7 @@
     "@babel/runtime": "^7.9.2"
   },
   "peerDependencies": {
-    "@graphql-ts/schema": "^0.6.0",
+    "@graphql-ts/schema": "0.0.0-test-20250228012525",
     "graphql": "15 || 16"
   },
   "devDependencies": {
