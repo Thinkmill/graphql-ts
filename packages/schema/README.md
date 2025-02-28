@@ -22,7 +22,7 @@ const Query = g.object()({
 });
 
 const schema = new GraphQLSchema({
-  query: Query.graphQLType,
+  query: Query,
 });
 
 graphql({

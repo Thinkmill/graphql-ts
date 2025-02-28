@@ -21,7 +21,7 @@
  * });
  *
  * const schema = new GraphQLSchema({
- *   query: Query.graphQLType,
+ *   query: Query,
  * });
  *
  * graphql({
@@ -90,8 +90,8 @@
  * });
  *
  * const schema = new GraphQLSchema({
- *   query: Query.graphQLType,
- *   mutation: Mutation.graphQLType,
+ *   query: Query,
+ *   mutation: Mutation,
  * });
  *
  * (async () => {
@@ -146,9 +146,6 @@
  *
  * @module
  */
-import type * as gInput from "./api-without-context";
-import type * as gOutput from "./output";
-import type * as gType from "./type";
 export { field, object } from "./api-with-context";
 export {
   arg,
@@ -176,10 +173,23 @@ export type {
   NullableInputType,
   ScalarType,
   EnumType,
-  EnumValue,
   Arg,
 } from "./api-without-context";
 export { scalar } from "./api-without-context";
+import type {
+  GArg,
+  GField,
+  GFieldResolver,
+  GInputType,
+  GInterfaceField,
+  GInterfaceType,
+  GNullableOutputType,
+  GNullableType,
+  GObjectType,
+  GOutputType,
+  GType,
+  GUnionType,
+} from "./types";
 
 /**
  * The particular `Context` type for this `graphql` export that is provided to
@@ -192,35 +202,31 @@ export { scalar } from "./api-without-context";
  */
 export type Context = unknown;
 
-export type NullableType = gType.NullableType<Context>;
-export type Type = gType.Type<Context>;
-export type NullableOutputType = gOutput.NullableOutputType<Context>;
-export type OutputType = gOutput.OutputType<Context>;
+export type NullableType = GNullableType<Context>;
+export type Type = GType<Context>;
+export type NullableOutputType = GNullableOutputType<Context>;
+export type OutputType = GOutputType<Context>;
 export type Field<
   Source,
-  Args extends Record<string, gInput.Arg<gInput.InputType>>,
+  Args extends Record<string, GArg<GInputType>>,
   TType extends OutputType,
   SourceAtKey,
-> = gOutput.Field<Source, Args, TType, SourceAtKey, Context>;
+> = GField<Source, Args, TType, SourceAtKey, Context>;
 export type FieldResolver<
   Source,
-  Args extends Record<string, gInput.Arg<gInput.InputType>>,
+  Args extends Record<string, GArg<GInputType>>,
   TType extends OutputType,
-> = gOutput.FieldResolver<Source, Args, TType, Context>;
-export type ObjectType<Source> = gOutput.ObjectType<Source, Context>;
-export type UnionType<Source> = gOutput.UnionType<Source, Context>;
+> = GFieldResolver<Source, Args, TType, Context>;
+export type ObjectType<Source> = GObjectType<Source, Context>;
+export type UnionType<Source> = GUnionType<Source, Context>;
 export type InterfaceType<
   Source,
   Fields extends Record<
     string,
-    gOutput.InterfaceField<
-      Record<string, gInput.Arg<gInput.InputType>>,
-      OutputType,
-      Context
-    >
+    GInterfaceField<Record<string, GArg<GInputType>>, OutputType, Context>
   >,
-> = gOutput.InterfaceType<Source, Fields, Context>;
+> = GInterfaceType<Source, Fields, Context>;
 export type InterfaceField<
-  Args extends Record<string, gInput.Arg<gInput.InputType>>,
+  Args extends Record<string, GArg<GInputType>>,
   TType extends OutputType,
-> = gOutput.InterfaceField<Args, TType, Context>;
+> = GInterfaceField<Args, TType, Context>;
