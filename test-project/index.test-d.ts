@@ -1372,3 +1372,26 @@ const someInputFields = {
     Invariant<typeof Something>
   >();
 }
+
+{
+  const A = g.object<{ __typename: "A" }>()({
+    name: "A",
+    fields: {},
+  });
+
+  g.object<{ thing: string }>()({
+    name: "Thing",
+    fields: {
+      thing: g.field({
+        type: A,
+        resolve(source) {
+          assertCompatible<
+            Invariant<{ thing: string }>,
+            Invariant<typeof source>
+          >();
+          return { __typename: "A" };
+        },
+      }),
+    },
+  });
+}
