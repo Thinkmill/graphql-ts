@@ -1,5 +1,15 @@
 # @graphql-ts/schema
 
+## 0.0.0-test-20250228021821
+
+### Patch Changes
+
+- [#32](https://github.com/Thinkmill/graphql-ts/pull/32) [`ef5ed129216d8ca20ec88560e241b5917acf079a`](https://github.com/Thinkmill/graphql-ts/commit/ef5ed129216d8ca20ec88560e241b5917acf079a) Thanks [@emmatown](https://github.com/emmatown)! - Revert changes to internal `FieldFuncResolve` type which broke parts of inference in a very small number of cases
+
+- [#29](https://github.com/Thinkmill/graphql-ts/pull/29) [`7756410781a21ba77616c8fbf6b36e7ab211200f`](https://github.com/Thinkmill/graphql-ts/commit/7756410781a21ba77616c8fbf6b36e7ab211200f) Thanks [@emmatown](https://github.com/emmatown)! - Improve types that enforce correct fields are provided when `interfaces` are passed to `g.object`/`g.interface`
+
+- [#29](https://github.com/Thinkmill/graphql-ts/pull/29) [`7756410781a21ba77616c8fbf6b36e7ab211200f`](https://github.com/Thinkmill/graphql-ts/commit/7756410781a21ba77616c8fbf6b36e7ab211200f) Thanks [@emmatown](https://github.com/emmatown)! - Deprecate `InterfaceToInterfaceFields` and `InterfacesToOutputFields` types.
+
 ## 0.6.2
 
 ### Patch Changes
