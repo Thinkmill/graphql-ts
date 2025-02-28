@@ -10,8 +10,34 @@ import {
   OutputType,
   Field,
   InputType,
+  InferValueFromArgs,
 } from "@graphql-ts/schema";
+import { extend } from "@graphql-ts/extend";
 import * as gWithContext from "./schema-api";
+import {
+  GArg,
+  GEnumType,
+  GInputObjectType,
+  GInputType,
+  GInterfaceType,
+  GList,
+  GNonNull,
+  GObjectType,
+  GScalarType,
+  GUnionType,
+} from "@graphql-ts/schema/types";
+import {
+  GraphQLEnumType,
+  GraphQLFieldExtensions,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLResolveInfo,
+  GraphQLScalarType,
+  GraphQLUnionType,
+} from "graphql";
 
 // this isn't really right
 function expectType<T>(type: T) {
@@ -82,7 +108,7 @@ function useType<T>(a?: T) {
 }
 
 {
-  // should be unknown
+  // should be unknown for G* types but for GraphQLOutputType, it is any
   type a = g.InferValueFromOutputType<g.OutputType>;
   useType<a>();
 }
@@ -1754,4 +1780,297 @@ const someInputFields = {
       discriminant: field,
     },
   });
+}
+
+{
+  assertCompatible<
+    Invariant<GScalarType<string, string>>,
+    Invariant<GraphQLScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GObjectType<{ something: string }, { context: "something" }>>,
+    Invariant<
+      GraphQLObjectType<{ something: string }, { context: "something" }>
+    >
+  >();
+
+  assertCompatible<
+    Invariant<GUnionType<{ something: string }, { context: "something" }>>,
+    Invariant<GraphQLUnionType>
+  >();
+
+  assertCompatible<
+    Invariant<
+      GInterfaceType<{ something: string }, any, { context: "something" }>
+    >,
+    Invariant<GraphQLInterfaceType>
+  >();
+
+  assertCompatible<
+    Invariant<GEnumType<Record<string, unknown>>>,
+    Invariant<GraphQLEnumType>
+  >();
+
+  assertCompatible<
+    Invariant<GEnumType<{ a: "a"; b: "b" }>>,
+    // @ts-expect-error
+    Invariant<GraphQLEnumType>
+  >();
+  assertCompatible<
+    GEnumType<{ a: "a"; b: "b" }>,
+    // @ts-expect-error
+    GraphQLEnumType
+  >();
+  assertCompatible<GraphQLEnumType, GEnumType<{ a: "a"; b: "b" }>>();
+
+  assertCompatible<
+    Invariant<GNonNull<GScalarType<string, string>>>,
+    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
+    // without this, GNonNull would be assignable to GList which is the stricter getter exists
+    // @ts-expect-error
+    Invariant<GraphQLNonNull<GScalarType<string, string>>>
+  >();
+  assertCompatible<
+    GraphQLNonNull<GScalarType<string, string>>,
+    GNonNull<GScalarType<string, string>>
+  >();
+  assertCompatible<
+    GNonNull<GScalarType<string, string>>,
+    // @ts-expect-error
+    GraphQLNonNull<GScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GList<GScalarType<string, string>>>,
+    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
+    // without this, GNonNull would be assignable to GList which is the stricter getter exists
+    // @ts-expect-error
+    Invariant<GraphQLList<GScalarType<string, string>>>
+  >();
+  assertCompatible<
+    GraphQLList<GScalarType<string, string>>,
+    GList<GScalarType<string, string>>
+  >();
+  assertCompatible<
+    GList<GScalarType<string, string>>,
+    // @ts-expect-error
+    GraphQLList<GScalarType<string, string>>
+  >();
+
+  assertCompatible<
+    Invariant<GInputObjectType<Record<string, GArg<any>>, boolean>>,
+    Invariant<GraphQLInputObjectType>
+  >();
+
+  assertCompatible<
+    Invariant<GInputObjectType<Record<string, GArg<GInputType>>, boolean>>,
+    // the error essentially ... makes sense due to the non null/list differences
+    // @ts-expect-error
+    Invariant<GraphQLInputObjectType>
+  >();
+  assertCompatible<
+    GraphQLInputObjectType,
+    GInputObjectType<Record<string, GArg<GInputType>>, boolean>
+  >();
+  assertCompatible<
+    GInputObjectType<Record<string, GArg<GInputType>>, boolean>,
+    // @ts-expect-error
+    GraphQLInputObjectType
+  >();
+
+  const x: GInputObjectType<Record<string, GArg<any>>, boolean> = undefined!;
+
+  g.field({
+    type: g.String,
+    args: {
+      a: g.arg({ type: x }),
+    },
+    resolve(_, args) {
+      assertCompatible<
+        Invariant<{
+          a: { readonly [x: string]: unknown } | null | undefined;
+        }>,
+        Invariant<typeof args>
+      >();
+      return "";
+    },
+  });
+}
+
+{
+  const a: GEnumType<Record<string, unknown>> = g.enum<{
+    a: "a";
+    b: "b";
+  }>({
+    name: "",
+    values: g.enumValues(["a", "b"]),
+  });
+  console.log(a);
+  const scalar: GScalarType<string, string> = g.scalar<string>({
+    name: "",
+    parseValue: () => "",
+    parseLiteral: () => "",
+  });
+  console.log(scalar);
+}
+
+{
+  const A = g.object<{ __typename: "A"; a: string }>()({
+    name: "A",
+    fields: {
+      a: g.field({ type: g.String }),
+    },
+  });
+  const B = g.object<{ __typename: "B"; b: string }>()({
+    name: "B",
+    fields: {
+      b: g.field({ type: g.String }),
+    },
+  });
+
+  const Something = new GUnionType<
+    { __typename: "A"; a: string } | { __typename: "B"; b: string },
+    unknown
+  >({
+    name: "Something",
+    types: [A, B],
+  });
+  assertCompatible<
+    Invariant<
+      GUnionType<
+        { __typename: "A"; a: string } | { __typename: "B"; b: string },
+        unknown
+      >
+    >,
+    Invariant<typeof Something>
+  >();
+}
+
+{
+  const Hex: GScalarType<Uint8Array, string> = undefined as any;
+  g.field({
+    type: g.Int,
+    args: { x: g.arg({ type: Hex }) },
+    resolve(_, { x }) {
+      assertCompatible<
+        Invariant<Uint8Array | null | undefined>,
+        Invariant<typeof x>
+      >();
+      return 1;
+    },
+  });
+  type x = InferValueFromInputType<GNonNull<typeof Hex>>;
+  assertCompatible<Invariant<Uint8Array>, Invariant<x>>();
+}
+
+{
+  type ImpliedResolver<
+    Args extends {
+      [Key in keyof Args]: Arg<InputType>;
+    },
+    Type extends OutputType<MyContext<any>>,
+    Context extends MyContext<any>,
+  > =
+    | InferValueFromOutputType<Type>
+    | ((
+        args: InferValueFromArgs<Args>,
+        context: Context,
+        info: GraphQLResolveInfo
+      ) => InferValueFromOutputType<Type>);
+
+  type MyContext<T> = {
+    something: string;
+    a: T;
+  };
+  type SomeTypeThatIsntARecordOfArgs = string;
+  const field: <
+    Source,
+    Type extends OutputType<MyContext<any>>,
+    Resolve extends
+      | undefined
+      | ((
+          source: Source,
+          args: g.InferValueFromArgs<
+            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+          >,
+          context: Context,
+          info: GraphQLResolveInfo
+        ) => InferValueFromOutputType<Type>),
+    Context extends MyContext<any>,
+    Args extends {
+      [Key in keyof Args]: Arg<InputType>;
+    } = {},
+  >(
+    field: {
+      args?: Args;
+      type: Type;
+      deprecationReason?: string;
+      description?: string;
+      extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+    } & (Resolve extends {}
+      ? {
+          resolve: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        }
+      : {
+          resolve?: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        })
+  ) => Field<
+    Source,
+    Args,
+    Type,
+    undefined extends Resolve ? ImpliedResolver<Args, Type, Context> : unknown,
+    Context
+  > = g.field as any;
+
+  extend((base) => {
+    return {
+      mutation: {
+        publishPost: field({
+          type: base.object("Post"),
+          args: { id: g.arg({ type: g.nonNull(g.ID) }) },
+          resolve(source, args, context: MyContext<{}>) {
+            assertCompatible<Invariant<typeof source>, Invariant<unknown>>();
+            assertCompatible<
+              Invariant<{ id: string }>,
+              Invariant<typeof args>
+            >();
+            console.log(context.something);
+            return undefined;
+          },
+        }),
+      },
+    };
+  });
+}
+
+{
+  const something: g.InputObjectType<{
+    [key: string]: g.Arg<g.InputType>;
+  }> = undefined as any;
+  const x = Math.random() > 0.5 ? { id: { equals: "1" } } : {};
+  const a = g.arg({
+    type: g.nonNull(something),
+    defaultValue: x,
+  });
+  assertCompatible<
+    Invariant<g.Arg<GNonNull<typeof something>, true>>,
+    Invariant<typeof a>
+  >();
 }
