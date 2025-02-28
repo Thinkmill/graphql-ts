@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/schema",
-  "version": "0.6.2",
+  "version": "0.0.0-test-20250228003718",
   "description": "Type-safety for constructing GraphQL schemas in TypeScript",
   "main": "dist/graphql-ts-schema.cjs.js",
   "module": "dist/graphql-ts-schema.esm.js",
