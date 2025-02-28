@@ -207,17 +207,40 @@ export type FieldFunc<Context> = <
   Type extends OutputType<Context>,
   Resolve extends
     | undefined
-    | FieldResolver<
-        Source,
-        SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-        Type,
-        Context
-      >,
+    | ((
+        source: Source,
+        args: InferValueFromArgs<
+          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+        >,
+        context: Context,
+        info: GraphQLResolveInfo
+      ) => InferValueFromOutputType<Type>),
   Args extends { [Key in keyof Args]: Arg<InputType> } = {},
 >(
-  field: FieldFuncArgs<Source, Args, Type, Context> & {
-    resolve?: Resolve;
-  } & (Resolve extends {} ? { resolve: Resolve } : unknown)
+  field: FieldFuncArgs<Source, Args, Type, Context> &
+    (Resolve extends {}
+      ? {
+          resolve: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        }
+      : {
+          resolve?: ((
+            source: Source,
+            args: InferValueFromArgs<
+              SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
+            >,
+            context: Context,
+            info: GraphQLResolveInfo
+          ) => InferValueFromOutputType<Type>) &
+            Resolve;
+        })
 ) => Field<
   Source,
   Args,

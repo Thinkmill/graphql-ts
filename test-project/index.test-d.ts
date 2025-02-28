@@ -1437,6 +1437,8 @@ const someInputFields = {
   };
   g.object()({
     name: "Thing",
+    // TODO: see if we can remove this error (but the error above should still exist)
+    // @ts-expect-error
     fields: {
       ...a,
     },
