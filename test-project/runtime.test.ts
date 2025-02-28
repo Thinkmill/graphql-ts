@@ -14,7 +14,7 @@ test("a basic schema works", async () => {
     },
   });
   const graphQLSchema = new GraphQLSchema({
-    query: Query.graphQLType,
+    query: Query,
   });
   const result = await graphql({
     schema: graphQLSchema,
