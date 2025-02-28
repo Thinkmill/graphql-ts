@@ -200,8 +200,8 @@ export type Field<
   Source,
   Args extends Record<string, gInput.Arg<gInput.InputType>>,
   TType extends OutputType,
-  Key extends string,
-> = gOutput.Field<Source, Args, TType, Key, Context>;
+  SourceOnField,
+> = gOutput.Field<Source, Args, TType, SourceOnField, Context>;
 export type FieldResolver<
   Source,
   Args extends Record<string, gInput.Arg<gInput.InputType>>,

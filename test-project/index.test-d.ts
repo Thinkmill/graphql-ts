@@ -932,6 +932,7 @@ g.object<{ thing?: undefined }>()({
 g.object()({
   name: "Thing",
   fields: {
+    // @ts-expect-error
     thing: g.field({
       type: g.String,
       // @ts-expect-error
@@ -1030,7 +1031,6 @@ g.object<any>()({
   g.object()({
     name: "",
     fields: {
-      // @ts-expect-error
       a: a.b,
     },
   });
@@ -1437,6 +1437,8 @@ const someInputFields = {
   };
   g.object()({
     name: "Thing",
+    // TODO: see if we can remove this error (but the error above should still exist)
+    // @ts-expect-error
     fields: {
       ...a,
     },
@@ -1522,6 +1524,26 @@ const someInputFields = {
         return { __typename: "A" };
       }
       return { __typename: "B" };
+    },
+  });
+}
+
+{
+  g.field<unknown, typeof g.String, (arg: unknown) => string, {}>(
+    // @ts-expect-error
+    { type: g.String }
+  );
+  g.field<unknown, typeof g.String, undefined, {}>({
+    type: g.String,
+  });
+  g.field<unknown, typeof g.String, (arg: unknown) => string | undefined, {}>(
+    // @ts-expect-error
+    { type: g.String }
+  );
+  g.field<unknown, typeof g.String, (arg: unknown) => string, {}>({
+    type: g.String,
+    resolve() {
+      return "";
     },
   });
 }
