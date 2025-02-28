@@ -210,9 +210,30 @@ type FieldFuncResolve<
             context: Context,
             info: GraphQLResolveInfo
           ) => InferValueFromOutputType<Type>)
-      ? {}
-      : { resolve: RequiredFieldResolver }
-    : { resolve: RequiredFieldResolver };
+      ? {
+          resolve?: FieldResolver<
+            Source,
+            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+            Type,
+            Context
+          >;
+        }
+      : {
+          resolve: FieldResolver<
+            Source,
+            SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+            Type,
+            Context
+          >;
+        }
+    : {
+        resolve: FieldResolver<
+          Source,
+          SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
+          Type,
+          Context
+        >;
+      };
 
 type FieldFuncArgs<
   Source,
@@ -223,12 +244,6 @@ type FieldFuncArgs<
 > = {
   args?: Args;
   type: Type;
-  resolve?: FieldResolver<
-    Source,
-    SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args,
-    Type,
-    Context
-  >;
   deprecationReason?: string;
   description?: string;
   extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
