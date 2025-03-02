@@ -1525,3 +1525,98 @@ const someInputFields = {
     },
   });
 }
+{
+  const fields = {
+    x: g.arg({ type: g.String }),
+  };
+  {
+    // this error is somewhat unfortunate but it's not a big deal imo
+    // what's going on is that InputType includes InputObjectType<any, boolean>
+    // so IsOneOf is inferred as boolean
+    // which makes the isOneOf property required (though it can be false)
+    const a: g.InputType = g.inputObject(
+      // @ts-expect-error
+      {
+        name: "Something",
+        fields,
+      }
+    );
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject({
+      name: "Something",
+      fields,
+      isOneOf: false,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, false>({
+      name: "Something",
+      fields,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, false>({
+      name: "Something",
+      fields,
+      isOneOf: false,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, true>(
+      // @ts-expect-error
+      {
+        name: "Something",
+        fields,
+      }
+    );
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, true>({
+      name: "Something",
+      fields,
+      isOneOf: true,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject({
+      name: "Something",
+      fields,
+      isOneOf: true,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, true>({
+      name: "Something",
+      fields,
+      // @ts-expect-error
+      isOneOf: false,
+    });
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, boolean>(
+      // @ts-expect-error
+      {
+        name: "Something",
+        fields,
+      }
+    );
+    console.log(a);
+  }
+  {
+    const a: g.InputType = g.inputObject<typeof fields, boolean>({
+      name: "Something",
+      fields,
+      isOneOf: Math.random() > 0.5,
+    });
+    console.log(a);
+  }
+}
