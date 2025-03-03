@@ -21,6 +21,7 @@ import {
   GArg,
   GEnumType,
   GField,
+  GInputObjectType,
   GInputType,
   GInterfaceField,
   GInterfaceType,
@@ -28,8 +29,11 @@ import {
   GList,
   GNonNull,
   GNullableOutputType,
+  GNullableType,
   GObjectType,
   GOutputType,
+  GScalarType,
+  GType,
   GUnionType,
 } from "./types";
 
@@ -598,6 +602,96 @@ export function initG<Context>(): typeof withoutContext &
     },
   };
 }
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace initG {
+  export type Arg = {
+    inputObject: { [key: string]: GArg<GInputType> };
+    object: unknown;
+    union: unknown;
+    interface: unknown;
+    arg: GInputType;
+    nonNull: GNullableType<any>;
+    list: GType<any>;
+    scalar: unknown;
+    enum: Record<string, unknown>;
+  };
+
+  // the definition of ArgDefaults may change in the future so you should use `ArgDefaults` as the default
+  // not `Arg`
+  export type ArgDefaults = Arg;
+
+  export type OtherArg = {
+    inputObject: never;
+    object: never;
+    union: never;
+    interface: never;
+    arg: boolean;
+    nonNull: never;
+    list: never;
+    scalar: unknown;
+    enum: never;
+  };
+
+  export type OtherArgDefaults<FirstArg> = {
+    inputObject: never;
+    object: never;
+    union: never;
+    interface: never;
+    arg: boolean;
+    nonNull: never;
+    list: never;
+    scalar: FirstArg;
+    enum: never;
+  };
+
+  export type Key =
+    | "inputObject"
+    | "object"
+    | "union"
+    | "interface"
+    | "arg"
+    | "nonNull"
+    | "list"
+    | "scalar"
+    | "enum";
+  export {};
+}
+
+export type initG<
+  Context,
+  K extends initG.Key,
+  FirstArg extends initG.Arg[K],
+  SecondArg extends initG.OtherArg[K] = initG.OtherArgDefaults<FirstArg>[K],
+> = K extends "inputObject"
+  ? FirstArg extends initG.Arg["inputObject"]
+    ? GInputObjectType<FirstArg>
+    : never
+  : K extends "object"
+    ? GObjectType<FirstArg, Context>
+    : K extends "union"
+      ? GUnionType<FirstArg, Context>
+      : K extends "arg"
+        ? FirstArg extends initG.Arg["arg"]
+          ? GArg<FirstArg, SecondArg & boolean>
+          : never
+        : K extends "nonNull"
+          ? FirstArg extends initG.Arg["nonNull"]
+            ? GNonNull<FirstArg>
+            : never
+          : K extends "list"
+            ? FirstArg extends initG.Arg["list"]
+              ? GList<FirstArg>
+              : never
+            : K extends "enum"
+              ? FirstArg extends initG.Arg["enum"]
+                ? GEnumType<FirstArg>
+                : never
+              : K extends "scalar"
+                ? FirstArg extends initG.Arg["scalar"]
+                  ? GScalarType<FirstArg>
+                  : never
+                : never;
 
 type Flatten<T> = {
   [Key in keyof T]: T[Key];
