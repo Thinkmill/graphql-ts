@@ -2069,3 +2069,76 @@ const someInputFields = {
     Invariant<typeof a>
   >();
 }
+
+{
+  type Person = {
+    name: string;
+  };
+  const Person: g<"object", Person> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve() {
+          return [];
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = { loadFriends: (id: string) => Promise<Person[]> };
+  const g = initG<Context>();
+  type g<
+    Key extends initG.Key,
+    Arg extends initG.Arg[Key] = initG.ArgDefaults[Key],
+    OtherArg extends initG.OtherArg[Key] = initG.OtherArgDefaults<Arg>[Key],
+  > = initG<Context, Key, Arg, OtherArg>;
+
+  type Person = {
+    id: string;
+    name: string;
+  };
+
+  const Person: g<"object", Person> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      id: g.field({ type: g.ID }),
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve(source, _, context) {
+          return context.loadFriends(source.id);
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = {};
+  const g = initG<Context>();
+  type g<
+    Key extends initG.Key,
+    Arg extends initG.Arg[Key] = initG.ArgDefaults[Key],
+    OtherArg extends initG.OtherArg[Key] = initG.OtherArgDefaults<Arg>[Key],
+  > = initG<Context, Key, Arg, OtherArg>;
+
+  type PersonFilter = g<
+    "inputObject",
+    {
+      name: g<"arg", typeof g.String>;
+      friends: g<"arg", g<"list", PersonFilter>>;
+    }
+  >;
+
+  const PersonFilter: PersonFilter = g.inputObject({
+    name: "PersonFilter",
+    fields: () => ({
+      name: g.arg({ type: g.String }),
+      friends: g.arg({ type: g.list(PersonFilter) }),
+    }),
+  });
+}
