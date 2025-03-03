@@ -32,26 +32,26 @@ import type {
   GType,
 } from "../types";
 
-/** @deprecated Use {@link GEnumType} instead */
+/** @deprecated Use {@link GEnumType} or `g<'enum', ...>` instead */
 export type EnumType<Values extends { [key: string]: unknown }> =
   GEnumType<Values>;
-/** @deprecated Use {@link GArg} instead */
+/** @deprecated Use {@link GArg} or `g<'arg', ...>` instead */
 export type Arg<
   Type extends GInputType,
   HasDefaultValue extends boolean = boolean,
 > = GArg<Type, HasDefaultValue>;
-/** @deprecated Use {@link GList} instead */
+/** @deprecated Use {@link GList} or `g<'list', ...>` instead */
 export type ListType<Of extends GType<any>> = GList<Of>;
-/** @deprecated Use {@link GNonNull} instead */
+/** @deprecated Use {@link GNonNull} or `g<'nonNull', ...>` instead */
 export type NonNullType<Of extends GNullableType<any>> = GNonNull<Of>;
 
-/** @deprecated Use {@link GScalarType} instead */
+/** @deprecated Use {@link GScalarType} or `g<'scalar', ...>` instead */
 export type ScalarType<Internal, External = Internal> = GScalarType<
   Internal,
   External
 >;
 
-/** @deprecated Use {@link GInputObjectType} instead */
+/** @deprecated Use {@link GInputObjectType} or `g<'inputObject', ...>` instead */
 export type InputObjectType<
   Fields extends {
     [key: string]: IsOneOf extends true
@@ -60,7 +60,7 @@ export type InputObjectType<
   },
   IsOneOf extends boolean = false,
 > = GInputObjectType<Fields, IsOneOf>;
-/** @deprecated Use {@link GNullableInputType} instead */
+/** @deprecated Use {@link GNullableInputType} or `g<'nullableInputType'>` instead */
 export type NullableInputType = GNullableInputType;
-/** @deprecated Use {@link GInputType} instead */
+/** @deprecated Use {@link GInputType} or `g<'inputType'>` instead */
 export type InputType = GInputType;

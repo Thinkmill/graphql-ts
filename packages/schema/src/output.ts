@@ -8,6 +8,7 @@ import type {
   GraphQLScalarTypeConfig,
 } from "graphql";
 import type {
+  InferValueFromArg,
   InferValueFromArgs,
   InferValueFromInputType,
 } from "./api-without-context";
@@ -41,9 +42,9 @@ import {
 } from "./types";
 import {
   GraphQLBoolean,
+  GraphQLFloat,
   GraphQLID,
   GraphQLInt,
-  GraphQLFloat,
   GraphQLString,
 } from "graphql";
 
@@ -203,13 +204,13 @@ export type GWithContext<Context> = {
    *
    * GraphQL types will often contain references to themselves and to make
    * TypeScript allow that, you need have an explicit type annotation of
-   * `g.ObjectType<Source>` along with making `fields` a function that returns
+   * `g<'object', Source>` along with making `fields` a function that returns
    * the object.
    *
    * ```ts
    * type PersonSource = { name: string; friends: PersonSource[] };
    *
-   * const Person: g.ObjectType<PersonSource> = g.object<PersonSource>()({
+   * const Person: g<"object", PersonSource> = g.object<PersonSource>()({
    *   name: "Person",
    *   fields: () => ({
    *     name: g.field({ type: g.String }),
@@ -989,6 +990,153 @@ export function initG<Context>(): GWithContext<Context> {
     Boolean: GraphQLBoolean,
     ID: GraphQLID,
   };
+}
+
+/**
+ * The `g` type initialised using `initG` accepts a key to define what type it
+ * is looking for and then potentially some type parameters after that specific
+ * to the type. The keys map to the following types but with the `Context` type
+ * parameter already filled in if it has a `Context` type parameter:
+ *
+ * - `object` -> {@link GObjectType `GObjectType`}
+ * - `inputObject` -> {@link GInputObjectType `GInputObjectType`}
+ * - `arg` -> {@link GArg `GArg`}
+ * - `nonNull` -> {@link GNonNull `GNonNull`}
+ * - `list` -> {@link GList `GList`}
+ * - `enum` -> {@link GEnumType `GEnumType`}
+ * - `scalar` -> {@link GScalarType `GScalarType`}
+ * - `union` -> {@link GUnionType `GUnionType`}
+ * - `interface` -> {@link GInterfaceType `GInterfaceType`}
+ * - `interfaceField` -> {@link GInterfaceField `GInterfaceField`}
+ * - `nullableInputType` -> {@link GNullableInputType `GNullableInputType`}
+ * - `nullableOutputType` -> {@link GNullableOutputType `GNullableOutputType`}
+ * - `inputType` -> {@link GInputType `GInputType`}
+ * - `outputType` -> {@link GOutputType `GOutputType`}
+ * - `type` -> {@link GType `GType`}
+ * - `nullableType` -> {@link GNullableType `GNullableType`}
+ * - `inferOutputType` ->
+ *   {@link InferValueFromOutputType `InferValueFromOutputType`}
+ * - `inferArg` -> {@link InferValueFromArg `InferValueFromArg`}
+ * - `inferArgs` -> {@link InferValueFromArgs `InferValueFromArgs`}
+ * - `inferInputType` -> {@link InferValueFromInputType `InferValueFromInputType`}
+ */
+export type initG<
+  Context,
+  K extends initG.Key,
+  FirstArg extends initG.Arg[K],
+  SecondArg extends initG.OtherArg[K] = initG.OtherArgDefaults<FirstArg>[K],
+> = K extends "object"
+  ? GObjectType<FirstArg, Context>
+  : K extends "inputObject"
+    ? GInputObjectType<Extract<FirstArg, {}>, SecondArg & boolean>
+    : K extends "arg"
+      ? GArg<Extract<FirstArg, initG.Arg["arg"]>, SecondArg & boolean>
+      : K extends "nonNull"
+        ? GNonNull<Extract<FirstArg, initG.Arg["nonNull"]>>
+        : K extends "list"
+          ? GList<Extract<FirstArg, initG.Arg["list"]>>
+          : K extends "enum"
+            ? GEnumType<Extract<FirstArg, {}>>
+            : K extends "scalar"
+              ? GScalarType<FirstArg, SecondArg>
+              : K extends "union"
+                ? GUnionType<FirstArg, Context>
+                : K extends "interface"
+                  ? GInterfaceType<FirstArg, Extract<SecondArg, {}>, Context>
+                  : K extends "interfaceField"
+                    ? GInterfaceField<
+                        Extract<FirstArg, {}>,
+                        Extract<SecondArg, GOutputType<any>>,
+                        Context
+                      >
+                    : K extends "inferArg"
+                      ? InferValueFromArg<Extract<FirstArg, GArg<GInputType>>>
+                      : K extends "inferArgs"
+                        ? InferValueFromArgs<Extract<FirstArg, {}>>
+                        : K extends "inferInputType"
+                          ? InferValueFromInputType<
+                              Extract<FirstArg, GInputType>
+                            >
+                          : K extends "inferOutputType"
+                            ? InferValueFromOutputType<
+                                Extract<FirstArg, GOutputType<any>>
+                              >
+                            : K extends keyof TypeKinds<Context>
+                              ? TypeKinds<Context>[K]
+                              : never;
+
+type TypeKindsArgs = {
+  [Key in keyof TypeKinds<any>]: never;
+};
+
+type TypeKinds<Context> = {
+  nullableInputType: GNullableInputType;
+  nullableOutputType: GNullableOutputType<Context>;
+  inputType: GInputType;
+  outputType: GOutputType<Context>;
+  type: GType<Context>;
+  nullableType: GNullableType<Context>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace initG {
+  export type Arg = {
+    inputObject: { [key: string]: GArg<GInputType> };
+    object: unknown;
+    union: unknown;
+    interface: unknown;
+    arg: GInputType;
+    nonNull: GNullableType<any>;
+    list: GType<any>;
+    scalar: unknown;
+    enum: { [key: string]: unknown };
+    interfaceField: { [key: string]: GArg<GInputType> };
+    inferArg: GArg<GInputType>;
+    inferArgs: Record<string, GArg<GInputType>>;
+    inferInputType: GInputType;
+    inferOutputType: GOutputType<any>;
+  } & TypeKindsArgs;
+
+  // the definition of ArgDefaults may change in the future so you should use `ArgDefaults` as the default
+  // not `Arg`
+  export type ArgDefaults = Arg;
+
+  export type OtherArg = {
+    inputObject: boolean;
+    object: never;
+    union: never;
+    interface: never;
+    arg: boolean;
+    nonNull: never;
+    list: never;
+    scalar: unknown;
+    enum: never;
+    interfaceField: GOutputType<any>;
+    inferArg: never;
+    inferArgs: never;
+    inferInputType: never;
+    inferOutputType: never;
+  } & TypeKindsArgs;
+
+  export type OtherArgDefaults<FirstArg> = {
+    inputObject: false;
+    object: OtherArg["object"];
+    union: OtherArg["union"];
+    interface: OtherArg["interface"];
+    arg: OtherArg["arg"];
+    nonNull: OtherArg["nonNull"];
+    list: OtherArg["list"];
+    scalar: FirstArg;
+    enum: OtherArg["enum"];
+    interfaceField: OtherArg["interfaceField"];
+    inferArg: OtherArg["inferArg"];
+    inferArgs: OtherArg["inferArgs"];
+    inferInputType: OtherArg["inferInputType"];
+    inferOutputType: OtherArg["inferOutputType"];
+  } & TypeKindsArgs;
+
+  export type Key = keyof Arg;
+  export {};
 }
 
 type Flatten<T> = {

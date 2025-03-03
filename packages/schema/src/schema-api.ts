@@ -110,7 +110,7 @@
  *   const result = await graphql({
  *     source: `
  *       mutation {
- *         createTodo(title: "Try @graphql-ts/schema") {
+ *         createTodo(title: "Try graphql-ts") {
  *           title
  *         }
  *       }
@@ -118,7 +118,7 @@
  *     schema,
  *   });
  *   deepEqual(result, {
- *     data: { createTodo: { title: "Try @graphql-ts/schema" } },
+ *     data: { createTodo: { title: "Try graphql-ts" } },
  *   });
  *
  *   const result = await graphql({
@@ -132,7 +132,7 @@
  *     schema,
  *   });
  *   deepEqual(result, {
- *     data: { todos: [{ title: "Try @graphql-ts/schema" }] },
+ *     data: { todos: [{ title: "Try graphql-ts" }] },
  *   });
  * })();
  * ```
