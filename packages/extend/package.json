@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/extend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Utilities to extend existing GraphQL schemas with @graphql-ts/schema",
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
