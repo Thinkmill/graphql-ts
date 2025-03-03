@@ -176,7 +176,6 @@ export type {
   NullableInputType,
   ScalarType,
   EnumType,
-  EnumValue,
   Arg,
 } from "./api-without-context";
 export { scalar } from "./api-without-context";

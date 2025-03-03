@@ -44,26 +44,19 @@ export * as g from "./schema-api";
 export { bindGraphQLSchemaAPIToContext } from "./output";
 export type {
   Field,
-  FieldFunc,
   FieldResolver,
-  FieldsFunc,
   InferValueFromOutputType,
   InterfaceField,
-  InterfaceFieldFunc,
   InterfaceType,
-  InterfaceTypeFunc,
   NullableOutputType,
   ObjectType,
-  ObjectTypeFunc,
   OutputType,
   GraphQLSchemaAPIWithContext,
   UnionType,
-  UnionTypeFunc,
 } from "./output";
 export type {
   Arg,
   EnumType,
-  EnumValue,
   InferValueFromArg,
   InferValueFromArgs,
   InferValueFromInputType,
@@ -74,9 +67,8 @@ export type {
   NonNullType,
   ScalarType,
 } from "./api-without-context";
-export type { Type, NullableType } from "./type";
-export * from "./schema-api-alias";
 export type {
-  InterfaceToInterfaceFields,
-  InterfacesToOutputFields,
-} from "./output";
+  GType as Type,
+  GNullableType as NullableType,
+} from "./definition";
+export * from "./schema-api-alias";

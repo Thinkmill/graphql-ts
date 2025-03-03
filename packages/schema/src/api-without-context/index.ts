@@ -1,4 +1,4 @@
-export type { EnumType, EnumValue } from "./enum";
+export type { EnumType } from "./enum";
 export { enum, enumValues } from "./enum";
 export type {
   Arg,
