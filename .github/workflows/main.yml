@@ -16,7 +16,7 @@ jobs:
       - uses: ./.github/actions/setup-deps
 
       - name: Check Types
-        run: pnpm run types
+        run: pnpm run all:types
   linting:
     name: Linting
     runs-on: ubuntu-latest
