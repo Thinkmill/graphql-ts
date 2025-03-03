@@ -29,9 +29,6 @@
     "src"
   ],
   "license": "MIT",
-  "dependencies": {
-    "@babel/runtime": "^7.9.2"
-  },
   "peerDependencies": {
     "graphql": "15 || 16"
   },
