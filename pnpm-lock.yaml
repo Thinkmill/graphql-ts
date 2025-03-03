@@ -61,10 +61,6 @@ importers:
         version: 5.7.3
 
   packages/extend:
-    dependencies:
-      '@babel/runtime':
-        specifier: ^7.9.2
-        version: 7.26.0
     devDependencies:
       '@graphql-ts/schema':
         specifier: workspace:^
@@ -74,10 +70,6 @@ importers:
         version: 16.10.0
 
   packages/schema:
-    dependencies:
-      '@babel/runtime':
-        specifier: ^7.9.2
-        version: 7.26.0
     devDependencies:
       graphql:
         specifier: ^16.3.0
