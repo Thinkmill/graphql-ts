@@ -1620,3 +1620,52 @@ const someInputFields = {
     console.log(a);
   }
 }
+
+{
+  const nodeFields = g.fields<{ id: string }>()({
+    id: g.field({ type: g.ID }),
+  });
+  const Node = g.interface<{ id: string }>()({
+    name: "Node",
+    fields: nodeFields,
+  });
+  const Person = g.object<{
+    __typename: "Person";
+    id: string;
+    name: string;
+  }>()({
+    name: "Person",
+    interfaces: [Node],
+    fields: {
+      ...nodeFields,
+      name: g.field({ type: g.String }),
+    },
+  });
+  console.log(Person);
+}
+
+{
+  const nodeFields = {
+    id: g.field(
+      // @ts-expect-error
+      { type: g.ID }
+    ),
+  };
+  const Node = g.interface<{ id: string }>()({
+    name: "Node",
+    fields: nodeFields,
+  });
+  const Person = g.object<{
+    __typename: "Person";
+    id: string;
+    name: string;
+  }>()({
+    name: "Person",
+    interfaces: [Node],
+    fields: {
+      ...nodeFields,
+      name: g.field({ type: g.String }),
+    },
+  });
+  console.log(Person);
+}
