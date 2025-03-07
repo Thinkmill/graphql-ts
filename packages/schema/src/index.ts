@@ -41,10 +41,7 @@
  * @module
  */
 export * as g from "./schema-api";
-export {
-  bindGraphQLSchemaAPIToContext,
-  type GraphQLSchemaAPIWithContext,
-} from "./output";
+export { initG, type GWithContext } from "./output";
 
 export {
   GObjectType,

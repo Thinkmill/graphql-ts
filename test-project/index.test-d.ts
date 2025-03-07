@@ -1,6 +1,6 @@
 import {
   g,
-  bindGraphQLSchemaAPIToContext,
+  initG,
   Arg,
   InferValueFromInputType,
   InputObjectType,
@@ -210,10 +210,7 @@ g.object<{ id: string } | { id: boolean }>()({
 });
 
 {
-  const g = {
-    ...gWithContext,
-    ...bindGraphQLSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
-  };
+  const g = initG<{ isAdminUIBuildProcess: true }>();
 
   const SomeOutput = g.object<{ thing: boolean }>()({
     name: "Something",
@@ -332,11 +329,11 @@ g.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA = bindGraphQLSchemaAPIToContext<{
+  const typesWithContextA = initG<{
     something: boolean;
   }>();
 
-  const typesWithContextB = bindGraphQLSchemaAPIToContext<{
+  const typesWithContextB = initG<{
     something: boolean;
     other: string;
   }>();
@@ -1755,7 +1752,7 @@ const someInputFields = {
   >;
   type SourceType = { discriminant: string };
 
-  const g = bindGraphQLSchemaAPIToContext<Context>();
+  const g = initG<Context>();
 
   const interfaceType = g.interface<SourceType>()({
     name: "a",
@@ -1765,7 +1762,7 @@ const someInputFields = {
   });
 
   const field = g.field({
-    type: gWithContext.String,
+    type: g.String,
     resolve(x: SourceType) {
       return x.discriminant as string;
     },
