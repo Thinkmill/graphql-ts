@@ -2071,3 +2071,67 @@ const someInputFields = {
     Invariant<typeof a>
   >();
 }
+
+{
+  type Person = {
+    name: string;
+  };
+  const Person: g<typeof g.object<Person>> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve() {
+          return [];
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = { loadFriends: (id: string) => Promise<Person[]> };
+  const g = initG<Context>();
+  type g<T> = initG<T>;
+
+  type Person = {
+    id: string;
+    name: string;
+  };
+
+  const Person: g<typeof g.object<Person>> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      id: g.field({ type: g.ID }),
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve(source, _, context) {
+          return context.loadFriends(source.id);
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = {};
+  const g = initG<Context>();
+  type g<T> = initG<T>;
+
+  type PersonFilter = g<
+    typeof g.inputObject<{
+      name: g<typeof g.arg<typeof g.String>>;
+      friends: GArg<PersonFilter>;
+    }>
+  >;
+
+  const PersonFilter: PersonFilter = g.inputObject({
+    name: "PersonFilter",
+    fields: () => ({
+      name: g.arg({ type: g.String }),
+      friends: g.arg({ type: PersonFilter }),
+    }),
+  });
+}
