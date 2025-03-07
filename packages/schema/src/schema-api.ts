@@ -1,232 +1,156 @@
-/**
- * The `g` export is the primary entrypoint into `@graphql-ts/schema` that lets
- * you compose GraphQL types into a GraphQL Schema
- *
- * A simple schema with only a query type looks like this.
- *
- * ```ts
- * import { g } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql } from "graphql";
- *
- * const Query = g.object()({
- *   name: "Query",
- *   fields: {
- *     hello: g.field({
- *       type: g.String,
- *       resolve() {
- *         return "Hello!";
- *       },
- *     }),
- *   },
- * });
- *
- * const schema = new GraphQLSchema({
- *   query: Query,
- * });
- *
- * graphql({
- *   source: `
- *     query {
- *       hello
- *     }
- *   `,
- *   schema,
- * }).then((result) => {
- *   console.log(result);
- * });
- * ```
- *
- * You can use pass the `graphQLSchema` to `ApolloServer` and other GraphQL
- * servers.
- *
- * You can also create a more advanced schema with other object types, args and
- * mutations.
- *
- * ```ts
- * import { g } from "@graphql-ts/schema";
- * import { GraphQLSchema, graphql } from "graphql";
- * import { deepEqual } from "assert";
- *
- * type TodoItem = {
- *   title: string;
- * };
- *
- * const todos: TodoItem[] = [];
- *
- * const Todo = g.object<TodoItem>({
- *   name: "Todo",
- *   fields: {
- *     title: g.field({ type: g.String }),
- *   },
- * });
- *
- * const Query = g.object()({
- *   name: "Query",
- *   fields: {
- *     todos: g.field({
- *       type: g.list(Todo),
- *       resolve() {
- *         return todos;
- *       },
- *     }),
- *   },
- * });
- *
- * const Mutation = g.object()({
- *   name: "Mutation",
- *   fields: {
- *     createTodo: g.field({
- *       args: {
- *         title: g.arg({ type: g.String }),
- *       },
- *       type: Todo,
- *       resolve(source, { title }) {
- *         const todo = { title };
- *         todos.push(todo);
- *         return todo;
- *       },
- *     }),
- *   },
- * });
- *
- * const schema = new GraphQLSchema({
- *   query: Query,
- *   mutation: Mutation,
- * });
- *
- * (async () => {
- *   const result = await graphql({
- *     source: `
- *       query {
- *         todos {
- *           title
- *         }
- *       }
- *     `,
- *     schema,
- *   });
- *   deepEqual(result, { data: { todos: [] } });
- *
- *   const result = await graphql({
- *     source: `
- *       mutation {
- *         createTodo(title: "Try @graphql-ts/schema") {
- *           title
- *         }
- *       }
- *     `,
- *     schema,
- *   });
- *   deepEqual(result, {
- *     data: { createTodo: { title: "Try @graphql-ts/schema" } },
- *   });
- *
- *   const result = await graphql({
- *     source: `
- *       query {
- *         todos {
- *           title
- *         }
- *       }
- *     `,
- *     schema,
- *   });
- *   deepEqual(result, {
- *     data: { todos: [{ title: "Try @graphql-ts/schema" }] },
- *   });
- * })();
- * ```
- *
- * For information on how to construct other types like input objects, unions,
- * interfaces and enums and more detailed information, see the documentation in
- * the `g` export below.
- *
- * When using it, you're going to want to create your own version of it bound to
- * your specific `Context` type.
- *
- * @module
- */
-export { field, object } from "./api-with-context";
-export {
-  arg,
-  Boolean,
-  Float,
-  ID,
-  Int,
-  String,
-  inputObject,
-  list,
-  nonNull,
-  enum,
-  enumValues,
-} from "./api-without-context";
-export { fields, interface, interfaceField, union } from "./api-with-context";
 export type {
   InferValueFromArg,
   InferValueFromArgs,
   InferValueFromInputType,
   InferValueFromOutputType,
-  InputObjectType,
-  InputType,
-  ListType,
-  NonNullType,
-  NullableInputType,
-  ScalarType,
-  EnumType,
-  Arg,
 } from "./api-without-context";
 export { scalar } from "./api-without-context";
 import type {
   GArg,
+  GEnumType,
   GField,
   GFieldResolver,
+  GInputObjectType,
   GInputType,
   GInterfaceField,
   GInterfaceType,
+  GList,
+  GNonNull,
+  GNullableInputType,
   GNullableOutputType,
   GNullableType,
   GObjectType,
   GOutputType,
+  GScalarType,
   GType,
   GUnionType,
+  InferValueFromInputType as _InferValueFromInputType,
+  InferValueFromArgs as _InferValueFromArgs,
+  InferValueFromOutputType as _InferValueFromOutputType,
+  InferValueFromArg as _InferValueFromArg,
 } from "./types";
 
-/**
- * The particular `Context` type for this `graphql` export that is provided to
- * field resolvers.
- *
- * Below, there are many types exported which are similar to the types with the
- * same names exported from the root of the package except that they are bound
- * to the `Context` type so they can be used elsewhere without needing to be
- * bound to the context on every usage.
- */
-export type Context = unknown;
+import { initG } from "./output";
 
-export type NullableType = GNullableType<Context>;
-export type Type = GType<Context>;
-export type NullableOutputType = GNullableOutputType<Context>;
-export type OutputType = GOutputType<Context>;
-export type Field<
-  Source,
-  Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
-  SourceAtKey,
-> = GField<Source, Args, TType, SourceAtKey, Context>;
-export type FieldResolver<
-  Source,
-  Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
-> = GFieldResolver<Source, Args, TType, Context>;
-export type ObjectType<Source> = GObjectType<Source, Context>;
-export type UnionType<Source> = GUnionType<Source, Context>;
-export type InterfaceType<
-  Source,
-  Fields extends Record<
-    string,
-    GInterfaceField<Record<string, GArg<GInputType>>, OutputType, Context>
-  >,
-> = GInterfaceType<Source, Fields, Context>;
-export type InterfaceField<
-  Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
-> = GInterfaceField<Args, TType, Context>;
+/**
+ * @deprecated Use {@link initG} to bind `g` to a specific context instead of
+ *   this generic `g`
+ */
+export const g = initG<g.Context>();
+export type g<T> = initG<T>;
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace g {
+  export type Context = unknown;
+  /**
+   * @deprecated Use {@link GEnumType} or {@link enumType `g<typeof g.enum<...>>`}
+   *   instead
+   */
+  export type EnumType<Values extends { [key: string]: unknown }> =
+    GEnumType<Values>;
+  /** @deprecated Use {@link GArg} or {@link arg `g<typeof g.arg<...>>`} instead */
+  export type Arg<
+    Type extends GInputType,
+    HasDefaultValue extends boolean = boolean,
+  > = GArg<Type, HasDefaultValue>;
+  /** @deprecated Use {@link GList} or {@link list `g<typeof g.list<...>>`} instead */
+  export type ListType<Of extends GType<any>> = GList<Of>;
+  /**
+   * @deprecated Use {@link GNonNull} or
+   *   {@link nonNull `g<typeof g.nonNull<...>>`} instead
+   */
+  export type NonNullType<Of extends GNullableType<any>> = GNonNull<Of>;
+
+  /**
+   * @deprecated Use {@link GScalarType} or
+   *   {@link scalar `g<typeof g.scalar<...>>`} instead
+   */
+  export type ScalarType<Internal, External = Internal> = GScalarType<
+    Internal,
+    External
+  >;
+
+  /**
+   * @deprecated Use {@link GInputObjectType} or
+   *   {@link inputObject `g<typeof g.inputObject<...>>`} instead
+   */
+  export type InputObjectType<
+    Fields extends {
+      [key: string]: IsOneOf extends true
+        ? GArg<GNullableInputType, false>
+        : GArg<GInputType>;
+    },
+    IsOneOf extends boolean = false,
+  > = GInputObjectType<Fields, IsOneOf>;
+  /** @deprecated Use {@link GNullableInputType} instead */
+  export type NullableInputType = GNullableInputType;
+  /** @deprecated Use {@link GInputType} instead */
+  export type InputType = GInputType;
+
+  /** @deprecated Use {@link GNullableType} instead. */
+  export type NullableType = GNullableType<Context>;
+  /** @deprecated Use {@link GType} instead. */
+  export type Type = GType<Context>;
+  /** @deprecated Use {@link GNullableOutputType} instead. */
+  export type NullableOutputType = GNullableOutputType<Context>;
+  /** @deprecated Use {@link GOutputType} instead. */
+  export type OutputType = GOutputType<Context>;
+  /** @deprecated Use {@link GField} instead. */
+  export type Field<
+    Source,
+    Args extends Record<string, GArg<GInputType>>,
+    TType extends GOutputType<Context>,
+    SourceAtKey,
+  > = GField<Source, Args, TType, SourceAtKey, Context>;
+  /** @deprecated Use {@link GFieldResolver} instead. */
+  export type FieldResolver<
+    Source,
+    Args extends Record<string, GArg<GInputType>>,
+    TType extends GOutputType<Context>,
+  > = GFieldResolver<Source, Args, TType, Context>;
+  /**
+   * @deprecated Use {@link GObjectType} or
+   *   {@link object `g<typeof g.object<...>`} instead.
+   */
+  export type ObjectType<Source> = GObjectType<Source, Context>;
+  /**
+   * @deprecated Use {@link GUnionType} or {@link union `g<typeof g.union<...>`}
+   *   instead.
+   */
+  export type UnionType<Source> = GUnionType<Source, Context>;
+  /** @deprecated Use {@link GInterfaceType} instead. */
+  export type InterfaceType<
+    Source,
+    Fields extends Record<
+      string,
+      GInterfaceField<Record<string, GArg<GInputType>>, OutputType, Context>
+    >,
+  > = GInterfaceType<Source, Fields, Context>;
+  /**
+   * @deprecated Use {@link GInterfaceField} or
+   *   {@link interfaceField `g<typeof g.interfaceField<...>`} instead.
+   */
+  export type InterfaceField<
+    Args extends Record<string, GArg<GInputType>>,
+    TType extends GOutputType<Context>,
+  > = GInterfaceField<Args, TType, Context>;
+
+  /** @deprecated Use {@link _InferValueFromArg `InferValueFromArg`} instead. */
+  export type InferValueFromArg<Arg extends GArg<GInputType>> =
+    _InferValueFromArg<Arg>;
+
+  /** @deprecated Use {@link _InferValueFromArgs `InferValueFromArgs`} instead. */
+  export type InferValueFromArgs<Arg extends Record<string, GArg<GInputType>>> =
+    _InferValueFromArgs<Arg>;
+
+  /** @deprecated Use {@link _InferValueFromArg `InferValueFromArg`} instead. */
+  export type InferValueFromInputType<InputType extends GInputType> =
+    _InferValueFromInputType<InputType>;
+
+  /**
+   * @deprecated Use {@link _InferValueFromOutputType `InferValueFromOutputType`}
+   *   instead.
+   */
+  export type InferValueFromOutputType<OutputType extends GOutputType<any>> =
+    _InferValueFromOutputType<OutputType>;
+}

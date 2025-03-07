@@ -1,8 +1,17 @@
-export {
+import { initG } from "../output";
+const {
   field,
   fields,
-  interface,
+  interface: interfaceType,
   interfaceField,
   object,
   union,
-} from "./api-with-context";
+} = initG<unknown>();
+export {
+  field,
+  fields,
+  interfaceType as interface,
+  interfaceField,
+  object,
+  union,
+};

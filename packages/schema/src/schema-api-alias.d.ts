@@ -1,4 +1,4 @@
-import * as _graphql from "./schema-api";
+import { g as _graphql } from "./schema-api";
 
 /**
  * The `graphql` export has been renamed to `g`.
