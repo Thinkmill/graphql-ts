@@ -160,7 +160,13 @@ export {
   enum,
   enumValues,
 } from "./api-without-context";
-export { fields, interface, interfaceField, union } from "./api-with-context";
+import {
+  fields,
+  interface as interfaceType,
+  interfaceField,
+  union,
+} from "./api-with-context";
+export { fields, interfaceType as interface, interfaceField, union };
 export type {
   InferValueFromArg,
   InferValueFromArgs,
@@ -202,23 +208,38 @@ import type {
  */
 export type Context = unknown;
 
+/** @deprecated Use {@link GNullableType} instead. */
 export type NullableType = GNullableType<Context>;
+/** @deprecated Use {@link GType} instead. */
 export type Type = GType<Context>;
+/** @deprecated Use {@link GNullableOutputType} instead. */
 export type NullableOutputType = GNullableOutputType<Context>;
+/** @deprecated Use {@link GOutputType} instead. */
 export type OutputType = GOutputType<Context>;
+/** @deprecated Use {@link GField} instead. */
 export type Field<
   Source,
   Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
+  TType extends GOutputType<Context>,
   SourceAtKey,
 > = GField<Source, Args, TType, SourceAtKey, Context>;
+/** @deprecated Use {@link GFieldResolver} instead. */
 export type FieldResolver<
   Source,
   Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
+  TType extends GOutputType<Context>,
 > = GFieldResolver<Source, Args, TType, Context>;
+/**
+ * @deprecated Use {@link GObjectType} or {@link object `g<typeof g.object<...>`}
+ *   instead.
+ */
 export type ObjectType<Source> = GObjectType<Source, Context>;
+/**
+ * @deprecated Use {@link GUnionType} or {@link union `g<typeof g.union<...>`}
+ *   instead.
+ */
 export type UnionType<Source> = GUnionType<Source, Context>;
+/** @deprecated Use {@link GInterfaceType} instead. */
 export type InterfaceType<
   Source,
   Fields extends Record<
@@ -226,7 +247,11 @@ export type InterfaceType<
     GInterfaceField<Record<string, GArg<GInputType>>, OutputType, Context>
   >,
 > = GInterfaceType<Source, Fields, Context>;
+/**
+ * @deprecated Use {@link GInterfaceField} or
+ *   {@link interfaceField `g<typeof g.interfaceField<...>`} instead.
+ */
 export type InterfaceField<
   Args extends Record<string, GArg<GInputType>>,
-  TType extends OutputType,
+  TType extends GOutputType<Context>,
 > = GInterfaceField<Args, TType, Context>;

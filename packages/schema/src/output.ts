@@ -991,6 +991,12 @@ export function initG<Context>(): GWithContext<Context> {
   };
 }
 
+export type initG<T> = T extends () => (args: any) => infer R
+  ? R
+  : T extends (args: any) => infer R
+    ? R
+    : never;
+
 type Flatten<T> = {
   [Key in keyof T]: T[Key];
 } & {};
