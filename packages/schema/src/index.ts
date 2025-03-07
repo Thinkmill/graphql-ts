@@ -41,10 +41,7 @@
  * @module
  */
 export * as g from "./schema-api";
-export {
-  bindGraphQLSchemaAPIToContext,
-  type GraphQLSchemaAPIWithContext,
-} from "./output";
+export { initG, type GWithContext } from "./output";
 
 export {
   GObjectType,
@@ -65,12 +62,12 @@ export {
   type GInputType,
   type GOutputType,
   type GType,
+  type InferValueFromOutputType,
+  type InferValueFromArg,
+  type InferValueFromArgs,
+  type InferValueFromInputType,
 } from "./types";
-export type { InferValueFromOutputType } from "./output";
 export type {
-  InferValueFromArg,
-  InferValueFromArgs,
-  InferValueFromInputType,
   Arg,
   EnumType,
   InputObjectType,
