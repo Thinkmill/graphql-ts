@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 0.6.4
+
+### Patch Changes
+
+- [#36](https://github.com/Thinkmill/graphql-ts/pull/36) [`692b08c5f7fdfb8e6aead74be2ea0841ba74dbad`](https://github.com/Thinkmill/graphql-ts/commit/692b08c5f7fdfb8e6aead74be2ea0841ba74dbad) Thanks [@emmatown](https://github.com/emmatown)! - Remove `@babel/runtime` dependency
+
 ## 0.6.3
 
 ### Patch Changes
