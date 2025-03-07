@@ -10,6 +10,7 @@ import type {
   GraphQLUnionType,
   GraphQLUnionTypeConfig,
 } from "graphql/type/definition";
+import * as withoutContext from "./api-without-context";
 import type { InferValueFromArgs } from "./api-without-context";
 import type {
   object,
@@ -20,6 +21,7 @@ import {
   GArg,
   GEnumType,
   GField,
+  GInputObjectType,
   GInputType,
   GInterfaceField,
   GInterfaceType,
@@ -27,8 +29,11 @@ import {
   GList,
   GNonNull,
   GNullableOutputType,
+  GNullableType,
   GObjectType,
   GOutputType,
+  GScalarType,
+  GType,
   GUnionType,
 } from "./types";
 
@@ -180,7 +185,7 @@ type InterfaceFieldFuncArgs<
   extensions?: Readonly<GraphQLFieldExtensions<any, Context>>;
 };
 
-export type GraphQLSchemaAPIWithContext<Context> = {
+export type GWithContext<Context> = {
   /**
    * Creates a GraphQL object type.
    *
@@ -561,10 +566,10 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   ) => GInterfaceType<Source, Fields, Context>;
 };
 
-export function bindGraphQLSchemaAPIToContext<
-  Context,
->(): GraphQLSchemaAPIWithContext<Context> {
+export function initG<Context>(): typeof withoutContext &
+  GWithContext<Context> {
   return {
+    ...withoutContext,
     object() {
       return function objectInner(config) {
         return new GObjectType(config);
@@ -597,6 +602,102 @@ export function bindGraphQLSchemaAPIToContext<
     },
   };
 }
+
+type TypeKindsArgs = {
+  [Key in keyof TypeKinds<any>]: never;
+};
+
+type TypeKinds<Context> = {
+  nullableInputType: GNullableType<GInputType>;
+  nullableOutputType: GNullableOutputType<Context>;
+  inputType: GInputType;
+  outputType: GOutputType<Context>;
+  type: GType<Context>;
+  nullableType: GNullableType<Context>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace initG {
+  export type Arg = {
+    inputObject: { [key: string]: GArg<GInputType> };
+    object: unknown;
+    union: unknown;
+    interface: unknown;
+    arg: GInputType;
+    nonNull: GNullableType<any>;
+    list: GType<any>;
+    scalar: unknown;
+    enum: Record<string, unknown>;
+  } & TypeKindsArgs;
+
+  // the definition of ArgDefaults may change in the future so you should use `ArgDefaults` as the default
+  // not `Arg`
+  export type ArgDefaults = Arg;
+
+  export type OtherArg = {
+    inputObject: boolean;
+    object: never;
+    union: never;
+    interface: never;
+    arg: boolean;
+    nonNull: never;
+    list: never;
+    scalar: unknown;
+    enum: never;
+  } & TypeKindsArgs;
+
+  export type OtherArgDefaults<FirstArg> = {
+    inputObject: false;
+    object: OtherArg["object"];
+    union: OtherArg["union"];
+    interface: OtherArg["interface"];
+    arg: OtherArg["arg"];
+    nonNull: OtherArg["nonNull"];
+    list: OtherArg["list"];
+    scalar: FirstArg;
+    enum: OtherArg["enum"];
+  } & TypeKindsArgs;
+
+  export type Key =
+    | "inputObject"
+    | "object"
+    | "union"
+    | "interface"
+    | "arg"
+    | "nonNull"
+    | "list"
+    | "scalar"
+    | "enum"
+    | keyof TypeKinds<any>;
+  export {};
+}
+
+export type initG<
+  Context,
+  K extends initG.Key,
+  FirstArg extends initG.Arg[K],
+  SecondArg extends initG.OtherArg[K] = initG.OtherArgDefaults<FirstArg>[K],
+> = K extends "object"
+  ? GObjectType<FirstArg, Context>
+  : K extends "inputObject"
+    ? GInputObjectType<Extract<FirstArg, {}>, SecondArg & boolean>
+    : K extends "arg"
+      ? GArg<Extract<FirstArg, initG.Arg["arg"]>, SecondArg & boolean>
+      : K extends "nonNull"
+        ? GNonNull<Extract<FirstArg, initG.Arg["nonNull"]>>
+        : K extends "list"
+          ? GList<Extract<FirstArg, initG.Arg["list"]>>
+          : K extends "enum"
+            ? GEnumType<Extract<FirstArg, {}>>
+            : K extends "scalar"
+              ? GScalarType<FirstArg, SecondArg>
+              : K extends "union"
+                ? GUnionType<FirstArg, Context>
+                : K extends "interface"
+                  ? GInterfaceType<FirstArg, Extract<SecondArg, {}>, Context>
+                  : K extends keyof TypeKinds<Context>
+                    ? TypeKinds<Context>[K]
+                    : never;
 
 type Flatten<T> = {
   [Key in keyof T]: T[Key];

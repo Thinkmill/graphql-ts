@@ -1,11 +1,3 @@
-# @graphql-ts/schema
-
-`@graphql-ts/schema` is a thin wrapper around
-[GraphQL.js](https://github.com/graphql/graphql-js) providing type-safety for
-constructing GraphQL Schemas while avoiding type-generation, [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
-and [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
-
-```ts
 import { initG } from "@graphql-ts/schema";
 import { GraphQLSchema, graphql } from "graphql";
 
@@ -94,4 +86,3 @@ const schema = new GraphQLSchema({
     console.log(result);
   });
 }
-```
