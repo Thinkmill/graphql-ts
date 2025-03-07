@@ -1,6 +1,6 @@
-import { bindGraphQLSchemaAPIToContext } from "../output";
+import { initG } from "../output";
 
-const __graphql = bindGraphQLSchemaAPIToContext();
+const __graphql = initG();
 
 export const { field, fields, interfaceField, object, union } = __graphql;
 
