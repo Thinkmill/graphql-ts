@@ -32,7 +32,7 @@ const onlyQuery = new GraphQLSchema({
         },
       }),
     },
-  }).graphQLType,
+  }),
 });
 
 test("basic query", () => {
@@ -114,7 +114,7 @@ test("basic mutation with existing mutations", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
     mutation: g.object()({
       name: "Mutation",
       fields: {
@@ -125,7 +125,7 @@ test("basic mutation with existing mutations", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   const extended = extend({
     mutation: {
@@ -180,7 +180,7 @@ test("errors when query type is used elsewhere in schema", () => {
     }),
   });
   const initial = new GraphQLSchema({
-    query: Query.graphQLType,
+    query: Query,
   });
   expect(() => {
     extend({
@@ -229,8 +229,8 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
     }),
   });
   const initial = new GraphQLSchema({
-    query: Query.graphQLType,
-    mutation: Mutation.graphQLType,
+    query: Query,
+    mutation: Mutation,
   });
   expect(() => {
     extend({
@@ -291,8 +291,8 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
     }),
   });
   const initial = new GraphQLSchema({
-    query: Query.graphQLType,
-    mutation: Mutation.graphQLType,
+    query: Query,
+    mutation: Mutation,
   });
   expect(() => {
     extend({
@@ -370,7 +370,7 @@ test("using an existing object type", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   const extended = extend((base) => ({
     query: {
@@ -455,7 +455,7 @@ test("errors when the type isn't an object type", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   expect(() => {
     extend((base) => ({
@@ -485,7 +485,7 @@ test(".scalar throws for built-in scalars", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   expect(() => {
     extend((base) => ({
@@ -520,7 +520,7 @@ test(".scalar works for custom scalars", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   const extended = extend((base) => ({
     query: {
@@ -554,7 +554,7 @@ test("a good error when there is already a field with the same name in the origi
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   expect(() => {
     extend({
@@ -588,7 +588,7 @@ test("a good error when multiple extensions add a field with the same name", () 
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   expect(() => {
     extend([
@@ -627,7 +627,7 @@ test("multiple extensions work", () => {
           },
         }),
       },
-    }).graphQLType,
+    }),
   });
   const extended = extend([
     {
