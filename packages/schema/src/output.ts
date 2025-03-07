@@ -10,6 +10,7 @@ import type {
   GraphQLUnionType,
   GraphQLUnionTypeConfig,
 } from "graphql/type/definition";
+import * as withoutContext from "./api-without-context";
 import type { InferValueFromArgs } from "./api-without-context";
 import type {
   object,
@@ -168,7 +169,7 @@ type MergeTuple<T, Merged> = T extends readonly [infer U, ...infer Rest]
   ? MergeTuple<Rest, Merged & U>
   : Merged;
 
-export type GraphQLSchemaAPIWithContext<Context> = {
+export type GWithContext<Context> = {
   /**
    * Creates a GraphQL object type.
    *
@@ -549,10 +550,10 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   ) => GInterfaceType<Source, Fields, Context>;
 };
 
-export function bindGraphQLSchemaAPIToContext<
-  Context,
->(): GraphQLSchemaAPIWithContext<Context> {
+export function initG<Context>(): typeof withoutContext &
+  GWithContext<Context> {
   return {
+    ...withoutContext,
     object() {
       return function objectInner(config) {
         return new GObjectType(config);
