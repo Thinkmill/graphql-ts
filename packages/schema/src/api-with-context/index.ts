@@ -1,8 +1,22 @@
-export {
+/**
+ * @module
+ * @deprecated This entrypoint should no longer be used. Use {@link initG}
+ *   instead.
+ */
+import { initG } from "@graphql-ts/schema";
+const {
   field,
   fields,
-  interface,
+  interface: interfaceType,
   interfaceField,
   object,
   union,
-} from "./api-with-context";
+} = initG<unknown>();
+export {
+  field,
+  fields,
+  interfaceType as interface,
+  interfaceField,
+  object,
+  union,
+};

@@ -1,1 +1,1 @@
-export * as graphql from "./schema-api";
+export { g as graphql } from "./schema-api";
