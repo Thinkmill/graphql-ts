@@ -1,6 +1,4 @@
-import { initG } from "../output";
-
-const g = initG();
+import { g } from "@graphql-ts/schema";
 
 export const {
   Boolean,

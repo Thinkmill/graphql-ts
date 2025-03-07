@@ -203,19 +203,20 @@ export type GWithContext<Context> = {
    *
    * GraphQL types will often contain references to themselves and to make
    * TypeScript allow that, you need have an explicit type annotation of
-   * `g.ObjectType<Source>` along with making `fields` a function that returns
-   * the object.
+   * `g<typeof g.object<Source>>` along with making `fields` a function that
+   * returns the object.
    *
    * ```ts
    * type PersonSource = { name: string; friends: PersonSource[] };
    *
-   * const Person: g.ObjectType<PersonSource> = g.object<PersonSource>()({
-   *   name: "Person",
-   *   fields: () => ({
-   *     name: g.field({ type: g.String }),
-   *     friends: g.field({ type: g.list(Person) }),
-   *   }),
-   * });
+   * const Person: g<typeof g.object<PersonSource>> =
+   *   g.object<PersonSource>()({
+   *     name: "Person",
+   *     fields: () => ({
+   *       name: g.field({ type: g.String }),
+   *       friends: g.field({ type: g.list(Person) }),
+   *     }),
+   *   });
    * ```
    */
   object: <
@@ -925,6 +926,179 @@ export type GWithContext<Context> = {
   Boolean: GScalarType<boolean>;
 };
 
+/**
+ * The `initG` export is the primary entrypoint into using `@graphql-ts/schema`
+ * that lets you compose GraphQL types into a GraphQL Schema
+ *
+ * A simple schema with only a query type looks like this.
+ *
+ * ```ts
+ * import { initG } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
+ *
+ * type Context = {};
+ *
+ * const g = initG<Context>();
+ * type g<T> = initG<T>;
+ *
+ * const Query = g.object()({
+ *   name: "Query",
+ *   fields: {
+ *     hello: g.field({
+ *       type: g.String,
+ *       resolve() {
+ *         return "Hello!";
+ *       },
+ *     }),
+ *   },
+ * });
+ *
+ * const schema = new GraphQLSchema({
+ *   query: Query,
+ * });
+ *
+ * graphql({
+ *   source: `
+ *     query {
+ *       hello
+ *     }
+ *   `,
+ *   schema,
+ * }).then((result) => {
+ *   console.log(result);
+ * });
+ * ```
+ *
+ * You can use pass the `schema` to `ApolloServer` and other GraphQL servers.
+ *
+ * You can also create a more advanced schema with other object types, circular
+ * types, args, and mutations. See {@link GWithContext} for what the other
+ * functions on `g` do.
+ *
+ * ```ts
+ * import { initG } from "@graphql-ts/schema";
+ * import { GraphQLSchema, graphql } from "graphql";
+ * import { deepEqual } from "node:assert";
+ *
+ * type Context = {
+ *   todos: Map<string, TodoItem>;
+ * };
+ *
+ * const g = initG<Context>();
+ * type g<T> = initG<T>;
+ *
+ * type TodoItem = {
+ *   id: string;
+ *   title: string;
+ *   relatedTodos: string[];
+ * };
+ *
+ * const Todo: g<typeof g.object<TodoItem>> = g.object<TodoItem>()({
+ *   name: "Todo",
+ *   fields: () => ({
+ *     id: g.field({ type: g.nonNull(g.ID) }),
+ *     title: g.field({ type: g.nonNull(g.String) }),
+ *     relatedTodos: g.field({
+ *       type: g.list(Todo),
+ *       resolve(source, _args, context) {
+ *         return source.relatedTodos
+ *           .map((id) => context.todos.get(id))
+ *           .filter((todo) => todo !== undefined);
+ *       },
+ *     }),
+ *   }),
+ * });
+ *
+ * const Query = g.object()({
+ *   name: "Query",
+ *   fields: {
+ *     todos: g.field({
+ *       type: g.list(Todo),
+ *       resolve(_source, _args, context) {
+ *         return context.todos.values();
+ *       },
+ *     }),
+ *   },
+ * });
+ *
+ * const Mutation = g.object()({
+ *   name: "Mutation",
+ *   fields: {
+ *     createTodo: g.field({
+ *       args: {
+ *         title: g.arg({ type: g.nonNull(g.String) }),
+ *         relatedTodos: g.arg({
+ *           type: g.nonNull(g.list(g.nonNull(g.ID))),
+ *           defaultValue: [],
+ *         }),
+ *       },
+ *       type: Todo,
+ *       resolve(_source, { title, relatedTodos }, context) {
+ *         const todo = { title, relatedTodos, id: crypto.randomUUID() };
+ *         context.todos.set(todo.id, todo);
+ *         return todo;
+ *       },
+ *     }),
+ *   },
+ * });
+ *
+ * const schema = new GraphQLSchema({
+ *   query: Query,
+ *   mutation: Mutation,
+ * });
+ *
+ * (async () => {
+ *   const contextValue: Context = { todos: new Map() };
+ *   {
+ *     const result = await graphql({
+ *       source: `
+ *         query {
+ *           todos {
+ *             title
+ *           }
+ *         }
+ *       `,
+ *       schema,
+ *       contextValue,
+ *     });
+ *     deepEqual(result, { data: { todos: [] } });
+ *   }
+ *
+ *   {
+ *     const result = await graphql({
+ *       source: `
+ *         mutation {
+ *           createTodo(title: "Try graphql-ts") {
+ *             title
+ *           }
+ *         }
+ *       `,
+ *       schema,
+ *       contextValue,
+ *     });
+ *     deepEqual(result, {
+ *       data: { createTodo: { title: "Try graphql-ts" } },
+ *     });
+ *   }
+ *   {
+ *     const result = await graphql({
+ *       source: `
+ *         query {
+ *           todos {
+ *             title
+ *           }
+ *         }
+ *       `,
+ *       schema,
+ *       contextValue,
+ *     });
+ *     deepEqual(result, {
+ *       data: { todos: [{ title: "Try graphql-ts" }] },
+ *     });
+ *   }
+ * })();
+ * ```
+ */
 export function initG<Context>(): GWithContext<Context> {
   return {
     scalar(config) {
@@ -990,6 +1164,33 @@ export function initG<Context>(): GWithContext<Context> {
     ID: GraphQLID,
   };
 }
+
+/**
+ * The `g` type is useful particularly when defining circular types to resolve
+ * errors from TypeScript because of the circularity.
+ *
+ * ```ts
+ * import { initG } from "@graphql-ts/schema";
+ * type PersonSource = { name: string; friends: PersonSource[] };
+ *
+ * const g = initG<PersonSource>();
+ * type g<T> = initG<T>;
+ *
+ * const Person: g<typeof g.object<PersonSource>> =
+ *   g.object<PersonSource>()({
+ *     name: "Person",
+ *     fields: () => ({
+ *       name: g.field({ type: g.String }),
+ *       friends: g.field({ type: g.list(Person) }),
+ *     }),
+ *   });
+ * ```
+ */
+export type initG<T> = T extends () => (args: any) => infer R
+  ? R
+  : T extends (args: any) => infer R
+    ? R
+    : never;
 
 type Flatten<T> = {
   [Key in keyof T]: T[Key];
