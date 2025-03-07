@@ -1,13 +1,23 @@
-export { arg, inputObject } from "./input";
-export { Boolean, Float, ID, Int, String, scalar } from "./scalars";
-export { list, nonNull } from "./list-and-non-null";
-export { enum, enumValues } from "./enum";
-export type { InferValueFromOutputType } from "../output";
+export {
+  arg,
+  inputObject,
+  Boolean,
+  Float,
+  ID,
+  Int,
+  String,
+  list,
+  nonNull,
+  enum,
+  enumValues,
+  scalar,
+} from "./api-without-context";
 export type {
+  InferValueFromOutputType,
   InferValueFromArg,
   InferValueFromArgs,
   InferValueFromInputType,
-} from "./input";
+} from "../types";
 
 import type {
   GArg,
