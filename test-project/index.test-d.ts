@@ -1,6 +1,6 @@
 import {
   g,
-  bindGraphQLSchemaAPIToContext,
+  initG,
   Arg,
   InferValueFromInputType,
   InputObjectType,
@@ -212,10 +212,7 @@ g.object<{ id: string } | { id: boolean }>()({
 });
 
 {
-  const g = {
-    ...gWithContext,
-    ...bindGraphQLSchemaAPIToContext<{ isAdminUIBuildProcess: true }>(),
-  };
+  const g = initG<{ isAdminUIBuildProcess: true }>();
 
   const SomeOutput = g.object<{ thing: boolean }>()({
     name: "Something",
@@ -334,11 +331,11 @@ g.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA = bindGraphQLSchemaAPIToContext<{
+  const typesWithContextA = initG<{
     something: boolean;
   }>();
 
-  const typesWithContextB = bindGraphQLSchemaAPIToContext<{
+  const typesWithContextB = initG<{
     something: boolean;
     other: string;
   }>();
@@ -1757,7 +1754,7 @@ const someInputFields = {
   >;
   type SourceType = { discriminant: string };
 
-  const g = bindGraphQLSchemaAPIToContext<Context>();
+  const g = initG<Context>();
 
   const interfaceType = g.interface<SourceType>()({
     name: "a",
@@ -1767,7 +1764,7 @@ const someInputFields = {
   });
 
   const field = g.field({
-    type: gWithContext.String,
+    type: g.String,
     resolve(x: SourceType) {
       return x.discriminant as string;
     },
@@ -2073,4 +2070,68 @@ const someInputFields = {
     Invariant<g.Arg<GNonNull<typeof something>, true>>,
     Invariant<typeof a>
   >();
+}
+
+{
+  type Person = {
+    name: string;
+  };
+  const Person: g<typeof g.object<Person>> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve() {
+          return [];
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = { loadFriends: (id: string) => Promise<Person[]> };
+  const g = initG<Context>();
+  type g<T> = initG<T>;
+
+  type Person = {
+    id: string;
+    name: string;
+  };
+
+  const Person: g<typeof g.object<Person>> = g.object<Person>()({
+    name: "Person",
+    fields: () => ({
+      id: g.field({ type: g.ID }),
+      name: g.field({ type: g.String }),
+      friends: g.field({
+        type: g.list(Person),
+        resolve(source, _, context) {
+          return context.loadFriends(source.id);
+        },
+      }),
+    }),
+  });
+}
+
+{
+  type Context = {};
+  const g = initG<Context>();
+  type g<T> = initG<T>;
+
+  type PersonFilter = g<
+    typeof g.inputObject<{
+      name: g<typeof g.arg<typeof g.String>>;
+      friends: GArg<PersonFilter>;
+    }>
+  >;
+
+  const PersonFilter: PersonFilter = g.inputObject({
+    name: "PersonFilter",
+    fields: () => ({
+      name: g.arg({ type: g.String }),
+      friends: g.arg({ type: PersonFilter }),
+    }),
+  });
 }
