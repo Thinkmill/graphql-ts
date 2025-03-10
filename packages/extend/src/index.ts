@@ -13,13 +13,15 @@
 import {
   GField,
   GObjectType,
-  GArg,
   GEnumType,
   GUnionType,
   GInterfaceType,
   GScalarType,
   GOutputType,
   GInputObjectType,
+  GInputType,
+  GArg,
+  GInterfaceField,
 } from "@graphql-ts/schema/types";
 import {
   GraphQLSchema,
@@ -37,6 +39,10 @@ import {
   parse,
   ObjectTypeDefinitionNode,
   print,
+  GraphQLInterfaceType,
+  GraphQLInputObjectType,
+  GraphQLUnionType,
+  GraphQLScalarType,
 } from "graphql";
 
 import { g } from "@graphql-ts/schema";
@@ -92,11 +98,11 @@ const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
  * }
  * ```
  */
-export function extend(
+export function extend<Types extends Record<string, NamedType>>(
   extension:
     | Extension
     | readonly Extension[]
-    | ((base: BaseSchemaMeta) => Extension | readonly Extension[])
+    | ((base: BaseSchemaMeta<Types>) => Extension | readonly Extension[])
 ): (schema: GraphQLSchema) => GraphQLSchema {
   return (schema) => {
     const getType = (name: string) => {
@@ -114,8 +120,11 @@ export function extend(
       typeof extension === "function"
         ? extension({
             schema,
+            all(name) {
+              return getType(name as string) as any;
+            },
             object(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isObjectType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -123,10 +132,10 @@ export function extend(
                   )} in the schema being extended but it is not an object type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
             inputObject(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isInputObjectType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -134,10 +143,10 @@ export function extend(
                   )} in the schema being extended but it is not an input object type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
             enum(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isEnumType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -145,10 +154,10 @@ export function extend(
                   )} in the schema being extended but it is not an enum type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
             interface(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isInterfaceType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -156,15 +165,17 @@ export function extend(
                   )} in the schema being extended but it is not an interface type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
             scalar(name) {
-              if (builtinScalars.has(name)) {
+              if (builtinScalars.has(name as string)) {
                 throw new Error(
-                  `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but ${name} was passed`
+                  `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but ${
+                    name as string
+                  } was passed`
                 );
               }
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isScalarType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -172,10 +183,10 @@ export function extend(
                   )} in the schema being extended but it is not a scalar type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
             union(name) {
-              const graphQLType = getType(name);
+              const graphQLType = getType(name as string);
               if (!isUnionType(graphQLType)) {
                 throw new Error(
                   `There is a type named ${JSON.stringify(
@@ -183,7 +194,7 @@ export function extend(
                   )} in the schema being extended but it is not a union type`
                 );
               }
-              return graphQLType;
+              return graphQLType as any;
             },
           })
         : extension
@@ -427,12 +438,39 @@ export type Extension = {
   //   unreferencedConcreteInterfaceImplementations?: ObjectType<Context, any>[];
 };
 
+export type NamedType =
+  | GObjectType<any, unknown>
+  | GInputObjectType<{ [key: string]: GArg<GInputType, boolean> }>
+  | GEnumType<Record<string, unknown>>
+  | GUnionType<unknown, unknown>
+  | GInterfaceType<
+      unknown,
+      Record<string, GInterfaceField<any, GOutputType<unknown>, unknown>>,
+      unknown
+    >
+  | GScalarType<unknown>;
+
+export type NamedTypes = Record<string & {}, NamedType>;
+
+type TypeOfKind<Types extends Record<string, NamedType>, Constraint> = {
+  [K in keyof Types]: Extract<Types[K], Constraint> extends never ? never : K;
+}[keyof Types];
+
 /**
  * This object contains the schema being extended and functions to get GraphQL
  * types from the schema.
  */
-export type BaseSchemaMeta = {
+export type BaseSchemaMeta<
+  Types extends Record<string, NamedType> = NamedTypes,
+> = {
   schema: GraphQLSchema;
+  all<
+    Name extends {
+      [K in keyof Types]: string extends K ? never : K;
+    }[keyof Types],
+  >(
+    name: Name
+  ): Types[Name];
   /**
    * Gets an {@link GObjectType object type} from the existing GraphQL schema. If
    * there is no object type in the existing schema with the name passed, an
@@ -453,7 +491,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  object(name: string): GObjectType<unknown, unknown>;
+  object<Name extends TypeOfKind<Types, GraphQLObjectType>>(
+    name: Name
+  ): Extract<Types[Name], GraphQLObjectType>;
   /**
    * Gets an {@link GInputObjectType input object type} from the existing GraphQL
    * schema. If there is no input object type in the existing schema with the
@@ -480,9 +520,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  inputObject(
-    name: string
-  ): GInputObjectType<{ [key: string]: GArg<any, boolean> }, boolean>;
+  inputObject<Name extends TypeOfKind<Types, GraphQLInputObjectType>>(
+    name: Name
+  ): Extract<Types[Name], GraphQLInputObjectType>;
   /**
    * Gets an {@link GEnumType enum type} from the existing GraphQL schema. If
    * there is no enum type in the existing schema with the name passed, an error
@@ -508,7 +548,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  enum(name: string): GEnumType<Record<string, unknown>>;
+  enum<Name extends TypeOfKind<Types, GEnumType<any>>>(
+    name: Name
+  ): Extract<Types[Name], GEnumType<any>>;
   /**
    * Gets a {@link GUnionType union type} from the existing GraphQL schema. If
    * there is no union type in the existing schema with the name passed, an
@@ -529,7 +571,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  union(name: string): GUnionType<unknown, unknown>;
+  union<Name extends TypeOfKind<Types, GraphQLUnionType>>(
+    name: Name
+  ): Extract<Types[Name], GraphQLUnionType>;
   /**
    * Gets an {@link GInterfaceType interface type} from the existing GraphQL
    * schema. If there is no interface type in the existing schema with the name
@@ -550,7 +594,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  interface(name: string): GInterfaceType<unknown, any, unknown>;
+  interface<Name extends TypeOfKind<Types, GraphQLInterfaceType>>(
+    name: Name
+  ): Extract<Types[Name], GraphQLInterfaceType>;
   /**
    * Gets a {@link GScalarType scalar type} from the existing GraphQL schema. If
    * there is no scalar type in the existing schema with the name passed, an
@@ -579,7 +625,9 @@ export type BaseSchemaMeta = {
    * }))(originalSchema);
    * ```
    */
-  scalar(name: string): GScalarType<unknown>;
+  scalar<Name extends TypeOfKind<Types, GraphQLScalarType<any>>>(
+    name: Name
+  ): Extract<Types[Name], GraphQLScalarType<any>>;
 };
 
 function findObjectTypeUsages(
