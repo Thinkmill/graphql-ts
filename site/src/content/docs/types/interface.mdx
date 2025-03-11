@@ -1,0 +1,97 @@
+---
+title: Interface Types
+sidebar:
+  label: Interface
+---
+
+GraphQL interface types represent a set of fields that can be implemented by other object and interface types. In `@graphql-ts/schema`, you can define interface types using the `g.interface` function.
+
+Since interface types are only
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+
+const Node = g.interface()({
+  name: "Entity",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.ID) }),
+  },
+});
+```
+
+This can then be used in object types to implement the interface:
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext<{
+  loadEntity: (id: string) => Promise<UserSource | OrganisationSource | null>;
+}>();
+type g<T> = gWithContext.infer<T>;
+const Entity = g.interface()({
+  name: "Entity",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut---
+type UserSource = {
+  __typename: "User";
+  id: string;
+  name: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type OrganisationSource = {
+  __typename: "Organisation";
+  id: string;
+  name: string;
+};
+
+const Organisation = g.object<OrganisationSource>()({
+  name: "User",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    members: g.field({
+      type: g.list(User),
+      resolve: () => [],
+    }),
+  },
+});
+
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    entity: g.field({
+      type: Entity,
+      args: {
+        id: g.arg({ type: g.nonNull(g.ID) }),
+      },
+      resolve: (_, args) => {
+        return { __typename: "User", id: args.id, name: "Alice" };
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ query: Query });
+```
+
+## `resolveType` and `isTypeOf`
+
+To get GraphQL.js to understand what

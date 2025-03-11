@@ -2180,3 +2180,12 @@ const someInputFields = {
     Invariant<typeof x>
   >();
 }
+
+{
+  const Node = g.interface()({
+    name: "Node",
+    fields: {
+      id: g.field({ type: g.nonNull(g.ID) }),
+    },
+  });
+}

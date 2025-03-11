@@ -1,0 +1,74 @@
+---
+title: Union Types
+sidebar:
+  label: Union
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+GraphQL union types represent a type that can be one of several object types. They are similar to [interface types](./interface.md) though unlike interface types, they don't imply any common properties between the types and consumers have to use `... on TypeName { }` to access each property they want. In `@graphql-ts/schema`, you can define union types using the `g.union` function.
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+type CatSource = {
+  __typename: "Cat";
+  meow: string;
+};
+const Cat = g.object<CatSource>()({
+  name: "Cat",
+  fields: {
+    meow: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type DogSource = {
+  __typename: "Dog";
+  bark: string;
+};
+const Dog = g.object<DogSource>()({
+  name: "Dog",
+  fields: {
+    bark: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+const Animal = g.union({
+  name: "Animal",
+  types: [Cat, Dog],
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: g.object()({
+    name: "Query",
+    fields: {
+      animals: g.field({
+        type: g.list(Animal),
+        resolve: () => [],
+      }),
+    },
+  }),
+});
+```
+
+</ShowSchema>
+
+```graphql
+# query.graphql
+query {
+  animals {
+    __typename
+    ... on Cat {
+      meow
+    }
+    ... on Dog {
+      bark
+    }
+  }
+}
+```
