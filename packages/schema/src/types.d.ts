@@ -26,17 +26,13 @@ import {
   type GraphQLTypeResolver,
   GraphQLUnionType,
   type GraphQLUnionTypeConfig,
-} from "graphql/type/definition";
-import type {
-  FieldDefinitionNode,
-  InputValueDefinitionNode,
-} from "graphql/language/ast";
-import { InferValueFromOutputType } from "./output";
+  type FieldDefinitionNode,
+  type InputValueDefinitionNode,
+} from "graphql";
 import type {
   field,
   union,
   interface as interface_,
-  interfaceField,
   object,
 } from "./api-with-context";
 import type {
@@ -45,7 +41,6 @@ import type {
   inputObject,
   arg,
 } from "./api-without-context";
-import { InferValueFromArgs } from "./api-without-context/input";
 
 type Maybe<T> = T | null | undefined;
 
@@ -86,6 +81,95 @@ export type GFieldResolver<
   context: Context,
   info: GraphQLResolveInfo
 ) => InferValueFromOutputType<Type>;
+
+type InferValueFromOutputTypeWithoutAddingNull<Type extends GOutputType<any>> =
+  Type extends GraphQLScalarType<infer Value>
+    ? Value
+    : Type extends GraphQLEnumType
+      ? Type extends GEnumType<infer Values>
+        ? Values[keyof Values]
+        : never
+      : Type extends GList<infer Value extends GOutputType<any>>
+        ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
+          // which means that things like `string` won't be allowed
+          // (which is probably a good thing because returning a string from a resolver that needs
+          // a graphql list of strings is almost definitely not what you want and if it is, use Array.from)
+          // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
+          // (though tbh, i think the chance of that causing problems is quite low)
+          object & Iterable<InferValueFromOutputType<Value>>
+        : Type extends GraphQLObjectType<infer Source, any>
+          ? Source
+          : Type extends GraphQLUnionType | GraphQLInterfaceType
+            ? Type extends
+                | GUnionType<infer Source, any>
+                | GInterfaceType<infer Source, any, any>
+              ? Source
+              : unknown
+            : never;
+
+export type InferValueFromOutputType<Type extends GOutputType<any>> =
+  MaybePromise<
+    Type extends GNonNull<infer Value extends GNullableOutputType<any>>
+      ? InferValueFromOutputTypeWithoutAddingNull<Value>
+      : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
+  >;
+
+type MaybePromise<T> = Promise<T> | T;
+
+type InferValueFromNullableInputType<Type extends GInputType> =
+  Type extends GraphQLScalarType<infer Value, any>
+    ? Value
+    : Type extends GraphQLEnumType
+      ? Type extends GEnumType<infer Values>
+        ? Values[keyof Values]
+        : unknown
+      : Type extends GList<infer Value extends GInputType>
+        ? InferValueFromInputType<Value>[]
+        : Type extends GraphQLInputObjectType
+          ? Type extends GInputObjectType<infer Fields, infer IsOneOf>
+            ? IsOneOf extends true
+              ? InferValueForOneOf<Fields>
+              : InferValueFromArgs<Fields>
+            : Record<string, unknown>
+          : never;
+
+type InferValueForOneOf<
+  T extends { [key: string]: { type: GInputType } },
+  Key extends keyof T = keyof T,
+> = Flatten<
+  Key extends unknown
+    ? {
+        readonly [K in Key]: InferValueFromNullableInputType<T[K]["type"]>;
+      } & {
+        readonly [K in Exclude<keyof T, Key>]?: never;
+      }
+    : never
+>;
+
+export type InferValueFromArgs<Args extends Record<string, GArg<GInputType>>> =
+  {
+    readonly [Key in keyof Args]: InferValueFromArg<Args[Key]>;
+  } & {};
+
+export type InferValueFromArg<Arg extends GArg<GInputType>> =
+  // the distribution technically only needs to be around the AddUndefined
+  // but having it here instead of inside the union
+  // means that TypeScript will print the resulting type
+  // when you use it rather than keep the alias and
+  // the resulting type is generally far more readable
+  Arg extends unknown
+    ?
+        | InferValueFromInputType<Arg["type"]>
+        | AddUndefined<Arg["type"], Arg["defaultValue"]>
+    : never;
+
+type AddUndefined<TInputType extends GInputType, DefaultValue> =
+  TInputType extends GNonNull<any> ? never : DefaultValue & undefined;
+
+export type InferValueFromInputType<Type extends GInputType> =
+  Type extends GNonNull<infer Value extends GNullableInputType>
+    ? InferValueFromNullableInputType<Value>
+    : InferValueFromNullableInputType<Type> | null;
 
 /**
  * A GraphQL output field for an {@link GObjectType object type} which should be
@@ -384,14 +468,14 @@ export class GEnumType<
 
 /**
  * A GraphQL enum type. This should generally be constructed with
- * {@link enum_ `g.enum`}.
+ * {@link scalar `g.scalar`}.
  *
  * Unlike some other constructors in this module, this constructor functions
- * exactly the same as it's counterpart `g.enum` so it is safe to use directly
+ * exactly the same as it's counterpart `g.scalar` so it is safe to use directly
  * if desired.
  *
  * Also unlike some other types in this module, this type is exactly equivalent
- * to the original {@link GraphQLEnumType `GraphQLEnumType`} type from the
+ * to the original {@link GraphQLScalarType `GraphQLScalarType`} type from the
  * `graphql` package.
  */
 export class GScalarType<

@@ -1,16 +1,16 @@
 import type {
-  GraphQLEnumType,
   GraphQLFieldExtensions,
   GraphQLObjectTypeConfig,
-  GraphQLOutputType,
   GraphQLResolveInfo,
-  GraphQLScalarType,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-  GraphQLUnionType,
   GraphQLUnionTypeConfig,
-} from "graphql/type/definition";
-import type { InferValueFromArgs } from "./api-without-context";
+  GraphQLArgumentConfig,
+  GraphQLInputFieldConfig,
+  GraphQLScalarTypeConfig,
+} from "graphql";
+import type {
+  InferValueFromArgs,
+  InferValueFromInputType,
+} from "./api-without-context";
 import type {
   object,
   field,
@@ -19,58 +19,39 @@ import type {
 import {
   GArg,
   GEnumType,
+  GEnumTypeConfig,
+  GEnumValueConfig,
   GField,
+  GInputObjectType,
+  GInputObjectTypeConfig,
   GInputType,
   GInterfaceField,
   GInterfaceType,
   GInterfaceTypeConfig,
   GList,
   GNonNull,
-  GNullableOutputType,
+  GNullableInputType,
+  GNullableType,
   GObjectType,
   GOutputType,
+  GScalarType,
+  GType,
   GUnionType,
+  InferValueFromOutputType,
 } from "./types";
+import {
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLString,
+} from "graphql";
 
 export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
   typeof interfaceFunc,
   typeof field,
   typeof object,
 ];
-
-type InferValueFromOutputTypeWithoutAddingNull<Type extends GraphQLOutputType> =
-  Type extends GraphQLScalarType<infer Value>
-    ? Value
-    : Type extends GraphQLEnumType
-      ? Type extends GEnumType<infer Values>
-        ? Values[keyof Values]
-        : never
-      : Type extends GList<infer Value extends GOutputType<any>>
-        ? // the `object` bit is here because graphql checks `typeof maybeIterable === 'object'`
-          // which means that things like `string` won't be allowed
-          // (which is probably a good thing because returning a string from a resolver that needs
-          // a graphql list of strings is almost definitely not what you want and if it is, use Array.from)
-          // sadly functions that are iterables will be allowed by this type but not allowed by graphql-js
-          // (though tbh, i think the chance of that causing problems is quite low)
-          object & Iterable<InferValueFromOutputType<Value>>
-        : Type extends GraphQLObjectType<infer Source, any>
-          ? Source
-          : Type extends GraphQLUnionType | GraphQLInterfaceType
-            ? Type extends
-                | GUnionType<infer Source, any>
-                | GInterfaceType<infer Source, any, any>
-              ? Source
-              : unknown
-            : never;
-
-export type InferValueFromOutputType<Type extends GOutputType<any>> =
-  MaybePromise<
-    Type extends GNonNull<infer Value extends GNullableOutputType<any>>
-      ? InferValueFromOutputTypeWithoutAddingNull<Value>
-      : InferValueFromOutputTypeWithoutAddingNull<Type> | null | undefined
-  >;
-
-type MaybePromise<T> = Promise<T> | T;
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
@@ -168,7 +149,7 @@ type MergeTuple<T, Merged> = T extends readonly [infer U, ...infer Rest]
   ? MergeTuple<Rest, Merged & U>
   : Merged;
 
-export type GraphQLSchemaAPIWithContext<Context> = {
+export type GWithContext<Context> = {
   /**
    * Creates a GraphQL object type.
    *
@@ -547,42 +528,466 @@ export type GraphQLSchemaAPIWithContext<Context> = {
   >(
     config: GInterfaceTypeConfig<Source, Fields, Interfaces, Context>
   ) => GInterfaceType<Source, Fields, Context>;
+  /**
+   * A shorthand to easily create {@link GEnumValueConfig enum values} to pass to
+   * {@link enumType `g.enum`}.
+   *
+   * If you need to set a `description` or `deprecationReason` for an enum
+   * variant, you should pass values directly to `g.enum` without using
+   * `g.enumValues`.
+   *
+   * ```ts
+   * const MyEnum = g.enum({
+   *   name: "MyEnum",
+   *   values: g.enumValues(["a", "b"]),
+   * });
+   * ```
+   *
+   * ```ts
+   * const values = g.enumValues(["a", "b"]);
+   *
+   * assertDeepEqual(values, {
+   *   a: { value: "a" },
+   *   b: { value: "b" },
+   * });
+   * ```
+   */
+  enumValues: <const Values extends readonly string[]>(
+    values: readonly [...Values]
+  ) => {
+    [Key in Values[number]]: GEnumValueConfig<Key>;
+  };
+
+  /**
+   * Creates an {@link GEnumType enum type} with a number of
+   * {@link GEnumValueConfig enum values}.
+   *
+   * ```ts
+   * const MyEnum = g.enum({
+   *   name: "MyEnum",
+   *   values: g.enumValues(["a", "b"]),
+   * });
+   * // ==
+   * graphql`
+   *   enum MyEnum {
+   *     a
+   *     b
+   *   }
+   * `;
+   * ```
+   *
+   * ```ts
+   * const MyEnum = g.enum({
+   *   name: "MyEnum",
+   *   description: "My enum does things",
+   *   values: {
+   *     something: {
+   *       description: "something something",
+   *       value: "something",
+   *     },
+   *     thing: {
+   *       description: "thing thing",
+   *       deprecationReason: "something should be used instead of thing",
+   *       value: "thing",
+   *     },
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   """
+   *   My enum does things
+   *   """
+   *   enum MyEnum {
+   *     """
+   *     something something
+   *     """
+   *     something
+   *     """
+   *     thing thing
+   *     """
+   *     thing @\deprecated(reason: "something should be used instead of thing")
+   *   }
+   * `;)
+   * ```
+   */
+  enum: <Values extends Record<string, unknown>>(
+    config: GEnumTypeConfig<Values>
+  ) => GEnumType<Values>;
+  /**
+   * Creates a {@link GArg GraphQL argument}.
+   *
+   * Args can can be used as arguments on output fields:
+   *
+   * ```ts
+   * g.field({
+   *   type: g.String,
+   *   args: {
+   *     something: g.arg({ type: g.String }),
+   *   },
+   *   resolve(source, { something }) {
+   *     return something || somethingElse;
+   *   },
+   * });
+   * // ==
+   * graphql`(something: String): String`;
+   * ```
+   *
+   * Or as fields on input objects:
+   *
+   * ```ts
+   * const Something = g.inputObject({
+   *   name: "Something",
+   *   fields: {
+   *     something: g.arg({ type: g.String }),
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   input Something {
+   *     something: String
+   *   }
+   * `;
+   * ```
+   */
+  arg: <
+    Type extends GInputType,
+    DefaultValue extends InferValueFromInputType<Type> | undefined = undefined,
+  >(
+    arg: Flatten<
+      {
+        type: Type;
+      } & Omit<
+        GraphQLInputFieldConfig & GraphQLArgumentConfig,
+        "type" | "defaultValue"
+      >
+    > &
+      (undefined extends DefaultValue
+        ? { defaultValue?: DefaultValue }
+        : { defaultValue: DefaultValue })
+  ) => GArg<Type, DefaultValue extends undefined ? false : true>;
+  /**
+   * Creates an {@link GInputObjectType input object type}
+   *
+   * ```ts
+   * const Something = g.inputObject({
+   *   name: "Something",
+   *   fields: {
+   *     something: g.arg({ type: g.String }),
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   input Something {
+   *     something: String
+   *   }
+   * `;
+   * ```
+   *
+   * ### Handling circular objects
+   *
+   * Circular input objects require explicitly specifying the fields on the
+   * object in the type because of TypeScript's limits with circularity.
+   *
+   * ```ts
+   * type SomethingInputType = g.InputObjectType<{
+   *   something: g.Arg<SomethingInputType>;
+   * }>;
+   * const Something: SomethingInputType = g.inputObject({
+   *   name: "Something",
+   *   fields: () => ({
+   *     something: g.arg({ type: Something }),
+   *   }),
+   * });
+   * ```
+   *
+   * You can specify all of your non-circular fields outside of the fields
+   * object and then use `typeof` to get the type to avoid writing the
+   * non-circular fields as types again.
+   *
+   * ```ts
+   * const nonCircularFields = {
+   *   thing: g.arg({ type: g.String }),
+   * };
+   * type SomethingInputType = g.InputObjectType<
+   *   typeof nonCircularFields & {
+   *     something: g.Arg<SomethingInputType>;
+   *   }
+   * >;
+   * const Something: SomethingInputType = g.inputObject({
+   *   name: "Something",
+   *   fields: () => ({
+   *     ...nonCircularFields,
+   *     something: g.arg({ type: Something }),
+   *   }),
+   * });
+   * ```
+   */
+  inputObject: <
+    Fields extends {
+      [key: string]: IsOneOf extends true
+        ? GArg<GNullableInputType, false>
+        : GArg<GInputType>;
+    },
+    IsOneOf extends boolean = false,
+  >(
+    config: GInputObjectTypeConfig<Fields, IsOneOf>
+  ) => GInputObjectType<Fields, IsOneOf>;
+  /**
+   * Wraps any GraphQL type in a {@link GList list type}.
+   *
+   * ```ts
+   * const stringListType = g.list(g.String);
+   * // ==
+   * graphql`[String]`;
+   * ```
+   *
+   * When used as an input type, you will recieve an array of the inner type.
+   *
+   * ```ts
+   * g.field({
+   *   type: g.String,
+   *   args: { thing: g.arg({ type: g.list(g.String) }) },
+   *   resolve(source, { thing }) {
+   *     const theThing: undefined | null | Array<string | null> = thing;
+   *     return "";
+   *   },
+   * });
+   * ```
+   *
+   * When used as an output type, you can return an iterable of the inner type
+   * that also matches `typeof val === 'object'` so for example, you'll probably
+   * return an Array most of the time but you could also return a Set you
+   * couldn't return a string though, even though a string is an iterable, it
+   * doesn't match `typeof val === 'object'`.
+   *
+   * ```ts
+   * g.field({
+   *   type: g.list(g.String),
+   *   resolve() {
+   *     return [""];
+   *   },
+   * });
+   * ```
+   *
+   * ```ts
+   * g.field({
+   *   type: g.list(g.String),
+   *   resolve() {
+   *     return new Set([""]);
+   *   },
+   * });
+   * ```
+   *
+   * ```ts
+   * g.field({
+   *   type: g.list(g.String),
+   *   resolve() {
+   *     // this will not be allowed
+   *     return "some things";
+   *   },
+   * });
+   * ```
+   */
+  list: <Of extends GType<any>>(of: Of) => GList<Of>;
+  /**
+   * Wraps a {@link GNullableType nullable type} with a
+   * {@link GNonNull non-nullable type}.
+   *
+   * Types in GraphQL are always nullable by default so if you want to enforce
+   * that a type must always be there, you can use the non-null type.
+   *
+   * ```ts
+   * const nonNullableString = g.nonNull(g.String);
+   * // ==
+   * graphql`String!`;
+   * ```
+   *
+   * When using a non-null type as an input type, your resolver will never
+   * recieve null and consumers of your GraphQL API **must** provide a value for
+   * it unless you provide a default value.
+   *
+   * ```ts
+   * g.field({
+   *   args: {
+   *     someNonNullAndRequiredArg: g.arg({
+   *       type: g.nonNull(g.String),
+   *     }),
+   *     someNonNullButOptionalArg: g.arg({
+   *       type: g.nonNull(g.String),
+   *       defaultValue: "some default",
+   *     }),
+   *   },
+   *   type: g.String,
+   *   resolve(source, args) {
+   *     // both of these will always be a string
+   *     args.someNonNullAndRequiredArg;
+   *     args.someNonNullButOptionalArg;
+   *
+   *     return "";
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   fieldName(
+   *     someNonNullAndRequiredArg: String!
+   *     someNonNullButOptionalArg: String! = "some default"
+   *   ): String
+   * `;
+   * ```
+   *
+   * When using a non-null type as an output type, your resolver must never
+   * return null. If you do return null(which unless you do
+   * type-casting/ts-ignore/etc. `@graphql-ts/schema` will not let you do)
+   * graphql-js will return an error to consumers of your GraphQL API.
+   *
+   * Non-null types should be used very carefully on output types. If you have
+   * to do a fallible operation like a network request or etc. to get the value,
+   * it probably shouldn't be non-null. If you make a field non-null and doing
+   * the fallible operation fails, consumers of your GraphQL API will be unable
+   * to see any of the other fields on the object that the non-null field was
+   * on. For example, an id on some type is a good candidate for being non-null
+   * because if you have the item, you will already have the id so getting the
+   * id will never fail but fetching a related item from a database would be
+   * fallible so even if it will never be null in the success case, you should
+   * make it nullable.
+   *
+   * ```ts
+   * g.field({
+   *   type: g.nonNull(g.String),
+   *   resolve(source, args) {
+   *     return "something";
+   *   },
+   * });
+   * // ==
+   * graphql`
+   *   fieldName: String!
+   * `;
+   * ```
+   *
+   * If you try to wrap another non-null type in a non-null type again, you will
+   * get a type error.
+   *
+   * ```ts
+   * // Argument of type 'NonNullType<ScalarType<string>>'
+   * // is not assignable to parameter of type 'NullableType'.
+   * g.nonNull(g.nonNull(g.String));
+   * ```
+   */
+  nonNull: <Of extends GNullableType<any>>(of: Of) => GNonNull<Of>;
+  /**
+   * Creates a {@link GScalarType scalar type}.
+   *
+   * ```ts
+   * const BigInt = g.scalar({
+   *   name: "BigInt",
+   *   serialize(value) {
+   *     if (typeof value !== "bigint")
+   *       throw new GraphQLError(
+   *         `unexpected value provided to BigInt scalar: ${value}`
+   *       );
+   *     return value.toString();
+   *   },
+   *   parseLiteral(value) {
+   *     if (value.kind !== "StringValue")
+   *       throw new GraphQLError("BigInt only accepts values as strings");
+   *     return globalThis.BigInt(value.value);
+   *   },
+   *   parseValue(value) {
+   *     if (typeof value === "bigint") return value;
+   *     if (typeof value !== "string")
+   *       throw new GraphQLError("BigInt only accepts values as strings");
+   *     return globalThis.BigInt(value);
+   *   },
+   * });
+   * // for fields on output types
+   * g.field({ type: someScalar });
+   *
+   * // for args on output fields or fields on input types
+   * g.arg({ type: someScalar });
+   * ```
+   *
+   * Note, while graphql-js allows you to express scalar types like the `ID`
+   * type which accepts integers and strings as both input values and return
+   * values from resolvers which are transformed into strings before calling
+   * resolvers and returning the query respectively, the type you use should be
+   * `string` for `ID` since that is what it is transformed into.
+   * `@graphql-ts/schema` doesn't currently express the coercion of scalars, you
+   * should instead convert values to the canonical form yourself before
+   * returning from resolvers.
+   */
+  scalar: <Internal, External = Internal>(
+    config: GraphQLScalarTypeConfig<Internal, External>
+  ) => GScalarType<Internal, External>;
+  ID: GScalarType<string>;
+  String: GScalarType<string>;
+  Float: GScalarType<number>;
+  Int: GScalarType<number>;
+  Boolean: GScalarType<boolean>;
 };
 
-export function bindGraphQLSchemaAPIToContext<
-  Context,
->(): GraphQLSchemaAPIWithContext<Context> {
+export function initG<Context>(): GWithContext<Context> {
   return {
-    object() {
-      return function objectInner(config) {
-        return new GObjectType(config);
-      };
+    scalar(config) {
+      return new GScalarType(config);
+    },
+    list(of) {
+      return new GList(of);
+    },
+    nonNull(of) {
+      return new GNonNull(of);
+    },
+    inputObject(config) {
+      return new GInputObjectType(config);
+    },
+    enum(config) {
+      return new GEnumType(config);
     },
     union(config) {
       return new GUnionType(config as any);
     },
-    field(field) {
-      if (!field.type) {
-        throw new Error("A type must be passed to g.field()");
-      }
-      return field as any;
-    },
-    fields() {
-      return function fieldsInner(fields) {
-        return fields;
+    object() {
+      return function objectInner(config) {
+        return new GObjectType(config);
       };
-    },
-    interfaceField(field) {
-      if (!field.type) {
-        throw new Error("A type must be passed to g.interfaceField()");
-      }
-      return field as any;
     },
     interface() {
       return function interfaceInner(config) {
         return new GInterfaceType(config);
       };
     },
+    fields() {
+      return function fieldsInner(fields) {
+        return fields;
+      };
+    },
+    field(field) {
+      if (!field.type) {
+        throw new Error("A type must be passed to g.field()");
+      }
+      return field;
+    },
+    interfaceField(field) {
+      if (!field.type) {
+        throw new Error("A type must be passed to g.interfaceField()");
+      }
+      return field;
+    },
+    arg(arg) {
+      if (!arg.type) {
+        throw new Error("A type must be passed to g.arg()");
+      }
+      return arg as any;
+    },
+    enumValues(values) {
+      return Object.fromEntries(
+        values.map((value) => [value, { value }])
+      ) as any;
+    },
+    Int: GraphQLInt,
+    Float: GraphQLFloat,
+    String: GraphQLString,
+    Boolean: GraphQLBoolean,
+    ID: GraphQLID,
   };
 }
 

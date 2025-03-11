@@ -7,4 +7,4 @@ export {
   GraphQLUnionType as GUnionType,
   GraphQLList as GList,
   GraphQLNonNull as GNonNull,
-} from "graphql/type/definition";
+} from "graphql";
