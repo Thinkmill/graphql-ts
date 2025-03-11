@@ -1,5 +1,13 @@
 # @graphql-ts/test-project
 
+## 0.0.0-test-20250311000959
+
+### Patch Changes
+
+- Updated dependencies [[`b9aacb9bdfb135c251ae2b4a09206b5392280c88`](https://github.com/Thinkmill/graphql-ts/commit/b9aacb9bdfb135c251ae2b4a09206b5392280c88), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d), [`5eafeeaebf4aab3cb8080cb62db5b2d78b39526d`](https://github.com/Thinkmill/graphql-ts/commit/5eafeeaebf4aab3cb8080cb62db5b2d78b39526d)]:
+  - @graphql-ts/extend@0.0.0-test-20250311000959
+  - @graphql-ts/schema@0.0.0-test-20250311000959
+
 ## 1.0.10
 
 ### Patch Changes
