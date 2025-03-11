@@ -1,0 +1,85 @@
+---
+title: graphql-ts
+template: splash
+editUrl: false
+lastUpdated: false
+hero: {}
+---
+
+import { CardGrid, Card, LinkButton } from "@astrojs/starlight/components";
+
+<div class="grid items-center gap-4 pb-4 md:grid-cols-[5fr_5fr] md:gap-[3%]">
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col items-center text-center md:text-start md:items-start">
+      <h1 id="_top" data-page-title class="text-6xl">
+        graphql-ts
+      </h1>
+      <div class="gray-700 text-2xl">
+        Simple Type-Safe GraphQL Schemas in TypeScript
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-[1rem] justify-center md:justify-start">
+      <LinkButton href="/installation" icon="right-arrow">
+        Get Started
+      </LinkButton>
+      <LinkButton
+        href="https://github.com/Thinkmill/graphql-ts"
+        icon="external"
+        variant="minimal"
+      >
+        View on GitHub
+      </LinkButton>
+    </div>
+  </div>
+
+{/* prettier-ignore */}
+```ts twoslash
+// @noErrors
+import { gWithContext } from "@graphql-ts/schema";
+import { GraphQLSchema } from "graphql";
+type Context = {
+  loadUser: (id: string) => Promise<UserSource | null>;
+}
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+type UserSource = { id: string; name: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: () => ({
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  }),
+});
+// ---cut---
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    user: g.field({
+      type: User,
+      args: { 
+        id: g.arg({ type: g.nonNull(g.ID) }),
+      },
+      resolve(_, args, context) {
+        return context.loadUser(args.);
+        //                           ^|
+      },
+    }),
+  },
+});
+// ---cut-after---
+const schema = new GraphQLSchema({ query: Query });
+```
+
+</div>
+
+<CardGrid>
+  <Card icon="seti:typescript" title="Type Safety">
+    `@graphql-ts/schema` provides type safety when defining your GraphQL schema
+    while avoiding the need for code generation, decorators, or other
+    complexity.
+  </Card>
+  <Card icon="seti:graphql" title="Direct Compatibility with GraphQL.js">
+    Use `@graphql-ts/schema` with any existing GraphQL server that uses
+    GraphQL.js, like GraphQL Yoga, Apollo Server, graphql-http, etc.
+  </Card>
+</CardGrid>

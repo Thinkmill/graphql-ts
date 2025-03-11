@@ -1,0 +1,389 @@
+---
+title: Object Types
+sidebar:
+  label: Object
+  order: 1
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+Object types are the most common type in GraphQL. They represent a type with a set of fields that you can query. In `@graphql-ts/schema`, you can define object types using the `g.object` function.
+
+To define an object type, you need to provide a source type that represents the shape of the object type on the server. Note this type doesn't have to align with the GraphQL fields.
+
+```ts twoslash
+// @noErrors
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+type UserSource = {
+  id: string;
+  name: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+});
+```
+
+:::note
+
+`g.object` is called with only the source type and no run-time arguments and then the return of that function is called with the actual runtime arguments.
+
+:::
+
+Then we can define the fields of the object type. The `fields` object is a map of field names to field definitions. The field definitions are created using the `g.field` function.
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+Since the `UserSource` type in this case aligns with the GraphQL fields, we don't need to provide a `resolve` function for the fields. This isn't always the case though, if we add a field that doesn't exist on the `UserSource` type, we'll receive a TypeScript error:
+
+<ShowSchema>
+
+```ts twoslash
+// @errors: 2322 2375
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    nameBackwards: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+This is telling us that we need to provide a `resolve` function for the `nameBackwards` field. The `resolve` function recieves the source type that we provided when creating the object type. This allows us to calculate the value of the field based on the source type.
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    nameBackwards: g.field({
+      type: g.nonNull(g.String),
+      resolve(source) {
+        return source.name.split("").reverse().join("");
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+## Field Arguments
+
+Fields can also have arguments. Arguments are defined using the `args` object on the field definition. The `args` object is a map of argument names to argument definitions. The argument definitions are created using the `g.arg` function. `@graphql-ts/schema` will then infer the second parameter to `resolve` based on the `args` defintion.
+
+<ShowSchema>
+
+```ts twoslash
+// @noErrors
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    nameWithLength: g.field({
+      type: g.nonNull(g.String),
+      args: {
+        length: g.arg({ type: g.nonNull(g.Int) }),
+      },
+      resolve(source, args) {
+        return source.name.slice(0, args.l);
+        //                                ^|
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+## Context
+
+The `resolve` function is also provided a third argument, the `context`. This is useful for providing things like database connections, authentication information, etc. The `context` is defined by the `Context` type that is passed to `gWithContext`.
+
+<ShowSchema>
+
+{/* prettier-ignore */}
+```ts twoslash "<Context>" /, (context)/
+// @noErrors
+import { gWithContext } from "@graphql-ts/schema";
+
+type Context = {
+  loadUser: (id: string) => Promise<UserSource | null>;
+};
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+// ---cut-start---
+type UserSource = {
+  id: string;
+  name: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut-end---
+
+const Query = g.object()({
+  name: "Query",
+  fields: () => ({
+    user: g.field({
+      type: User,
+      args: {
+        id: g.arg({ type: g.nonNull(g.ID) }),
+      },
+      resolve(_, args, context) {
+        return context.lo
+        //               ^|
+      },
+    }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ query: Query });
+```
+
+</ShowSchema>
+
+## Circular Types
+
+Since GraphQL, like the name suggests, is about querying a graph, it's common to have circular types in your schema where one type references another type that references the first type. To start with, we need to make `fields` a function that returns a function so we can lazily reference the `User` type:
+
+```ts twoslash  ins="() => ("
+// @errors: 7022 7023
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: () => ({
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    friends: g.field({
+      type: g.list(User),
+      resolve: () => [],
+    }),
+  }),
+});
+```
+
+TypeScript doesn't understand this circularity though, we can fix this by using the `g` type and the `g.object` function to be explicit about the type of `User`:
+
+<ShowSchema>
+
+```ts twoslash {3} ins=": g<typeof g.object<UserSource>>"
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = { id: string; name: string };
+const User: g<typeof g.object<UserSource>> = g.object<UserSource>()({
+  name: "User",
+  fields: () => ({
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    friends: g.field({
+      type: g.list(User),
+      resolve: () => [],
+    }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+:::note[What's going on here?]
+
+The `g<typeof g.object<UserSource>>` might seem a bit magic so let's break down what's going on here.
+
+The inner bit `typeof g.object<UserSource>` is using [Instantiation Expressions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#instantiation-expressions) which gives us a function type that already has the type parameters applied:
+
+```ts twoslash
+import { gWithContext, GObjectType } from "@graphql-ts/schema";
+type Context = {};
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+
+type SomeArgs = {
+  thisIsntImportant: string;
+};
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+type UserSourceFn = typeof g.object<UserSource>;
+// these two types are ~equivalent
+type UserSourceFn2 = () => (args: SomeArgs) => GObjectType<UserSource, Context>;
+```
+
+But then we have to wrap it in `g<...>` to get the type of the object type.
+
+```ts twoslash
+import { gWithContext, GObjectType } from "@graphql-ts/schema";
+type Context = {};
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+type UserType = g<typeof g.object<UserSource>>;
+```
+
+If you've seen the `ReturnType` utility type, `g` is basically doing `ReturnType<ReturnType<...>>` here.
+
+```ts twoslash
+type ReturnType<T extends (...args: any) => any> = T extends (
+  ...args: any
+) => infer R
+  ? R
+  : any;
+```
+
+`g` is a bit more complex than that though because it supports using both `g.object` along with e.g. `g.enum` which doesn't have the double function call syntax.
+
+```ts twoslash
+import { gWithContext, GObjectType } from "@graphql-ts/schema";
+type Context = {};
+const g = gWithContext<Context>();
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+// ---cut---
+type g<T> = T extends () => (args: any) => infer R
+  ? R
+  : T extends (args: any) => infer R
+    ? R
+    : never;
+type UserType = g<typeof g.object<UserSource>>;
+```
+
+You also might have noticed that we've been defining `g` as both a type and a value with `g.object`/etc. This makes accessing the type and functions easy so you only have to import a single thing.
+
+:::
+
+<details>
+<summary>Alternative Syntax</summary>
+
+The `g` type and `g.object` function is a shorthand for using `GObjectType`. You can also use `GObjectType` directly, though it does mean importing the extra type and instead of only providing the source type, you also need to provide the context type whereas with `g<typeof g.object<UserSource>>`, the context type is inferred from the `gWithContext` call.
+
+<ShowSchema>
+
+```ts twoslash ins=", GObjectType" ins=": GObjectType<UserSource, Context>"
+import { gWithContext, GObjectType } from "@graphql-ts/schema";
+type Context = {};
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+type UserSource = {
+  id: string;
+  name: string;
+};
+
+const User: GObjectType<UserSource, Context> = g.object<UserSource>()({
+  name: "User",
+  fields: () => ({
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    friends: g.field({
+      type: g.list(User),
+      resolve: () => [],
+    }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [User] });
+```
+
+</ShowSchema>
+
+</details>

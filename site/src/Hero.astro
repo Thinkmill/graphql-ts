@@ -1,0 +1,6 @@
+---
+import InnerHero from '@astrojs/starlight/components/Hero.astro'
+
+---
+
+{Astro.locals.starlightRoute.id !== '' && <InnerHero {...Astro.props}></InnerHero>}

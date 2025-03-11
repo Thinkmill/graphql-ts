@@ -1,0 +1,124 @@
+---
+title: Scalar Types
+sidebar:
+  label: Scalar
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+GraphQL has a set of built-in scalars that are used to represent primitive types, in `@graphql-ts/schema`, these are accessible at `g.Int`, `g.Float`, `g.String`, `g.Boolean`, and `g.ID`.
+
+## Custom Scalars
+
+You can define custom scalars using the `g.scalar` function. In general since you will likely want to use your custom scalars all around your schema, a common pattern is to include them in the `g` object like this:
+
+<ShowSchema>
+
+```ts twoslash "_g.scalar"
+// @declaration: true
+import { gWithContext } from "@graphql-ts/schema";
+import { GraphQLError } from "graphql";
+
+const _g = gWithContext();
+
+export const g = {
+  ..._g,
+  BigInt: _g.scalar({
+    name: "BigInt",
+    serialize(value) {
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      throw new GraphQLError(
+        "BigInt cannot represent non-bigint value: " + value
+      );
+    },
+    parseValue(value) {
+      if (typeof value === "bigint") {
+        return value;
+      }
+      if (typeof value === "string") {
+        return BigInt(value);
+      }
+      throw new GraphQLError("BigInt must be a string");
+    },
+    parseLiteral(ast) {
+      if (ast.kind === "StringValue") {
+        return BigInt(ast.value);
+      }
+      throw new GraphQLError("BigInt must be a string");
+    },
+  }),
+};
+export type g<T> = gWithContext.infer<T>;
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  types: [g.BigInt],
+});
+```
+
+</ShowSchema>
+
+:::tip
+
+If you receive a TypeScript error like `The inferred type of 'g' cannot be named without a reference to './node_modules/@graphql-ts/schema/src/types'. This is likely not portable. A type annotation is necessary.`, use the `GWithContext` type to be explicit about the type of `g`:
+
+```ts twoslash "GWithContext<Context>"
+import { gWithContext, GWithContext } from "@graphql-ts/schema";
+type Context = {};
+const extra = {};
+const g: GWithContext<Context> & typeof extra = {
+  ...gWithContext(),
+  ...extra,
+};
+```
+
+:::
+
+Unlike all other GraphQL types in `@graphql-ts/schema`, the TypeScript types for scalars are exactly the same in `@graphql-ts/schema` as GraphQL.js so you can use `GraphQLScalarType` from GraphQL.js interchangably with `g.scalar`/`GScalarType`, For example, the above code can be rewritten using `GraphQLScalarType`:
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+import { GraphQLError, GraphQLScalarType } from "graphql";
+
+export const g = {
+  ...gWithContext(),
+  BigInt: new GraphQLScalarType({
+    name: "BigInt",
+    serialize(value) {
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      throw new GraphQLError(
+        "BigInt cannot represent non-bigint value: " + value
+      );
+    },
+    parseValue(value) {
+      if (typeof value === "bigint") {
+        return value;
+      }
+      if (typeof value === "string") {
+        return BigInt(value);
+      }
+      throw new GraphQLError("BigInt must be a string");
+    },
+    parseLiteral(ast) {
+      if (ast.kind === "StringValue") {
+        return BigInt(ast.value);
+      }
+      throw new GraphQLError("BigInt must be a string");
+    },
+  }),
+};
+export type g<T> = gWithContext.infer<T>;
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  types: [g.BigInt],
+});
+```
+
+</ShowSchema>

@@ -1,0 +1,101 @@
+---
+title: List & Non-Null Types
+sidebar:
+  label: List & Non-Null
+  order: 4
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+## List Types
+
+GraphQL list types represent a list of values of a specific type. In `@graphql-ts/schema`, you can create a list type by calling the `g.list` function with the type of the list as the argument. They can be used in both input and output types.
+
+<ShowSchema>
+
+```ts twoslash /g.list/
+import { gWithContext } from "@graphql-ts/schema";
+
+const g = gWithContext<{
+  fetchUsers: (ids: string[]) => Promise<UserSource[]>;
+}>();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut---
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    users: g.field({
+      type: g.list(User),
+      args: {
+        ids: g.arg({ type: g.nonNull(g.list(g.nonNull(g.ID))) }),
+      },
+      resolve(_, args, context) {
+        return context.fetchUsers(args.ids);
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ query: Query });
+```
+
+</ShowSchema>
+
+## Non-Null Types
+
+In GraphQL, by default every type can also be null (and in the case of input types, `undefined` as well). You can make a type non-null by wrapping it in the `g.nonNull` function. Non-null types can be used in both input and output types.
+
+<ShowSchema>
+
+```ts twoslash /g.nonNull/
+import { gWithContext } from "@graphql-ts/schema";
+
+const g = gWithContext<{
+  fetchUser: (id: string) => Promise<UserSource | null>;
+}>();
+
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+type UserSource = { id: string; name: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    user: g.field({
+      type: User,
+      args: {
+        id: g.arg({ type: g.nonNull(g.ID) }),
+      },
+      resolve(_, args, context) {
+        return context.fetchUser(args.id);
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ query: Query });
+```
+
+</ShowSchema>

@@ -1,0 +1,96 @@
+---
+title: Extending an existing schema
+---
+
+import { TabItem, Tabs } from "@astrojs/starlight/components";
+
+graphql-ts provides a small library to extend an existing GraphQL schema with new query/mutation fields and types.
+
+:::note
+
+If you're creating your schema entirely with `@graphql-ts/schema`, you **shouldn't use this package**.
+
+:::
+
+## Installation
+
+<Tabs>
+  <TabItem label="npm">
+
+```sh
+npm install @graphql-ts/extend
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```sh
+pnpm add @graphql-ts/extend
+```
+
+  </TabItem>
+  <TabItem label="yarn">
+
+```sh
+yarn add @graphql-ts/extend
+```
+
+  </TabItem>
+</Tabs>
+
+## Usage
+
+```ts twoslash "base"
+// @noErrors
+// @filename: g.ts
+import { gWithContext } from "@graphql-ts/schema";
+
+export type Context = {};
+
+export const g = gWithContext();
+export type g<T> = gWithContext.infer<T>;
+// @filename: existing-schema.ts
+import { GraphQLSchema, GraphQLString, GraphQLObjectType } from "graphql";
+export const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: "Query",
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve: () => "world",
+      },
+    },
+  }),
+});
+// @filename: index.ts
+// ---cut---
+import { extend } from "@graphql-ts/extend";
+import { schema } from "./existing-schema";
+import { g } from "./g";
+
+const newSchema = extend((base) => {
+  const existingType = base.
+  //                        ^|
+  return {
+    query: {
+      hello: g.field({
+        type: g.String,
+        resolve: () => "world",
+      }),
+      users: g.field({
+        // `base` allows easily retrieving types from the existing schema
+        type: g.list(base.object("User")),
+        resolve() {
+          return [];
+        },
+      }),
+    },
+  };
+})(schema);
+```
+
+## Limitations
+
+`extend` only supports extending the query and mutation types. `extend` also doesn't support schemas that use the query or mutation types in any types besides as the root query/mutation types.
+
+Also, since there is no TypeScript type information in the existing schema, all existing types that can be used are typed generically e.g. for object types, the source type is `unknown` and etc.

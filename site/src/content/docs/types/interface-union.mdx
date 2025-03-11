@@ -1,0 +1,245 @@
+---
+title: Interface & Union Types
+sidebar:
+  label: Interface & Union
+---
+
+import ShowSchema from "../../../show-schema.astro";
+import { TabItem } from "@astrojs/starlight/components";
+
+GraphQL union & interface types are both ways to allow a GraphQL field to return one of a set of [object types](./object).
+
+The difference between the two is that interface types declare a common set of fields that must be implemented by the object types that implement the interface, while union types declare a set of object types and those objects don't have to share any fields.
+
+## Interface Types
+
+In `@graphql-ts/schema`, you can define interface types using the `g.interface` function and then use the `interfaces` option on object types to declare that the object type implements the interface:
+
+<ShowSchema>
+
+```ts twoslash {1-7,12,26}
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext<{
+  loadEntity: (id: string) => Promise<UserSource | OrganisationSource | null>;
+}>();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+const Entity = g.interface()({
+  name: "Entity",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type UserSource = { __typename: "User"; id: string; name: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type OrganisationSource = {
+  __typename: "Organisation";
+  id: string;
+  name: string;
+};
+const Organisation = g.object<OrganisationSource>()({
+  name: "Organisation",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    members: g.field({ type: g.list(User), resolve: () => [] }),
+  },
+});
+// ---cut-after---
+
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    entity: g.field({
+      type: Entity,
+      args: { id: g.arg({ type: g.nonNull(g.ID) }) },
+      resolve(_, args, context) {
+        return context.loadEntity(args.id);
+      },
+    }),
+  },
+});
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: Query,
+  types: [Entity, User, Organisation],
+});
+```
+
+<TabItem slot="extra" label="query.graphql">
+
+```graphql
+query {
+  entity(id: "123") {
+    id
+    name
+    ... on Organisation {
+      members {
+        id
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+
+</ShowSchema>
+
+## Union Types
+
+Union types are defined using the `g.union` function:
+
+<ShowSchema>
+
+```ts twoslash {19-22}
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext<{
+  search: (query: string) => Array<UserSource | PostSource>;
+}>();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+type UserSource = { __typename: "User"; id: string; name: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type PostSource = { __typename: "Post"; id: string; title: string };
+const Post = g.object<PostSource>()({
+  name: "Post",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    title: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+const SearchResult = g.union({
+  name: "SearchResult",
+  types: [User, Post],
+});
+// ---cut-after---
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    search: g.field({
+      type: g.list(SearchResult),
+      args: {
+        query: g.arg({ type: g.nonNull(g.String) }),
+      },
+      resolve(_, args, context) {
+        return context.search(args.query);
+      },
+    }),
+  },
+});
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ query: Query });
+```
+
+<TabItem slot="extra" label="query.graphql">
+
+```graphql
+query {
+  search(query: "graphql") {
+    __typename
+    ... on User {
+      id
+      name
+    }
+    ... on Post {
+      id
+      title
+    }
+  }
+}
+```
+
+</TabItem>
+</ShowSchema>
+
+## `resolveType` and `isTypeOf`
+
+In the examples above, we have included `__typename` fields on the source objects. By default GraphQL.js uses `__typename` to determine what concrete object type is being returned when returning a union or interface type.
+
+There are also two other options:
+
+- `resolveType` on a interface/union types, this accepts a source type and returns the object type name that it corresponds to
+- `isTypeOf` on object types, this accepts a source type and returns a boolean indicating if the object type is the correct type for the source type
+
+You can use either one, you don't need to use both.
+
+```ts twoslash {7-9,16} /entityType/
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+const Entity = g.interface<{ entityType: string }>()({
+  name: "Entity",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+  resolveType(source) {
+    return source.entityType;
+  },
+});
+
+type UserSource = { entityType: "User"; id: string; name: string };
+
+const User = g.object<UserSource>()({
+  name: "User",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+```
+
+```ts twoslash {12,17-19}
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+const Entity = g.interface()({
+  name: "Entity",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+type UserSource = { entityType: "User"; id: string; name: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  interfaces: [Entity],
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+  isTypeOf(source) {
+    return source.entityType === "User";
+  },
+});
+```
+
+:::note
+
+`@graphql-ts/schema` isn't able to provide strong validation to ensure that you're providing a `__typename`/correctly implementing `resolveType`/`isTypeOf` functions so be careful to ensure you've implemented it correctly.
+
+:::
