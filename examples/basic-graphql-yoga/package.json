@@ -12,7 +12,7 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "dev": "tsx index.ts",
+    "dev": "tsx --watch index.ts",
     "types": "tsc"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/examples/basic-graphql-yoga"
