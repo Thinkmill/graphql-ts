@@ -1,0 +1,37 @@
+---
+title: List & Non-Null Types
+---
+
+## List Types
+
+GraphQL list types represent a list of values of a specific type. In `@graphql-ts/schema`, you can create a list type by calling the `g.list` function with the type of the list as the argument.
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    users: g.field({
+      type: g.list(User),
+      resolve: () => [],
+    }),
+  },
+});
+```

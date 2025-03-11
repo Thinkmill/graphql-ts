@@ -17,7 +17,10 @@ const Query = g.object()({
 
 const schema = new GraphQLSchema({ query: Query });
 
-const yoga = createYoga({ schema });
+const yoga = createYoga({
+  schema,
+  graphiql: { defaultQuery: `query {\n  hello\n}` },
+});
 const server = createServer(yoga);
 server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql");

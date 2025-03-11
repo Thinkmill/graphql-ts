@@ -1,0 +1,15 @@
+---
+import { TabItem, Tabs, Code } from '@astrojs/starlight/components'
+
+---
+
+
+<Tabs>
+  <TabItem label="schema.ts">
+    <slot />
+  </TabItem>
+  <TabItem label="schema.graphql">
+    <Code lang="graphql" code={Astro.props.schema}/>
+  </TabItem>
+  <slot name="extra" />
+</Tabs>
