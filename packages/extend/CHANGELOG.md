@@ -1,5 +1,81 @@
 # @graphql-ts/extend
 
+## 0.0.0-test-20250311071901
+
+### Major Changes
+
+- [#26](https://github.com/Thinkmill/graphql-ts/pull/26) [`a0d9ea204c6a3cf1b9fad600e52de8f9f1a2ac42`](https://github.com/Thinkmill/graphql-ts/commit/a0d9ea204c6a3cf1b9fad600e52de8f9f1a2ac42) Thanks [@emmatown](https://github.com/emmatown)! - The `Key` type parameter on `Field` has been replaced with a new type parameter (`SourceAtKey`) and represents essentially `Source[Key]` instead of `Key`. For example, a field like this can be written:
+
+  ```ts
+  const field = g.field({
+    type: g.String,
+  });
+  ```
+
+  and `field` will be usable like this:
+
+  ```ts
+  const Something = g.object<{
+    name: string
+  }>({
+    name: "Something"
+    fields: {
+      name: field,
+      // @ts-expect-error
+      other: field
+    },
+  });
+  ```
+
+  The field is usable at `name` since the source type has an object with a `name` property that's a `string` but using it at `other` will result in a type error since the source type doesn't have a `other` property.
+
+  Previously, using `g.field` outside a `g.object`/`g.fields` call would require specifying a resolver and fields written within `g.fields` would be bound to be used at a specific key rather than the new behaviour of any key with the right type.
+
+  This also reduces the need for `g.fields`. For example, the example given in the previous JSDoc for `g.fields`:
+
+  ```ts
+  const nodeFields = g.fields<{ id: string }>()({
+    id: g.field({ type: g.ID }),
+  });
+  const Node = g.interface<{ id: string }>()({
+    name: "Node",
+    fields: nodeFields,
+  });
+  const Person = g.object<{
+    __typename: "Person";
+    id: string;
+    name: string;
+  }>()({
+    name: "Person",
+    interfaces: [Node],
+    fields: {
+      ...nodeFields,
+      name: g.field({ type: g.String }),
+    },
+  });
+  ```
+
+  Now the `g.fields` call is unnecessary and writing `nodeFields` will no longer error at the `g.field` call and will instead work as expected.
+
+  ```ts
+  const nodeFields = {
+    id: g.field({ type: g.ID }),
+  };
+  ```
+
+  There is still some use to `g.fields` for when you want to define a number of shared fields with resolvers and specify the source type just once in the `g.fields` call rathe than in every resolver.
+
+  This change is unlikely to break existing code except where you explicitly use the `Field` type or explicitly pass type parameters to `g.field` (the latter of which you likely shouldn't do) but since it changes the meaning of a type parameter of `Field`, it's regarded as a breaking change.
+
+- [#17](https://github.com/Thinkmill/graphql-ts/pull/17) [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba) Thanks [@emmatown](https://github.com/emmatown)! - `graphql@15` is no longer supported. `graphql@16.0.0` or newer is now required.
+
+- [#17](https://github.com/Thinkmill/graphql-ts/pull/17) [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba) Thanks [@emmatown](https://github.com/emmatown)! - The `wrap` export has been removed. Since the types in `@graphql-ts/schema@1.0.0` are compatible with the GraphQL.js types directly, these functions are no longer needed.
+
+### Patch Changes
+
+- Updated dependencies [[`a0d9ea204c6a3cf1b9fad600e52de8f9f1a2ac42`](https://github.com/Thinkmill/graphql-ts/commit/a0d9ea204c6a3cf1b9fad600e52de8f9f1a2ac42), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba), [`b651f3398fc9aadb59152cd51bc744c2405a9bb6`](https://github.com/Thinkmill/graphql-ts/commit/b651f3398fc9aadb59152cd51bc744c2405a9bb6), [`5d6be9c641ec8fa1bbb7587db5aab496227c38d6`](https://github.com/Thinkmill/graphql-ts/commit/5d6be9c641ec8fa1bbb7587db5aab496227c38d6), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba), [`083a8e59931b07580f1e57a91acecf0526d932ba`](https://github.com/Thinkmill/graphql-ts/commit/083a8e59931b07580f1e57a91acecf0526d932ba)]:
+  - @graphql-ts/schema@0.0.0-test-20250311071901
+
 ## 1.0.3
 
 ### Patch Changes
