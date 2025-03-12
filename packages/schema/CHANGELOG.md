@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 1.0.1
+
+### Patch Changes
+
+- [#55](https://github.com/Thinkmill/graphql-ts/pull/55) [`11ee5523d046a91c8e091580cc0954f9e2b108ae`](https://github.com/Thinkmill/graphql-ts/commit/11ee5523d046a91c8e091580cc0954f9e2b108ae) Thanks [@emmatown](https://github.com/emmatown)! - Improve internals of `GField` and `GInterfaceField` types
+
 ## 1.0.0
 
 ### Major Changes
