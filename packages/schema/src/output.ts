@@ -7,10 +7,6 @@ import type {
   GraphQLInputFieldConfig,
   GraphQLScalarTypeConfig,
 } from "graphql";
-import type {
-  InferValueFromArgs,
-  InferValueFromInputType,
-} from "./api-without-context";
 import {
   GArg,
   GEnumType,
@@ -33,6 +29,8 @@ import {
   GType,
   GUnionType,
   InferValueFromOutputType,
+  InferValueFromArgs,
+  InferValueFromInputType,
 } from "./types";
 import {
   GraphQLBoolean,
