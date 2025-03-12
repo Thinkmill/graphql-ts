@@ -185,9 +185,10 @@ export type GField<
   args?: Args;
   type: Type;
   resolve?: GFieldResolver<Source, Args, Type, Context>;
-  deprecationReason?: string;
-  description?: string;
-  extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+  description?: Maybe<string>;
+  deprecationReason?: Maybe<string>;
+  extensions?: Maybe<Readonly<GraphQLFieldExtensions<any, Context>>>;
+  astNode?: Maybe<FieldDefinitionNode>;
   __missingResolve?: (arg: SourceAtKey) => void;
 };
 
@@ -278,6 +279,7 @@ export type GInterfaceField<
   deprecationReason?: Maybe<string>;
   extensions?: Maybe<Readonly<GraphQLFieldExtensions<any, Context>>>;
   astNode?: Maybe<FieldDefinitionNode>;
+  __missingResolve?: (arg: never) => void;
 };
 
 /**
