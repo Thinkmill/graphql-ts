@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/extend",
-  "version": "1.0.3",
+  "version": "0.0.0-test-20250312030016",
   "description": "Utilities to extend existing GraphQL schemas with @graphql-ts/schema",
   "main": "dist/graphql-ts-extend.cjs.js",
   "module": "dist/graphql-ts-extend.esm.js",
@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@graphql-ts/schema": "^0.6.0",
+    "@graphql-ts/schema": "0.0.0-test-20250312030016",
     "graphql": "16"
   },
   "devDependencies": {
