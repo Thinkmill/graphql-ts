@@ -32,4 +32,4 @@ const schema = new GraphQLSchema({
 });
 ```
 
-All types available at `g.*` like `g.ObjectType<Source>` can written instead like `g<typeof g.object<Source>>` or from types available from `@graphql-ts/schema` instead of being accessible directly on `g`.
+All types previously available at `g.*` like `g.ObjectType<Source>` can written instead like `g<typeof g.object<Source>>` or from types imported from `@graphql-ts/schema` instead of being accessible directly on `g`.
