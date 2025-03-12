@@ -1,5 +1,166 @@
 # @graphql-ts/schema
 
+## 1.0.0
+
+### Major Changes
+
+- [#51](https://github.com/Thinkmill/graphql-ts/pull/51) [`8169eb85cdfc22f1f9730fca9136bd44e057af81`](https://github.com/Thinkmill/graphql-ts/commit/8169eb85cdfc22f1f9730fca9136bd44e057af81) Thanks [@emmatown](https://github.com/emmatown)! - The `g` and `graphql` exports from `@graphql-ts/schema` have been removed. You should now use `gWithContext` to bind `g` to a specific context type.
+
+  ```ts
+  import { GraphQLSchema } from "graphql";
+  import { gWithContext } from "@graphql-ts/schema";
+
+  type Context = {
+    something: string;
+  };
+
+  const g = gWithContext<Context>();
+  type g<T> = gWithContext.infer<T>;
+
+  const Query = g.object()({
+    name: "Query",
+    fields: {
+      something: g.field({
+        type: g.String,
+        resolve(_, __, context) {
+          return context.something;
+        },
+      }),
+    },
+  });
+
+  const schema = new GraphQLSchema({
+    query: Query,
+  });
+  ```
+
+  All types previously available at `g.*` like `g.ObjectType<Source>` can written instead like `g<typeof g.object<Source>>` or from types imported from `@graphql-ts/schema` instead of being accessible directly on `g`.
+
+- [#51](https://github.com/Thinkmill/graphql-ts/pull/51) [`8169eb85cdfc22f1f9730fca9136bd44e057af81`](https://github.com/Thinkmill/graphql-ts/commit/8169eb85cdfc22f1f9730fca9136bd44e057af81) Thanks [@emmatown](https://github.com/emmatown)! - The following types have been replaced as follows:
+
+  - `ObjectType` -> `GObjectType`
+  - `EnumType` -> `GEnumType`
+  - `ScalarType` -> `GScalarType`
+  - `InputObjectType` -> `GInputObjectType`
+  - `InterfaceType` -> `GInterfaceType`
+  - `UnionType` -> `GUnionType`
+  - `ListType` -> `GList`
+  - `NonNullType` -> `GNonNull`
+  - `Arg` -> `GArg`
+  - `Field` -> `GField`
+  - `FieldResolver` -> `GFieldResolver`
+  - `InterfaceField` -> `GInterfaceField`
+  - `NullableInputType` -> `GNullableInputType`
+  - `NullableOutputType` -> `GNullableOutputType`
+  - `NullableType` -> `GNullableType`
+  - `InputType` -> `GInputType`
+  - `OutputType` -> `GOutputType`
+  - `Type` -> `GType`
+
+  They are all exactly adding `G` before the previous name except for `ListType` and `NonNullType` which are now `GList` and `GNonNull` respectively without `Type` at the end.
+
+- [#51](https://github.com/Thinkmill/graphql-ts/pull/51) [`8169eb85cdfc22f1f9730fca9136bd44e057af81`](https://github.com/Thinkmill/graphql-ts/commit/8169eb85cdfc22f1f9730fca9136bd44e057af81) Thanks [@emmatown](https://github.com/emmatown)! - All of the GraphQL types returned by `@graphql-ts/schema` are now directly runtime compatible with the equivalent types from GraphQL.js instead of being on `.graphQLType`.
+
+  Handling this change should generally just require removing `.graphQLType` from where `@graphql-ts/schema` types are used with GraphQL.js, like this:
+
+  ```diff
+  import { GraphQLSchema } from "graphql";
+
+  const Query = g.object()({
+    name: "Query",
+    fields: {
+      hello: g.field({
+        type: g.String,
+        resolve() {
+          return "Hello!";
+        },
+      }),
+    },
+  });
+
+  const schema = new GraphQLSchema({
+  -   query: Query.graphQLType,
+  +   query: Query,
+  });
+  ```
+
+  The types returned by `@graphql-ts/schema` are internally now extended classes of the equivalent types from GraphQL.js (though only in the types, at runtime they are re-exports). These new classes are exported from `@graphql-ts/schema` as `GObjectType` and etc. The constructors of the `G*` types can be used directly safely in place of the `g.*` functions in **some cases** though some are not safe and it's still recommended to use `g.*` to also have binding to the same context type without needed to provide it manually.
+
+- [#51](https://github.com/Thinkmill/graphql-ts/pull/51) [`8169eb85cdfc22f1f9730fca9136bd44e057af81`](https://github.com/Thinkmill/graphql-ts/commit/8169eb85cdfc22f1f9730fca9136bd44e057af81) Thanks [@emmatown](https://github.com/emmatown)! - `bindGraphQLSchemaAPIToContext` and `GraphQLSchemaAPIWithContext` have been replaced with the `gWithContext` function and `GWithContext` type respectively. They now also include all the APIs that aren't specifically bound to a context.
+
+- [#31](https://github.com/Thinkmill/graphql-ts/pull/31) [`5d2341e2d4653f8370c05f0e07ba9a151bf6b085`](https://github.com/Thinkmill/graphql-ts/commit/5d2341e2d4653f8370c05f0e07ba9a151bf6b085) Thanks [@emmatown](https://github.com/emmatown)! - `graphql@15` is no longer supported. `graphql@16.0.0` or newer is now required.
+
+- [#53](https://github.com/Thinkmill/graphql-ts/pull/53) [`d7151bd2a6333327ac1a57e0c924bd4bfdbdf01f`](https://github.com/Thinkmill/graphql-ts/commit/d7151bd2a6333327ac1a57e0c924bd4bfdbdf01f) Thanks [@emmatown](https://github.com/emmatown)! - The `@graphql-ts/schema/api-with-context` and `@graphql-ts/schema/api-without-context` entrypoints have been removed. You should use `gWithContext` and the types exported from `@graphql-ts/schema` directly instead.
+
+- [#31](https://github.com/Thinkmill/graphql-ts/pull/31) [`5d2341e2d4653f8370c05f0e07ba9a151bf6b085`](https://github.com/Thinkmill/graphql-ts/commit/5d2341e2d4653f8370c05f0e07ba9a151bf6b085) Thanks [@emmatown](https://github.com/emmatown)! - The `ObjectTypeFunc` and other `*TypeFunc` types are no longer exported. Use `GWithContext<Context>['object']`/etc. instead
+
+- [#31](https://github.com/Thinkmill/graphql-ts/pull/31) [`5d2341e2d4653f8370c05f0e07ba9a151bf6b085`](https://github.com/Thinkmill/graphql-ts/commit/5d2341e2d4653f8370c05f0e07ba9a151bf6b085) Thanks [@emmatown](https://github.com/emmatown)! - The `EnumValue` type no longer exists. The type parameter for `EnumType` is now `Record<Key, Value>` instead of `Record<Key, EnumValue<Value>>`.
+
+- [#31](https://github.com/Thinkmill/graphql-ts/pull/31) [`5d2341e2d4653f8370c05f0e07ba9a151bf6b085`](https://github.com/Thinkmill/graphql-ts/commit/5d2341e2d4653f8370c05f0e07ba9a151bf6b085) Thanks [@emmatown](https://github.com/emmatown)! - TypeScript 5.7 or newer is now required
+
+- [#51](https://github.com/Thinkmill/graphql-ts/pull/51) [`8169eb85cdfc22f1f9730fca9136bd44e057af81`](https://github.com/Thinkmill/graphql-ts/commit/8169eb85cdfc22f1f9730fca9136bd44e057af81) Thanks [@emmatown](https://github.com/emmatown)! - The `Key` type parameter on `Field` has been replaced with a new type parameter (`SourceAtKey`) and represents essentially `Source[Key]` instead of `Key`. For example, a field like this can be written:
+
+  ```ts
+  const field = g.field({
+    type: g.String,
+  });
+  ```
+
+  and `field` will be usable like this:
+
+  ```ts
+  const Something = g.object<{
+    name: string
+  }>({
+    name: "Something"
+    fields: {
+      name: field,
+      // @ts-expect-error
+      other: field
+    },
+  });
+  ```
+
+  The field is usable at `name` since the source type has an object with a `name` property that's a `string` but using it at `other` will result in a type error since the source type doesn't have a `other` property.
+
+  Previously, using `g.field` outside a `g.object`/`g.fields` call would require specifying a resolver and fields written within `g.fields` would be bound to be used at a specific key rather than the new behaviour of any key with the right type.
+
+  This also reduces the need for `g.fields`. For example, the example given in the previous JSDoc for `g.fields`:
+
+  ```ts
+  const nodeFields = g.fields<{ id: string }>()({
+    id: g.field({ type: g.ID }),
+  });
+  const Node = g.interface<{ id: string }>()({
+    name: "Node",
+    fields: nodeFields,
+  });
+  const Person = g.object<{
+    __typename: "Person";
+    id: string;
+    name: string;
+  }>()({
+    name: "Person",
+    interfaces: [Node],
+    fields: {
+      ...nodeFields,
+      name: g.field({ type: g.String }),
+    },
+  });
+  ```
+
+  Now the `g.fields` call is unnecessary and writing `nodeFields` will no longer error at the `g.field` call and will instead work as expected.
+
+  ```ts
+  const nodeFields = {
+    id: g.field({ type: g.ID }),
+  };
+  ```
+
+  There is still some use to `g.fields` for when you want to define a number of shared fields with resolvers and specify the source type just once in the `g.fields` call rathe than in every resolver.
+
+  This change is unlikely to break existing code except where you explicitly use the `Field` type or explicitly pass type parameters to `g.field` (the latter of which you likely shouldn't do) but since it changes the meaning of a type parameter of `Field`, it's regarded as a breaking change.
+
 ## 0.6.4
 
 ### Patch Changes
