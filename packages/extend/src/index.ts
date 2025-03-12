@@ -29,7 +29,6 @@ import {
 } from "graphql";
 
 import {
-  g,
   GField,
   GObjectType,
   GArg,
@@ -323,13 +322,13 @@ function flattenExtensions(
                 `More than one extension defines a field named ${JSON.stringify(
                   key
                 )} on the ${operation} type.\nThe first field:\n${printFieldOnType(
-                  g.object()({
+                  new GObjectType({
                     name: "ForError",
                     fields: { [key]: val },
                   }),
                   key
                 )}\nThe second field:\n${printFieldOnType(
-                  g.object()({
+                  new GObjectType({
                     name: "ForError",
                     fields: { [key]: resolvedExtension[operation][key] },
                   }),

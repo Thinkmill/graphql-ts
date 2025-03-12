@@ -4,8 +4,11 @@ import {
   graphqlSync,
   printSchema,
 } from "graphql";
-import { g } from "@graphql-ts/schema";
+import { gWithContext } from "@graphql-ts/schema";
 import { extend } from ".";
+
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
 
 const getGql =
   (schema: GraphQLSchema) =>
@@ -162,7 +165,7 @@ test("basic mutation with existing mutations", () => {
 });
 
 test("errors when query type is used elsewhere in schema", () => {
-  const Query: g.ObjectType<{}> = g.object<{}>()({
+  const Query: g<typeof g.object<{}>> = g.object<{}>()({
     name: "Query",
     fields: () => ({
       thing: g.field({
@@ -200,7 +203,7 @@ test("errors when query type is used elsewhere in schema", () => {
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
-  const Query: g.ObjectType<{}> = g.object<{}>()({
+  const Query: g<typeof g.object<{}>> = g.object<{}>()({
     name: "Query",
     fields: () => ({
       thing: g.field({
@@ -211,7 +214,7 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
       }),
     }),
   });
-  const Mutation: g.ObjectType<{}> = g.object<{}>()({
+  const Mutation: g<typeof g.object<{}>> = g.object<{}>()({
     name: "Mutation",
     fields: () => ({
       thing: g.field({
@@ -250,7 +253,7 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
-  const Query: g.ObjectType<{}> = g.object<{}>()({
+  const Query: g<typeof g.object<{}>> = g.object<{}>()({
     name: "Query",
     fields: () => ({
       thing: g.field({
@@ -273,7 +276,7 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
       }),
     }),
   });
-  const Mutation: g.ObjectType<{}> = g.object<{}>()({
+  const Mutation: g<typeof g.object<{}>> = g.object<{}>()({
     name: "Mutation",
     fields: () => ({
       thing: g.field({
