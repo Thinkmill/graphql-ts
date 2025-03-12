@@ -178,7 +178,7 @@ export type GField<
   deprecationReason?: Maybe<string>;
   extensions?: Maybe<Readonly<GraphQLFieldExtensions<any, Context>>>;
   astNode?: Maybe<FieldDefinitionNode>;
-  __missingResolve?: (arg: SourceAtKey) => void;
+  __missingResolve: undefined | ((arg: SourceAtKey) => void);
 };
 
 /**
@@ -268,7 +268,6 @@ export type GInterfaceField<
   deprecationReason?: Maybe<string>;
   extensions?: Maybe<Readonly<GraphQLFieldExtensions<any, Context>>>;
   astNode?: Maybe<FieldDefinitionNode>;
-  __missingResolve?: (arg: never) => void;
 };
 
 /**

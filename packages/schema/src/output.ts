@@ -1135,7 +1135,7 @@ export function gWithContext<Context>(): GWithContext<Context> {
       if (!field.type) {
         throw new Error("A type must be passed to g.field()");
       }
-      return field;
+      return field as any;
     },
     interfaceField(field) {
       if (!field.type) {
