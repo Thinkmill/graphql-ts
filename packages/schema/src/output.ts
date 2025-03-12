@@ -11,11 +11,6 @@ import type {
   InferValueFromArgs,
   InferValueFromInputType,
 } from "./api-without-context";
-import type {
-  object,
-  field,
-  interface as interfaceFunc,
-} from "./api-with-context";
 import {
   GArg,
   GEnumType,
@@ -46,12 +41,7 @@ import {
   GraphQLFloat,
   GraphQLString,
 } from "graphql";
-
-export type __toMakeTypeScriptEmitImportsForItemsOnlyUsedInJSDoc = [
-  typeof interfaceFunc,
-  typeof field,
-  typeof object,
-];
+import type { g } from "./g-for-doc-references";
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
@@ -399,7 +389,7 @@ export type GWithContext<Context> = {
    * Creates a GraphQL interface field.
    *
    * These will generally be passed directly to the `fields` object in a
-   * {@link interfaceFunc `g.interface`} call. Interfaces fields are similar to
+   * {@link g.interface} call. Interfaces fields are similar to
    * {@link GField regular fields} except that they **don't define how the field
    * is resolved**.
    *
@@ -531,7 +521,7 @@ export type GWithContext<Context> = {
   ) => GInterfaceType<Source, Fields, Context>;
   /**
    * A shorthand to easily create {@link GEnumValueConfig enum values} to pass to
-   * {@link enumType `g.enum`}.
+   * {@link g.enum}.
    *
    * If you need to set a `description` or `deprecationReason` for an enum
    * variant, you should pass values directly to `g.enum` without using

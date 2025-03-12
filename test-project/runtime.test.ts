@@ -1,5 +1,8 @@
-import { g } from "@graphql-ts/schema";
+import { gWithContext } from "@graphql-ts/schema";
 import { GraphQLSchema, graphql } from "graphql";
+
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
 
 test("a basic schema works", async () => {
   const Query = g.object()({

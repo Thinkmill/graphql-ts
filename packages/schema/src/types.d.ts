@@ -29,18 +29,7 @@ import {
   type FieldDefinitionNode,
   type InputValueDefinitionNode,
 } from "graphql";
-import type {
-  field,
-  union,
-  interface as interface_,
-  object,
-} from "./api-with-context";
-import type {
-  scalar,
-  enum as enum_,
-  inputObject,
-  arg,
-} from "./api-without-context";
+import type { g } from "./g-for-doc-references";
 
 type Maybe<T> = T | null | undefined;
 
@@ -173,7 +162,7 @@ export type InferValueFromInputType<Type extends GInputType> =
 
 /**
  * A GraphQL output field for an {@link GObjectType object type} which should be
- * created using {@link field `g.field`}.
+ * created using {@link g.field}.
  */
 export type GField<
   Source,
@@ -194,7 +183,7 @@ export type GField<
 
 /**
  * A GraphQL object type. This should generally be constructed with
- * {@link object `g.object`}.
+ * {@link g.object}.
  *
  * Note this is an **output** type, if you want an input object, use
  * {@link GInputObjectType}.
@@ -230,7 +219,7 @@ export type GObjectTypeConfig<
 
 /**
  * A GraphQL union type. This should generally be constructed with
- * {@link union `g.union`}.
+ * {@link g.union}.
  *
  * A union type represents an object that could be one of a list of types. Note
  * it is similar to an {@link GInterfaceType} except that a union doesn't imply
@@ -285,7 +274,7 @@ export type GInterfaceField<
 /**
  * A GraphQL interface type that can be implemented by other
  * {@link GObjectType GraphQL object} and interface types. This should generally
- * be constructed with {@link interface_ `g.interface`}.
+ * be constructed with {@link g.interface}.
  *
  * If you use the `GInterfaceType` constructor directly, all fields will need
  * explicit resolvers so you should use `g.interface` instead.
@@ -330,7 +319,7 @@ export type GInterfaceTypeConfig<
 >;
 
 /**
- * A GraphQL argument. These should be created with {@link arg `g.arg`}
+ * A GraphQL argument. These should be created with {@link g.arg}
  *
  * Args can can be used as arguments on output fields:
  *
@@ -388,7 +377,10 @@ export type GArg<
   HasDefaultValue extends boolean = boolean,
 > = {
   type: Type;
-  defaultValue: HasDefaultValue extends true ? {} | null : undefined;
+  defaultValue: {
+    true: {} | null;
+    false: undefined;
+  }[`${HasDefaultValue}`];
   description?: Maybe<string>;
   deprecationReason?: Maybe<string>;
   extensions?: Maybe<GraphQLInputFieldExtensions & GraphQLArgumentExtensions>;
@@ -412,7 +404,7 @@ export type GInputObjectTypeConfig<
 
 /**
  * A GraphQL input object type. This should generally be constructed with
- * {@link inputObject `g.inputObject`}.
+ * {@link g.inputObject}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.inputObject` so it is safe to use
@@ -450,8 +442,7 @@ export type GEnumTypeConfig<Values extends { [key: string]: unknown }> =
   >;
 
 /**
- * A GraphQL enum type. This should generally be constructed with
- * {@link enum_ `g.enum`}.
+ * A GraphQL enum type. This should generally be constructed with {@link g.enum}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.enum` so it is safe to use directly
@@ -470,7 +461,7 @@ export class GEnumType<
 
 /**
  * A GraphQL enum type. This should generally be constructed with
- * {@link scalar `g.scalar`}.
+ * {@link g.scalar}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.scalar` so it is safe to use directly
@@ -491,7 +482,7 @@ type Flatten<T> = {
 
 /**
  * A GraphQL non-null type. This should generally be constructed with
- * {@link enum_ `g.nonNull`}.
+ * {@link g.nonNull}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.nonNull` so it is safe to use
@@ -528,8 +519,7 @@ export class GNonNull<
 }
 
 /**
- * A GraphQL list type. This should generally be constructed with
- * {@link list `g.list`}.
+ * A GraphQL list type. This should generally be constructed with {@link g.list}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.list` so it is safe to use directly

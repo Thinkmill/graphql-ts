@@ -1,15 +1,7 @@
 import {
-  g,
   gWithContext,
-  Arg,
   InferValueFromInputType,
-  InputObjectType,
-  ScalarType,
   InferValueFromOutputType,
-  graphql,
-  OutputType,
-  Field,
-  InputType,
   InferValueFromArgs,
   GArg,
   GEnumType,
@@ -21,9 +13,11 @@ import {
   GObjectType,
   GScalarType,
   GUnionType,
+  InferValueFromArg,
+  GOutputType,
+  GField,
 } from "@graphql-ts/schema";
 import { extend } from "@graphql-ts/extend";
-import * as boundG from "./schema-api";
 import {
   GraphQLEnumType,
   GraphQLFieldExtensions,
@@ -42,8 +36,11 @@ function expectType<T>(type: T) {
   console.log(type);
 }
 
-boundG.arg({
-  type: boundG.Boolean,
+const g = gWithContext<unknown>();
+type g<T> = gWithContext.infer<T>;
+
+g.arg({
+  type: g.Boolean,
 });
 
 const someEnum = g.enum({
@@ -74,8 +71,8 @@ const Something = g.inputObject({
   },
 });
 
-type CircularInputType = g.InputObjectType<{
-  circular: g.Arg<CircularInputType>;
+type CircularInputType = GInputObjectType<{
+  circular: GArg<CircularInputType>;
 }>;
 
 const Circular: CircularInputType = g.inputObject({
@@ -107,24 +104,24 @@ function useType<T>(a?: T) {
 
 {
   // should be unknown for G* types but for GraphQLOutputType, it is any
-  type a = g.InferValueFromOutputType<g.OutputType>;
+  type a = InferValueFromOutputType<GOutputType<unknown>>;
   useType<a>();
 }
 {
   // should be unknown
-  type a = g.InferValueFromInputType<g.InputType>;
+  type a = InferValueFromInputType<GInputType>;
   useType<a>();
-  type b = g.InferValueFromArg<g.Arg<g.InputType>>;
+  type b = InferValueFromArg<GArg<GInputType>>;
   useType<b>();
   // should be { readonly a: unknown }
-  type c = g.InferValueFromArgs<{ a: g.Arg<g.InputType> }>;
+  type c = InferValueFromArgs<{ a: GArg<GInputType> }>;
   useType<c>();
 }
 
 {
-  type RecursiveInput = InputObjectType<{
-    nullableString: Arg<ScalarType<string>>;
-    recursive: Arg<RecursiveInput>;
+  type RecursiveInput = GInputObjectType<{
+    nullableString: GArg<GScalarType<string>>;
+    recursive: GArg<RecursiveInput>;
   }>;
 
   const Recursive: RecursiveInput = g.inputObject({
@@ -152,9 +149,9 @@ function useType<T>(a?: T) {
     nullableString: g.arg({ type: g.String }),
   };
 
-  type RecursiveInput = InputObjectType<
+  type RecursiveInput = GInputObjectType<
     typeof nonRecursiveFields & {
-      recursive: Arg<RecursiveInput, any>;
+      recursive: GArg<RecursiveInput, any>;
     }
   >;
 
@@ -180,8 +177,8 @@ function useType<T>(a?: T) {
 
 // TODO: if possible, this should error. not really a massive deal if it doesn't though tbh
 // since if people forget to add something here, they will see an error when they try to read a field that doesn't exist
-export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: InputObjectType<{
-  nullableString: Arg<typeof g.String>;
+export const ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls: GInputObjectType<{
+  nullableString: GArg<typeof g.String>;
 }> = g.inputObject({
   name: "ExplicitDefinitionMissingFieldsThatAreSpecifiedInCalls",
   fields: () => ({
@@ -672,7 +669,7 @@ g.fields<{ thing: Promise<string> }>()({
     type: g.String,
   });
 
-  const _assert: g.Arg<typeof g.String, false> = arg;
+  const _assert: GArg<typeof g.String, false> = arg;
   console.log(_assert);
 }
 
@@ -682,7 +679,7 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: undefined,
   });
 
-  const _assert: g.Arg<typeof g.String, false> = arg;
+  const _assert: GArg<typeof g.String, false> = arg;
   console.log(_assert);
 }
 
@@ -692,7 +689,7 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: "",
   });
 
-  const _assert: g.Arg<typeof g.String, true> = arg;
+  const _assert: GArg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
@@ -702,7 +699,7 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: null,
   });
 
-  const _assert: g.Arg<typeof g.String, true> = arg;
+  const _assert: GArg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
@@ -712,7 +709,7 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: null,
   });
 
-  const _assert: g.Arg<typeof g.String, true> = arg;
+  const _assert: GArg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
@@ -722,7 +719,7 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: Math.random() > 0.5 ? "" : null,
   });
 
-  const _assert: g.Arg<typeof g.String, true> = arg;
+  const _assert: GArg<typeof g.String, true> = arg;
   console.log(_assert);
 }
 
@@ -739,20 +736,20 @@ g.fields<{ thing: Promise<string> }>()({
           defaultValue: "",
         }
       : {};
-  const arg = g.arg({
+  const arg: GArg<typeof g.String, boolean> = g.arg({
     type: g.String,
     ...x,
   });
 
-  const _assert: g.Arg<typeof g.String, boolean> = arg;
+  const _assert: GArg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: g.Arg<typeof g.String, false> = arg;
+  const _assert1: GArg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: g.Arg<typeof g.String, true> = arg;
+  const _assert2: GArg<typeof g.String, true> = arg;
   console.log(_assert2);
-  const _assert3: (x: g.Arg<typeof g.String, boolean>) => void = (
+  const _assert3: (x: GArg<typeof g.String, boolean>) => void = (
     x: typeof arg
   ) => {
     console.log(x);
@@ -776,13 +773,13 @@ g.fields<{ thing: Promise<string> }>()({
     ...x,
   });
 
-  const _assert: g.Arg<typeof g.String, boolean> = arg;
+  const _assert: GArg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: g.Arg<typeof g.String, false> = arg;
+  const _assert1: GArg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: g.Arg<typeof g.String, true> = arg;
+  const _assert2: GArg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
@@ -801,13 +798,13 @@ g.fields<{ thing: Promise<string> }>()({
     type: g.String,
     ...x,
   });
-  const _assert: g.Arg<typeof g.String, boolean> = arg;
+  const _assert: GArg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: g.Arg<typeof g.String, false> = arg;
+  const _assert1: GArg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: g.Arg<typeof g.String, true> = arg;
+  const _assert2: GArg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
@@ -819,13 +816,13 @@ g.fields<{ thing: Promise<string> }>()({
     ...thing,
   });
 
-  const _assert: g.Arg<typeof g.String, boolean> = arg;
+  const _assert: GArg<typeof g.String, boolean> = arg;
   console.log(_assert);
   // @ts-expect-error
-  const _assert1: g.Arg<typeof g.String, false> = arg;
+  const _assert1: GArg<typeof g.String, false> = arg;
   console.log(_assert1);
   // @ts-expect-error
-  const _assert2: g.Arg<typeof g.String, true> = arg;
+  const _assert2: GArg<typeof g.String, true> = arg;
   console.log(_assert2);
 }
 
@@ -897,7 +894,7 @@ g.object<{ thing: () => Promise<string> }>()({
     })
   );
   // @ts-expect-error
-  const thing3: g.InputType = g.nonNull(
+  const thing3: GInputType = g.nonNull(
     g.object()({
       name: "something",
       fields: {},
@@ -1139,38 +1136,6 @@ function assertCompatible<A, _B extends A>() {}
   });
 }
 
-// just to ensure the old alias works
-{
-  graphql.object()({
-    name: "Query",
-    fields: {
-      hello: g.field({
-        type: g.String,
-        resolve() {
-          return "something";
-        },
-      }),
-    },
-  });
-  const Something: graphql.ObjectType<{}> = graphql.object<{}>()({
-    name: "Something",
-    fields: () => ({
-      a: graphql.field({
-        type: Something,
-        resolve() {
-          return {};
-        },
-      }),
-      b: graphql.field({
-        type: graphql.String,
-        resolve() {
-          return "something";
-        },
-      }),
-    }),
-  });
-}
-
 const someInputFields = {
   a: g.arg({ type: g.String }),
   b: g.arg({ type: g.String }),
@@ -1183,7 +1148,7 @@ const someInputFields = {
     isOneOf: true,
   });
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, true>>,
+    Invariant<GInputObjectType<typeof someInputFields, true>>,
     Invariant<typeof Something>
   >();
   g.field({
@@ -1218,7 +1183,7 @@ const someInputFields = {
     isOneOf: Math.random() > 0.5,
   });
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<GInputObjectType<typeof someInputFields, boolean>>,
     Invariant<typeof Something>
   >();
   g.field({
@@ -1257,7 +1222,7 @@ const someInputFields = {
   });
 
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<GInputObjectType<typeof someInputFields, false>>,
     Invariant<typeof Something>
   >();
 
@@ -1288,7 +1253,7 @@ const someInputFields = {
   });
 
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<GInputObjectType<typeof someInputFields, false>>,
     Invariant<typeof Something>
   >();
 }
@@ -1300,7 +1265,7 @@ const someInputFields = {
   });
 
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, false>>,
+    Invariant<GInputObjectType<typeof someInputFields, false>>,
     Invariant<typeof Something>
   >();
 }
@@ -1340,7 +1305,7 @@ const someInputFields = {
     isOneOf: true,
   });
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<GInputObjectType<typeof someInputFields, boolean>>,
     Invariant<typeof Something>
   >();
 }
@@ -1352,7 +1317,7 @@ const someInputFields = {
     isOneOf: false,
   });
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<GInputObjectType<typeof someInputFields, boolean>>,
     Invariant<typeof Something>
   >();
 }
@@ -1364,7 +1329,7 @@ const someInputFields = {
     isOneOf: Math.random() > 0.5,
   });
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<GInputObjectType<typeof someInputFields, boolean>>,
     Invariant<typeof Something>
   >();
 }
@@ -1392,7 +1357,7 @@ const someInputFields = {
   // this would also be banned under exactOptionalPropertyTypes
   // which again feels conceptually correct rather than banning when not using exactOptionalPropertyTypes
   assertCompatible<
-    Invariant<g.InputObjectType<typeof someInputFields, boolean>>,
+    Invariant<GInputObjectType<typeof someInputFields, boolean>>,
     Invariant<typeof Something>
   >();
 }
@@ -1503,13 +1468,14 @@ const someInputFields = {
   });
   assertCompatible<
     Invariant<
-      g.UnionType<
+      GUnionType<
         | {
             __typename: "A";
           }
         | {
             __typename: "B";
-          }
+          },
+        unknown
       >
     >,
     Invariant<typeof Something>
@@ -1557,10 +1523,10 @@ const someInputFields = {
   };
   {
     // this error is somewhat unfortunate but it's not a big deal imo
-    // what's going on is that InputType includes InputObjectType<any, boolean>
+    // what's going on is that InputType includes GInputObjectType<any, boolean>
     // so IsOneOf is inferred as boolean
     // which makes the isOneOf property required (though it can be false)
-    const a: g.InputType = g.inputObject(
+    const a: GInputType = g.inputObject(
       // @ts-expect-error
       {
         name: "Something",
@@ -1570,7 +1536,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject({
+    const a: GInputType = g.inputObject({
       name: "Something",
       fields,
       isOneOf: false,
@@ -1578,14 +1544,14 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, false>({
+    const a: GInputType = g.inputObject<typeof fields, false>({
       name: "Something",
       fields,
     });
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, false>({
+    const a: GInputType = g.inputObject<typeof fields, false>({
       name: "Something",
       fields,
       isOneOf: false,
@@ -1593,7 +1559,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, true>(
+    const a: GInputType = g.inputObject<typeof fields, true>(
       // @ts-expect-error
       {
         name: "Something",
@@ -1603,7 +1569,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, true>({
+    const a: GInputType = g.inputObject<typeof fields, true>({
       name: "Something",
       fields,
       isOneOf: true,
@@ -1611,7 +1577,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject({
+    const a: GInputType = g.inputObject({
       name: "Something",
       fields,
       isOneOf: true,
@@ -1619,7 +1585,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, true>({
+    const a: GInputType = g.inputObject<typeof fields, true>({
       name: "Something",
       fields,
       // @ts-expect-error
@@ -1628,7 +1594,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, boolean>(
+    const a: GInputType = g.inputObject<typeof fields, boolean>(
       // @ts-expect-error
       {
         name: "Something",
@@ -1638,7 +1604,7 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: g.InputType = g.inputObject<typeof fields, boolean>({
+    const a: GInputType = g.inputObject<typeof fields, boolean>({
       name: "Something",
       fields,
       isOneOf: Math.random() > 0.5,
@@ -1743,10 +1709,10 @@ const someInputFields = {
     x?: any;
   };
 
-  let discriminantField!: Field<
+  let discriminantField!: GField<
     { value: unknown },
-    Record<string, Arg<InputType, boolean>>,
-    OutputType<Context>,
+    Record<string, GArg<GInputType, boolean>>,
+    GOutputType<Context>,
     unknown,
     Context
   >;
@@ -1962,9 +1928,9 @@ const someInputFields = {
 {
   type ImpliedResolver<
     Args extends {
-      [Key in keyof Args]: Arg<InputType>;
+      [Key in keyof Args]: GArg<GInputType>;
     },
-    Type extends OutputType<MyContext<any>>,
+    Type extends GOutputType<MyContext<any>>,
     Context extends MyContext<any>,
   > =
     | InferValueFromOutputType<Type>
@@ -1981,12 +1947,12 @@ const someInputFields = {
   type SomeTypeThatIsntARecordOfArgs = string;
   const field: <
     Source,
-    Type extends OutputType<MyContext<any>>,
+    Type extends GOutputType<MyContext<any>>,
     Resolve extends
       | undefined
       | ((
           source: Source,
-          args: g.InferValueFromArgs<
+          args: InferValueFromArgs<
             SomeTypeThatIsntARecordOfArgs extends Args ? {} : Args
           >,
           context: Context,
@@ -1994,7 +1960,7 @@ const someInputFields = {
         ) => InferValueFromOutputType<Type>),
     Context extends MyContext<any>,
     Args extends {
-      [Key in keyof Args]: Arg<InputType>;
+      [Key in keyof Args]: GArg<GInputType>;
     } = {},
   >(
     field: {
@@ -2026,7 +1992,7 @@ const someInputFields = {
           ) => InferValueFromOutputType<Type>) &
             Resolve;
         })
-  ) => Field<
+  ) => GField<
     Source,
     Args,
     Type,
@@ -2056,8 +2022,8 @@ const someInputFields = {
 }
 
 {
-  const something: g.InputObjectType<{
-    [key: string]: g.Arg<g.InputType>;
+  const something: GInputObjectType<{
+    [key: string]: GArg<GInputType>;
   }> = undefined as any;
   const x = Math.random() > 0.5 ? { id: { equals: "1" } } : {};
   const a = g.arg({
@@ -2065,7 +2031,7 @@ const someInputFields = {
     defaultValue: x,
   });
   assertCompatible<
-    Invariant<g.Arg<GNonNull<typeof something>, true>>,
+    Invariant<GArg<GNonNull<typeof something>, true>>,
     Invariant<typeof a>
   >();
 }
