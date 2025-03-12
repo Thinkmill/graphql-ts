@@ -931,19 +931,20 @@ export type GWithContext<Context> = {
 };
 
 /**
- * The `initG` export is the primary entrypoint into using `@graphql-ts/schema`
- * that lets you compose GraphQL types into a GraphQL Schema
+ * The `gWithContext` export is the primary entrypoint into using
+ * `@graphql-ts/schema` that lets you compose GraphQL types into a GraphQL
+ * Schema
  *
  * A simple schema with only a query type looks like this.
  *
  * ```ts
- * import { initG } from "@graphql-ts/schema";
+ * import { gWithContext } from "@graphql-ts/schema";
  * import { GraphQLSchema, graphql } from "graphql";
  *
  * type Context = {};
  *
- * const g = initG<Context>();
- * type g<T> = initG<T>;
+ * const g = gWithContext<Context>();
+ * type g<T> = gWithContext.infer<T>;
  *
  * const Query = g.object()({
  *   name: "Query",
@@ -963,10 +964,10 @@ export type GWithContext<Context> = {
  *
  * graphql({
  *   source: `
- *     query {
- *       hello
- *     }
- *   `,
+ *       query {
+ *         hello
+ *       }
+ *     `,
  *   schema,
  * }).then((result) => {
  *   console.log(result);
@@ -980,7 +981,7 @@ export type GWithContext<Context> = {
  * functions on `g` do.
  *
  * ```ts
- * import { initG } from "@graphql-ts/schema";
+ * import { gWithContext } from "@graphql-ts/schema";
  * import { GraphQLSchema, graphql } from "graphql";
  * import { deepEqual } from "node:assert";
  *
@@ -988,8 +989,8 @@ export type GWithContext<Context> = {
  *   todos: Map<string, TodoItem>;
  * };
  *
- * const g = initG<Context>();
- * type g<T> = initG<T>;
+ * const g = gWithContext<Context>();
+ * type g<T> = gWithContext.infer<T>;
  *
  * type TodoItem = {
  *   id: string;
@@ -1103,7 +1104,7 @@ export type GWithContext<Context> = {
  * })();
  * ```
  */
-export function initG<Context>(): GWithContext<Context> {
+export function gWithContext<Context>(): GWithContext<Context> {
   return {
     scalar(config) {
       return new GScalarType(config);
@@ -1169,32 +1170,40 @@ export function initG<Context>(): GWithContext<Context> {
   };
 }
 
-/**
- * The `g` type is useful particularly when defining circular types to resolve
- * errors from TypeScript because of the circularity.
- *
- * ```ts
- * import { initG } from "@graphql-ts/schema";
- * type PersonSource = { name: string; friends: PersonSource[] };
- *
- * const g = initG<PersonSource>();
- * type g<T> = initG<T>;
- *
- * const Person: g<typeof g.object<PersonSource>> =
- *   g.object<PersonSource>()({
- *     name: "Person",
- *     fields: () => ({
- *       name: g.field({ type: g.String }),
- *       friends: g.field({ type: g.list(Person) }),
- *     }),
- *   });
- * ```
- */
-export type initG<T> = T extends () => (args: any) => infer R
-  ? R
-  : T extends (args: any) => infer R
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace gWithContext {
+  /**
+   * The `gWithContext.infer` type is useful particularly when defining circular
+   * types to resolve errors from TypeScript because of the circularity.
+   *
+   * We recommend aliasing `gWithContext.infer` to your `g` like this to make it
+   * easier to use:
+   *
+   * ```ts
+   * import { gWithContext } from "@graphql-ts/schema";
+   * type Context = {};
+   *
+   * const g = gWithContext<Context>();
+   * type g<T> = gWithContext.infer<T>;
+   *
+   * type PersonSource = { name: string; friends: PersonSource[] };
+   *
+   * const Person: g<typeof g.object<PersonSource>> =
+   *   g.object<PersonSource>()({
+   *     name: "Person",
+   *     fields: () => ({
+   *       name: g.field({ type: g.String }),
+   *       friends: g.field({ type: g.list(Person) }),
+   *     }),
+   *   });
+   * ```
+   */
+  export type infer<T> = T extends () => (args: any) => infer R
     ? R
-    : never;
+    : T extends (args: any) => infer R
+      ? R
+      : never;
+}
 
 type Flatten<T> = {
   [Key in keyof T]: T[Key];

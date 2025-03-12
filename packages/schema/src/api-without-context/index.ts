@@ -1,9 +1,9 @@
 /**
  * @module
- * @deprecated This entrypoint should no longer be used. Use {@link initG}
+ * @deprecated This entrypoint should no longer be used. Use {@link gWithContext}
  *   instead.
  */
-import { initG } from "@graphql-ts/schema";
+import { gWithContext } from "@graphql-ts/schema";
 export {
   arg,
   inputObject,

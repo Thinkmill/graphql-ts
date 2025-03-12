@@ -1,6 +1,6 @@
 import {
   g,
-  initG,
+  gWithContext,
   Arg,
   InferValueFromInputType,
   InputObjectType,
@@ -23,7 +23,7 @@ import {
   GUnionType,
 } from "@graphql-ts/schema";
 import { extend } from "@graphql-ts/extend";
-import * as gWithContext from "./schema-api";
+import * as boundG from "./schema-api";
 import {
   GraphQLEnumType,
   GraphQLFieldExtensions,
@@ -42,8 +42,8 @@ function expectType<T>(type: T) {
   console.log(type);
 }
 
-gWithContext.arg({
-  type: gWithContext.Boolean,
+boundG.arg({
+  type: boundG.Boolean,
 });
 
 const someEnum = g.enum({
@@ -210,7 +210,7 @@ g.object<{ id: string } | { id: boolean }>()({
 });
 
 {
-  const g = initG<{ isAdminUIBuildProcess: true }>();
+  const g = gWithContext<{ isAdminUIBuildProcess: true }>();
 
   const SomeOutput = g.object<{ thing: boolean }>()({
     name: "Something",
@@ -329,11 +329,11 @@ g.object<{ id: string } | { id: boolean }>()({
 }
 
 {
-  const typesWithContextA = initG<{
+  const typesWithContextA = gWithContext<{
     something: boolean;
   }>();
 
-  const typesWithContextB = initG<{
+  const typesWithContextB = gWithContext<{
     something: boolean;
     other: string;
   }>();
@@ -1752,7 +1752,7 @@ const someInputFields = {
   >;
   type SourceType = { discriminant: string };
 
-  const g = initG<Context>();
+  const g = gWithContext<Context>();
 
   const interfaceType = g.interface<SourceType>()({
     name: "a",
@@ -2090,8 +2090,8 @@ const someInputFields = {
 
 {
   type Context = { loadFriends: (id: string) => Promise<Person[]> };
-  const g = initG<Context>();
-  type g<T> = initG<T>;
+  const g = gWithContext<Context>();
+  type g<T> = gWithContext.infer<T>;
 
   type Person = {
     id: string;
@@ -2115,8 +2115,8 @@ const someInputFields = {
 
 {
   type Context = {};
-  const g = initG<Context>();
-  type g<T> = initG<T>;
+  const g = gWithContext<Context>();
+  type g<T> = gWithContext.infer<T>;
 
   type PersonFilter = GInputObjectType<{
     name: g<typeof g.arg<typeof g.String>>;
@@ -2134,8 +2134,8 @@ const someInputFields = {
 
 {
   type Context = {};
-  const g = initG<Context>();
-  type g<T> = initG<T>;
+  const g = gWithContext<Context>();
+  type g<T> = gWithContext.infer<T>;
 
   const Node: g<typeof g.interface<{ id: string }>> = g.interface<{
     id: string;
