@@ -923,11 +923,11 @@ export type GWithContext<Context> = {
 };
 
 /**
- * The `gWithContext` export is the primary entrypoint into using
- * `@graphql-ts/schema` that lets you compose GraphQL types into a GraphQL
- * Schema
+ * The `gWithContext` function accepts a `Context` type parameter which binds
+ * the returned functions so they can be used to compose GraphQL types into a
+ * GraphQL schema.
  *
- * A simple schema with only a query type looks like this.
+ * A simple schema with only a query type looks like this:
  *
  * ```ts
  * import { gWithContext } from "@graphql-ts/schema";
