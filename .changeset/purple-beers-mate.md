@@ -2,7 +2,7 @@
 "@graphql-ts/schema": major
 ---
 
-The `g` export exported from `@graphql-ts/schema` directly is now deprecated. Using `gWithContext` is now the recommended way to use `@graphql-ts/schema` instead of the instance of `g` exported by `@graphql-ts/schema` or creating multiple files to setup `g` though using those is still possible.
+The `g` and `graphql` exports from `@graphql-ts/schema` have been removed. You should now use `gWithContext` to bind `g` to a specific context type.
 
 ```ts
 import { GraphQLSchema } from "graphql";

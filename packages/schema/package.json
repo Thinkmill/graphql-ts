@@ -10,16 +10,6 @@
       "module": "./dist/graphql-ts-schema.esm.js",
       "default": "./dist/graphql-ts-schema.cjs.js"
     },
-    "./api-with-context": {
-      "types": "./api-with-context/dist/graphql-ts-schema-api-with-context.cjs.js",
-      "module": "./api-with-context/dist/graphql-ts-schema-api-with-context.esm.js",
-      "default": "./api-with-context/dist/graphql-ts-schema-api-with-context.cjs.js"
-    },
-    "./api-without-context": {
-      "types": "./api-without-context/dist/graphql-ts-schema-api-without-context.cjs.js",
-      "module": "./api-without-context/dist/graphql-ts-schema-api-without-context.esm.js",
-      "default": "./api-without-context/dist/graphql-ts-schema-api-without-context.cjs.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -36,12 +26,5 @@
   "devDependencies": {
     "graphql": "^16.3.0"
   },
-  "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/schema",
-  "preconstruct": {
-    "entrypoints": [
-      "index.ts",
-      "api-with-context/index.ts",
-      "api-without-context/index.ts"
-    ]
-  }
+  "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/packages/schema"
 }

@@ -2,7 +2,7 @@
 "@graphql-ts/schema": major
 ---
 
-The following types are now deprecated and have replacements as follows:
+The following types have been replaced as follows:
 
 - `ObjectType` -> `GObjectType`
 - `EnumType` -> `GEnumType`
