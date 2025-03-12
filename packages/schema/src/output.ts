@@ -6,6 +6,7 @@ import type {
   GraphQLArgumentConfig,
   GraphQLInputFieldConfig,
   GraphQLScalarTypeConfig,
+  FieldDefinitionNode,
 } from "graphql";
 import {
   GArg,
@@ -55,6 +56,8 @@ type ImpliedResolver<
       info: GraphQLResolveInfo
     ) => InferValueFromOutputType<Type>);
 
+type Maybe<T> = T | null | undefined;
+
 type FieldFuncArgs<
   Source,
   Args extends { [Key in keyof Args]: GArg<GInputType> },
@@ -63,9 +66,10 @@ type FieldFuncArgs<
 > = {
   args?: Args;
   type: Type;
-  deprecationReason?: string;
-  description?: string;
-  extensions?: Readonly<GraphQLFieldExtensions<Source, unknown>>;
+  description?: Maybe<string>;
+  deprecationReason?: Maybe<string>;
+  extensions?: Maybe<Readonly<GraphQLFieldExtensions<Source, Context>>>;
+  astNode?: Maybe<FieldDefinitionNode>;
 };
 
 /** @deprecated */
