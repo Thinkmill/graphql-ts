@@ -8,7 +8,6 @@ Handling this change should generally just require removing `.graphQLType` from 
 
 ```diff
 import { GraphQLSchema } from "graphql";
-import { g } from "@graphql-ts/schema";
 
 const Query = g.object()({
   name: "Query",
@@ -28,4 +27,4 @@ const schema = new GraphQLSchema({
 });
 ```
 
-The types returned by `@graphql-ts/schema` are internally now extended classes of the equivalent types from GraphQL.js (though only in the types, at runtime they are re-exports). These new classes are exported from `@graphql-ts/schema` as `GObjectType` and etc. The constructors of the `G*` types can be used directly safely in place of `g.*` in **some cases** though some are not safe and it's still recommended to use `g.*` to also have binding to the same context type without needed to provide it manually.
+The types returned by `@graphql-ts/schema` are internally now extended classes of the equivalent types from GraphQL.js (though only in the types, at runtime they are re-exports). These new classes are exported from `@graphql-ts/schema` as `GObjectType` and etc. The constructors of the `G*` types can be used directly safely in place of the `g.*` functions in **some cases** though some are not safe and it's still recommended to use `g.*` to also have binding to the same context type without needed to provide it manually.
