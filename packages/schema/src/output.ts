@@ -690,8 +690,10 @@ export type GWithContext<Context> = {
    * object in the type because of TypeScript's limits with circularity.
    *
    * ```ts
-   * type SomethingInputType = g.InputObjectType<{
-   *   something: g.Arg<SomethingInputType>;
+   * import { GInputObjectType } from "@graphql-ts/schema";
+   *
+   * type SomethingInputType = GInputObjectType<{
+   *   something: g<typeof g.arg<SomethingInputType>>;
    * }>;
    * const Something: SomethingInputType = g.inputObject({
    *   name: "Something",
@@ -706,12 +708,14 @@ export type GWithContext<Context> = {
    * non-circular fields as types again.
    *
    * ```ts
+   * import { GInputObjectType } from "@graphql-ts/schema";
+   *
    * const nonCircularFields = {
    *   thing: g.arg({ type: g.String }),
    * };
-   * type SomethingInputType = g.InputObjectType<
+   * type SomethingInputType = GInputObjectType<
    *   typeof nonCircularFields & {
-   *     something: g.Arg<SomethingInputType>;
+   *     something: g<typeof g.arg<SomethingInputType>>;
    *   }
    * >;
    * const Something: SomethingInputType = g.inputObject({

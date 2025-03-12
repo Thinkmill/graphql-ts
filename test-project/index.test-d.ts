@@ -2152,3 +2152,33 @@ const someInputFields = {
     }),
   });
 }
+
+{
+  const nonCircularFields = {
+    thing: g.arg({ type: g.String }),
+  };
+  type SomethingInputType = GInputObjectType<
+    typeof nonCircularFields & {
+      something: g<typeof g.arg<SomethingInputType>>;
+    }
+  >;
+  const Something: SomethingInputType = g.inputObject({
+    name: "Something",
+    fields: () => ({
+      ...nonCircularFields,
+      something: g.arg({ type: Something }),
+    }),
+  });
+}
+
+{
+  type SomethingInputType = GInputObjectType<{
+    something: g<typeof g.arg<SomethingInputType>>;
+  }>;
+  const Something: SomethingInputType = g.inputObject({
+    name: "Something",
+    fields: () => ({
+      something: g.arg({ type: Something }),
+    }),
+  });
+}
