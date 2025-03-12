@@ -2182,3 +2182,17 @@ const someInputFields = {
     }),
   });
 }
+
+{
+  g.object<{
+    id: string;
+  }>()({
+    name: "Something",
+    fields: {
+      // @ts-expect-error
+      id: g.interfaceField({ type: g.ID }),
+      // @ts-expect-error
+      other: g.interfaceField({ type: g.ID }),
+    },
+  });
+}
