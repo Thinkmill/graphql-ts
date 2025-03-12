@@ -2,18 +2,18 @@
 "@graphql-ts/schema": major
 ---
 
-The `g` export exported from `@graphql-ts/schema` directly is now deprecated. Using `initG` is now the recommended way to use `@graphql-ts/schema` instead of the instance of `g` exported by `@graphql-ts/schema` or creating multiple files to setup `g` though using those is still possible.
+The `g` export exported from `@graphql-ts/schema` directly is now deprecated. Using `gWithContext` is now the recommended way to use `@graphql-ts/schema` instead of the instance of `g` exported by `@graphql-ts/schema` or creating multiple files to setup `g` though using those is still possible.
 
 ```ts
 import { GraphQLSchema } from "graphql";
-import { initG } from "@graphql-ts/schema";
+import { gWithContext } from "@graphql-ts/schema";
 
 type Context = {
   something: string;
 };
 
-const g = initG<Context>();
-type g<T> = initG<T>;
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
 
 const Query = g.object()({
   name: "Query",

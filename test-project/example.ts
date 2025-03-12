@@ -1,12 +1,12 @@
-import { initG } from "@graphql-ts/schema";
+import { gWithContext } from "@graphql-ts/schema";
 import { GraphQLSchema, graphql } from "graphql";
 
 type Context = {
   loadPerson: (id: string) => Person | undefined;
   loadFriends: (id: string) => Person[];
 };
-const g = initG<Context>();
-type g<T> = initG<T>;
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
 
 type Person = {
   id: string;

@@ -23,14 +23,14 @@ import type {
   InferValueFromArg as _InferValueFromArg,
 } from "./types";
 
-import { initG } from "./output";
+import { gWithContext } from "./output";
 
 /**
- * @deprecated Use {@link initG} to bind `g` to a specific context instead of
- *   this generic `g`
+ * @deprecated Use {@link gWithContext} to bind `g` to a specific context instead
+ *   of this generic `g`
  */
-export const g = initG<g.Context>();
-export type g<T> = initG<T>;
+export const g = gWithContext<g.Context>();
+export type g<T> = gWithContext.infer<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace g {
