@@ -30,7 +30,7 @@
     "version-packages": "changeset version && pnpm i --frozen-lockfile=false",
     "test": "jest",
     "types": "tsc",
-    "all:types": "pnpm run /^types.*/",
+    "all:types": "pnpm run /^types.*/ && pnpm -r run types",
     "lint": "eslint . && prettier --check .",
     "site": "cd site && pnpm dev",
     "build": "preconstruct build",
