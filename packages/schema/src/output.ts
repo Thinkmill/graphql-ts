@@ -603,7 +603,7 @@ export type GWithContext<Context> = {
    * `;)
    * ```
    */
-  enum: <Values extends Record<string, unknown>>(
+  enum: <const Values extends Record<string, unknown>>(
     config: GEnumTypeConfig<Values>
   ) => GEnumType<Values>;
   /**

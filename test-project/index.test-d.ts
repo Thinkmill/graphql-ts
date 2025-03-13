@@ -2162,3 +2162,21 @@ const someInputFields = {
     },
   });
 }
+
+{
+  const x = g.enum({
+    name: "X",
+    values: {
+      a: {
+        value: "a",
+      },
+      b: {
+        value: "b",
+      },
+    },
+  });
+  assertCompatible<
+    Invariant<GEnumType<{ a: "a"; b: "b" }>>,
+    Invariant<typeof x>
+  >();
+}
