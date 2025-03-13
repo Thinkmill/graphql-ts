@@ -4,9 +4,11 @@ import { schema } from "./schema.js";
 import type { Context } from "./g.js";
 import { createDb } from "./db.js";
 
+const db = createDb("file:./dev.db");
+
 const yoga = createYoga({
   schema,
-  context: (): Context => ({ db: createDb("./dev.db") }),
+  context: (): Context => ({ db }),
 });
 
 const server = createServer(yoga);

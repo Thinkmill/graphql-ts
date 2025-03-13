@@ -4,20 +4,21 @@
   "type": "module",
   "dependencies": {
     "@graphql-ts/schema": "^1.0.1",
-    "better-sqlite3": "^11.8.1",
+    "@libsql/client": "^0.14.0",
     "drizzle-orm": "^0.40.0",
     "graphql": "^16.3.0",
     "graphql-yoga": "^5.13.1"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.10",
     "drizzle-kit": "^0.30.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "dev": "drizzle-kit push && tsx src/server.ts",
+    "dev": "cp -n template.db dev.db; tsx src/server.ts",
+    "db:push": "drizzle-kit db",
+    "db:push:template": "rm -f template.db && DATABASE_URL=file:./template.db drizzle-kit push",
     "types": "tsc"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/examples/drizzle-graphql-yoga"
