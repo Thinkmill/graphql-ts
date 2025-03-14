@@ -2,7 +2,7 @@
   "name": "@graphql-ts/example-basic-graphql-http",
   "private": true,
   "dependencies": {
-    "@graphql-ts/schema": "^1.0.1",
+    "@graphql-ts/schema": "^1.0.2",
     "graphql": "^16.3.0",
     "graphql-yoga": "^5.13.1"
   },
