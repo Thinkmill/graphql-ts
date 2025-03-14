@@ -1,6 +1,6 @@
 {
   "name": "@graphql-ts/test-project",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": true,
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/test-project",
   "license": "MIT",

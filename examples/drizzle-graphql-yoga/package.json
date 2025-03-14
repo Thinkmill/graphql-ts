@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@graphql-ts/schema": "^1.0.1",
+    "@graphql-ts/schema": "^1.0.2",
     "better-sqlite3": "^11.8.1",
     "drizzle-orm": "^0.40.0",
     "graphql": "^16.3.0",

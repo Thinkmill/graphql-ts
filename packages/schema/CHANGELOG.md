@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 1.0.2
+
+### Patch Changes
+
+- [#59](https://github.com/Thinkmill/graphql-ts/pull/59) [`85c667e3a6affe4651dcfe31151e56d39c78411e`](https://github.com/Thinkmill/graphql-ts/commit/85c667e3a6affe4651dcfe31151e56d39c78411e) Thanks [@emmatown](https://github.com/emmatown)! - Add `const` to `Values` type parameter on `g.enum` to improve inference
+
 ## 1.0.1
 
 ### Patch Changes
