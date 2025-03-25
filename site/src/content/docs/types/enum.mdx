@@ -1,0 +1,98 @@
+---
+title: Enum Types
+sidebar:
+  label: Enum
+  order: 3
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+GraphQL Enum Types are a way to define a type that can be one of a set of predefined values.
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+// ---cut---
+const TaskStatus = g.enum({
+  name: "TaskStatus",
+  values: {
+    TODO: { value: "todo" },
+    IN_PROGRESS: { value: "inProgress" },
+    DONE: { value: "done" },
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [TaskStatus] });
+```
+
+</ShowSchema>
+
+Note the key and value don't have to be the same, the key defines what the enum is for consumers of the GraphQL API.
+
+The `value` defines what the enum is for the schema implementation when it is received in/returned from resolvers. (this value can be any type, it is not constrained to a string, it could be a number, symbol, TypeScript enum value or any other value)
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+
+const TaskStatus = g.enum({
+  name: "TaskStatus",
+  values: {
+    TODO: { value: "todo" },
+    IN_PROGRESS: { value: "inProgress" },
+    DONE: { value: "done" },
+  },
+});
+
+// ---cut---
+const field = g.field({
+  type: TaskStatus,
+  args: { status: g.arg({ type: g.nonNull(TaskStatus) }) },
+  resolve(source, args, context) {
+    return args.status;
+    //           ^?
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: g.object()({ name: "Query", fields: { field } }),
+});
+```
+
+</ShowSchema>
+
+Of course in most cases, the internal and external values will likely be the same so `@graphql-ts/schema` provides a shorthand for defining enum values with `g.enumValues`:
+
+<ShowSchema>
+
+```ts twoslash
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+// ---cut---
+const TaskStatus = g.enum({
+  name: "TaskStatus",
+  values: g.enumValues(["TODO", "IN_PROGRESS", "DONE"]),
+});
+
+const field = g.field({
+  type: TaskStatus,
+  args: { status: g.arg({ type: g.nonNull(TaskStatus) }) },
+  resolve(source, args, context) {
+    return args.status;
+    //           ^?
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: g.object()({ name: "Query", fields: { field } }),
+});
+```
+
+</ShowSchema>

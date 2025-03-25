@@ -1,0 +1,306 @@
+---
+title: Input Object Types
+sidebar:
+  order: 2
+  label: Input Object
+---
+
+import ShowSchema from "../../../show-schema.astro";
+
+Input objects are used to represent the input arguments of a field. They are similar to object types, but they are used to represent inputs instead of output fields. Input object types use `g.arg` similar to how args are defined on output fields rather than using the `g.field` function like on output object types.
+
+<ShowSchema>
+
+```ts twoslash {1-7}
+import { gWithContext } from "@graphql-ts/schema";
+
+type Context = {
+  createUser: (input: { name: string; email: string }) => UserSource;
+};
+
+const g = gWithContext<Context>();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    email: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut---
+const UserCreateInput = g.inputObject({
+  name: "UserCreateInput",
+  fields: {
+    name: g.arg({ type: g.nonNull(g.String) }),
+    email: g.arg({ type: g.nonNull(g.String) }),
+  },
+});
+
+const Mutation = g.object()({
+  name: "Mutation",
+  fields: {
+    createUser: g.field({
+      type: User,
+      args: {
+        input: g.arg({ type: g.nonNull(UserCreateInput) }),
+      },
+      resolve: (source, args, context) => {
+        return context.createUser(args.input);
+        //                              ^?
+      },
+    }),
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ mutation: Mutation });
+```
+
+</ShowSchema>
+
+## Circular Types
+
+While circular input object types are less common than circular Object Types, they can still occur. Just like with circular object types, we need to start by making `fields` a function:
+
+<ShowSchema>
+
+```ts twoslash {3,6}
+// @errors: 7022 7023
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+const UserCreateInput = g.inputObject({
+  name: "UserCreateInput",
+  fields: () => ({
+    name: g.arg({ type: g.nonNull(g.String) }),
+    email: g.arg({ type: g.nonNull(g.String) }),
+    friends: g.arg({ type: g.list(g.nonNull(UserCreateInput)) }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [UserCreateInput] });
+```
+
+</ShowSchema>
+
+To resolve TypeScript's errors about circularity though, we unfortunately can't use the `g` type like we did with object types. Instead, we need to use the `GInputObjectType` type and we also need to essentially duplicate the fields definition in the types
+
+<ShowSchema>
+
+```ts twoslash {8-14} ins=": UserCreateInput"
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+import type {
+  GArg,
+  GNonNull,
+  GList,
+  GInputObjectType,
+} from "@graphql-ts/schema";
+
+type UserCreateInput = GInputObjectType<{
+  // you can use the G* types from @graphql-ts/schema to define the fields
+  name: GArg<GNonNull<typeof g.String>>;
+  // or you can use the g type and g.* functions
+  email: g<typeof g.arg<g<typeof g.nonNull<typeof g.String>>>>;
+  friends: GArg<GList<GNonNull<UserCreateInput>>>;
+}>;
+
+const UserCreateInput: UserCreateInput = g.inputObject({
+  name: "UserCreateInput",
+  fields: () => ({
+    name: g.arg({ type: g.nonNull(g.String) }),
+    email: g.arg({ type: g.nonNull(g.String) }),
+    friends: g.arg({ type: g.list(g.nonNull(UserCreateInput)) }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [UserCreateInput] });
+```
+
+</ShowSchema>
+
+Since most fields in input objects won't be circular, you can also extract out the non-circular fields and use `typeof` instead of duplicating the fields:
+
+<ShowSchema>
+
+```ts twoslash /typeof userCreateInputFields/
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+import type {
+  GArg,
+  GNonNull,
+  GList,
+  GInputObjectType,
+} from "@graphql-ts/schema";
+
+const userCreateInputFields = {
+  name: g.arg({ type: g.nonNull(g.String) }),
+  email: g.arg({ type: g.nonNull(g.String) }),
+};
+
+type UserCreateInput = GInputObjectType<
+  typeof userCreateInputFields & {
+    friends: GArg<GList<GNonNull<UserCreateInput>>>;
+  }
+>;
+
+const UserCreateInput: UserCreateInput = g.inputObject({
+  name: "UserCreateInput",
+  fields: () => ({
+    ...userCreateInputFields,
+    friends: g.arg({ type: g.list(g.nonNull(UserCreateInput)) }),
+  }),
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({ types: [UserCreateInput] });
+```
+
+</ShowSchema>
+
+## Nullability & Default Values
+
+Input objects can also have default values for their arguments. Default values are used when the argument is not provided in the input object. Default values can be provided using the `defaultValue` property in the `g.arg` function. We're going to demonstrate by using `args` on a field rather than on an input object type but the same concept applies to input object types.
+
+To start with, since all types are nullable in GraphQL by default, let's look at what the type of a nullable type is:
+
+<ShowSchema>
+
+```ts twoslash {4}
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+const field = g.field({
+  type: g.String,
+  args: {
+    name: g.arg({ type: g.String }),
+  },
+  resolve(_, args) {
+    //         ^?
+    return args.name;
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: g.object()({ name: "Query", fields: { field } }),
+});
+```
+
+</ShowSchema>
+
+For the `String` scalar, the type is `string | null | undefined`.
+
+This is because for a nullable input type, there are three possible options for a consumer of a GraphQL API:
+
+```graphql
+query {
+  withoutName: field # represented as `undefined` in resolvers
+  withNull: field(name: null)
+  withValue: field(name: "string")
+}
+```
+
+For a nullable input type, adding a `defaultValue` will remove the `undefined` option but note that it will not remove `null`.
+
+```ts twoslash /defaultValue: "name"/
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+g.field({
+  type: g.String,
+  args: {
+    name: g.arg({ type: g.String, defaultValue: "name" }),
+  },
+  resolve(_, args) {
+    //         ^?
+    return args.name;
+  },
+});
+```
+
+For non-nullable input types, adding a `defaultValue` doesn't affect the type received by the `resolve` function, it just allows the consumer to not provide the argument in which case the default value will be used:
+
+```ts twoslash "g.nonNull"
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+// ---cut---
+g.field({
+  type: g.String,
+  args: {
+    name: g.arg({ type: g.nonNull(g.String), defaultValue: "name" }),
+  },
+  resolve(_, args) {
+    //         ^?
+    return args.name;
+  },
+});
+```
+
+## One Of
+
+To express an input object where a consumer must provide exactly one of the keys, you can use `isOneOf`. Note all the fields must be nullable when defining the type but in your resolver, exactly one key will be provided and it will be non-null and no other keys will be provided.
+
+```ts twoslash {3}
+import { gWithContext } from "@graphql-ts/schema";
+const g = gWithContext();
+type g<T> = gWithContext.infer<T>;
+
+type UserSource = { id: string; name: string; email: string };
+const User = g.object<UserSource>()({
+  name: "User",
+  fields: {
+    id: g.field({ type: g.nonNull(g.ID) }),
+    name: g.field({ type: g.nonNull(g.String) }),
+    email: g.field({ type: g.nonNull(g.String) }),
+  },
+});
+// ---cut---
+const UserCreateInput = g.inputObject({
+  name: "UserSearchInput",
+  isOneOf: true,
+  fields: {
+    id: g.arg({ type: g.ID }),
+    email: g.arg({ type: g.String }),
+    name: g.arg({ type: g.String }),
+  },
+});
+
+const search = g.field({
+  type: User,
+  args: {
+    input: g.arg({ type: g.nonNull(UserCreateInput) }),
+  },
+  resolve(_, args) {
+    console.log(args.input);
+    //               ^?
+    return null;
+  },
+});
+// ---cut-after---
+import { GraphQLSchema } from "graphql";
+const schema = new GraphQLSchema({
+  query: g.object()({
+    name: "Query",
+    fields: { search },
+  }),
+});
+```

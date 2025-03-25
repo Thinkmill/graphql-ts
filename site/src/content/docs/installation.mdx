@@ -1,0 +1,95 @@
+---
+title: Installation
+---
+
+import { TabItem, Tabs } from "@astrojs/starlight/components";
+
+:::tip
+
+`@graphql-ts/schema` is for **constructing** a GraphQL schema. If you're looking for a tool for type-safe **querying**, check out [gql.tada](https://gql-tada.0no.co).
+
+:::
+
+To get started, you'll need to install `@graphql-ts/schema` and `graphql`.
+
+<Tabs>
+  <TabItem label="npm">
+
+```sh
+npm install graphql @graphql-ts/schema
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```sh
+pnpm add graphql @graphql-ts/schema
+```
+
+  </TabItem>
+  <TabItem label="yarn">
+
+```sh
+yarn add graphql @graphql-ts/schema
+```
+
+  </TabItem>
+</Tabs>
+
+Using `@graphql-ts/schema` starts with the `g` object which is a set of functions that mirror the GraphQL.js API, but with added type-safety.
+
+To create `g`, you need to call `gWithContext` with a context type. The context type defines the type of the context that resolvers receive. You'll generally want to export this from a module so you can use it in your schema definition. You'll also want to export a type alias for `g` like `type g<T> = gWithContext.infer<T>`, [you'll use this later](/types/object#circular-types).
+
+```ts twoslash
+// g.ts
+import { gWithContext } from "@graphql-ts/schema";
+
+export type Context = {};
+
+export const g = gWithContext<Context>();
+export type g<T> = gWithContext.infer<T>;
+```
+
+Now you can use `g` to define your schema, you'll probably start with a query type, like this:
+
+```ts twoslash
+// schema.ts
+// @filename: g.ts
+import { gWithContext } from "@graphql-ts/schema";
+
+export type Context = {};
+
+export const g = gWithContext<Context>();
+export type g<T> = gWithContext.infer<T>;
+// @filename: schema.ts
+// ---cut---
+import { g } from "./g";
+import { GraphQLSchema } from "graphql";
+
+const Query = g.object()({
+  name: "Query",
+  fields: {
+    hello: g.field({
+      type: g.String,
+      resolve: () => "world",
+    }),
+  },
+});
+
+const schema = new GraphQLSchema({
+  query: Query,
+});
+```
+
+If we print that schema in GraphQL SDL, it looks like this:
+
+```graphql
+# schema.graphql
+type Query {
+  hello: String
+}
+```
+
+You've now created a GraphQL schema using `@graphql-ts/schema`! 🎉
+
+This `schema` object can be used with any server that works with GraphQL.js schema, such as [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server), [Apollo Server](https://www.apollographql.com/docs/apollo-server), [graphql-http](https://github.com/graphql/graphql-http), etc.

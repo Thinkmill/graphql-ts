@@ -1,0 +1,20 @@
+diff --git a/index.ts b/index.ts
+index 8253e70a9d7aba3f76d198d52a0a0e91be592a6d..1b9f6a4e7958bf19589205e4e3096091a8dd6bd8 100644
+--- a/index.ts
++++ b/index.ts
+@@ -33,6 +33,7 @@ import plugin from 'tailwindcss/plugin';
+ const StarlightTailwindPlugin = () =>
+ 	plugin(
+ 		({ addBase, theme, config }) => {
++			// @ts-ignore
+ 			if (config<string>('prefix') === 'sl-') {
+ 				console.warn(
+ 					'A Tailwind prefix of "sl-" will clash with Starlight’s built-in styles.\n' +
+@@ -110,6 +111,7 @@ const StarlightTailwindPlugin = () =>
+ 		{
+ 			// Starlight uses a `data-theme` attribute to power its dark mode.
+ 			darkMode: ['class', '[data-theme="dark"]'],
++			// @ts-ignore
+ 			corePlugins: {
+ 				// Disable Tailwind’s default reset styles which conflict with Starlight.
+ 				preflight: false,

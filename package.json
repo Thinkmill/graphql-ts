@@ -47,5 +47,10 @@
   },
   "manypkg": {
     "defaultBranch": "main"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@astrojs/starlight-tailwind": "patches/@astrojs__starlight-tailwind.patch"
+    }
   }
 }
