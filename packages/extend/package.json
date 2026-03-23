@@ -18,7 +18,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@graphql-ts/schema": "^1.0.0",
-    "graphql": "16"
+    "graphql": "16 || 17"
   },
   "devDependencies": {
     "@graphql-ts/schema": "workspace:^",
