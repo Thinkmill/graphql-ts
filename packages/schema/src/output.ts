@@ -9,30 +9,30 @@ import type {
   FieldDefinitionNode,
 } from "graphql";
 import {
-  GArg,
+  type GArg,
   GEnumType,
-  GEnumTypeConfig,
-  GEnumValueConfig,
-  GField,
+  type GEnumTypeConfig,
+  type GEnumValueConfig,
+  type GField,
   GInputObjectType,
-  GInputObjectTypeConfig,
-  GInputType,
-  GInterfaceField,
+  type GInputObjectTypeConfig,
+  type GInputType,
+  type GInterfaceField,
   GInterfaceType,
-  GInterfaceTypeConfig,
+  type GInterfaceTypeConfig,
   GList,
   GNonNull,
-  GNullableInputType,
-  GNullableType,
+  type GNullableInputType,
+  type GNullableType,
   GObjectType,
-  GOutputType,
+  type GOutputType,
   GScalarType,
-  GType,
+  type GType,
   GUnionType,
-  InferValueFromOutputType,
-  InferValueFromArgs,
-  InferValueFromInputType,
-} from "./types";
+  type InferValueFromOutputType,
+  type InferValueFromArgs,
+  type InferValueFromInputType,
+} from "./types.js";
 import {
   GraphQLBoolean,
   GraphQLID,
@@ -40,7 +40,7 @@ import {
   GraphQLFloat,
   GraphQLString,
 } from "graphql";
-import type { g } from "./g-for-doc-references";
+import type { g } from "./g-for-doc-references.ts";
 
 type SomeTypeThatIsntARecordOfArgs = string;
 
@@ -229,11 +229,8 @@ export type GWithContext<Context> = {
       Context,
       InterfacesToInterfaceFields<Interfaces>
     >,
-    const Interfaces extends readonly GInterfaceType<
-      Source,
-      any,
-      Context
-    >[] = [],
+    const Interfaces extends readonly GInterfaceType<Source, any, Context>[] =
+      [],
   >(
     config: {
       fields: Fields | (() => Fields);
@@ -244,8 +241,9 @@ export type GWithContext<Context> = {
    * Create a GraphQL union type.
    *
    * A union type represents an object that could be one of a list of types.
-   * Note it is similar to an {@link GInterfaceType interface type} except that a
-   * union doesn't imply having a common set of fields among the member types.
+   * Note it is similar to an {@link GInterfaceType interface type} except that
+   * a union doesn't imply having a common set of fields among the member
+   * types.
    *
    * ```ts
    * const A = g.object<{ __typename: "A" }>()({
@@ -513,17 +511,14 @@ export type GWithContext<Context> = {
         Context
       >;
     } & InterfacesToInterfaceFields<Interfaces>,
-    const Interfaces extends readonly GInterfaceType<
-      Source,
-      any,
-      Context
-    >[] = [],
+    const Interfaces extends readonly GInterfaceType<Source, any, Context>[] =
+      [],
   >(
     config: GInterfaceTypeConfig<Source, Fields, Interfaces, Context>
   ) => GInterfaceType<Source, Fields, Context>;
   /**
-   * A shorthand to easily create {@link GEnumValueConfig enum values} to pass to
-   * {@link g.enum}.
+   * A shorthand to easily create {@link GEnumValueConfig enum values} to pass
+   * to {@link g.enum}.
    *
    * If you need to set a `description` or `deprecationReason` for an enum
    * variant, you should pass values directly to `g.enum` without using
@@ -1162,7 +1157,6 @@ export function gWithContext<Context>(): GWithContext<Context> {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace gWithContext {
   /**
    * The `gWithContext.infer` type is useful particularly when defining circular

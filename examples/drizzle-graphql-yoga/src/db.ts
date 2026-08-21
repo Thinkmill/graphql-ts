@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import * as dbSchema from "./db-schema.js";
+import * as dbSchema from "./db-schema.ts";
 
 export type DB = ReturnType<typeof createDb>;
 

@@ -5,16 +5,16 @@
  *
  * @module
  */
-import {
+import type {
   GraphQLArgumentExtensions,
   GraphQLEnumType,
-  type GraphQLEnumTypeConfig,
-  type GraphQLEnumValueConfig,
+  GraphQLEnumTypeConfig,
+  GraphQLEnumValueConfig,
   GraphQLFieldExtensions,
   GraphQLInputField,
   GraphQLInputFieldExtensions,
   GraphQLInputObjectType,
-  type GraphQLInputObjectTypeConfig,
+  GraphQLInputObjectTypeConfig,
   GraphQLInterfaceType,
   GraphQLInterfaceTypeConfig,
   GraphQLList,
@@ -23,13 +23,13 @@ import {
   GraphQLObjectTypeConfig,
   GraphQLResolveInfo,
   GraphQLScalarType,
-  type GraphQLTypeResolver,
+  GraphQLTypeResolver,
   GraphQLUnionType,
-  type GraphQLUnionTypeConfig,
-  type FieldDefinitionNode,
-  type InputValueDefinitionNode,
+  GraphQLUnionTypeConfig,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
 } from "graphql";
-import type { g } from "./g-for-doc-references";
+import type { g } from "./g-for-doc-references.ts";
 
 type Maybe<T> = T | null | undefined;
 
@@ -488,8 +488,8 @@ type Flatten<T> = {
  * directly if desired.
  *
  * Also unlike the named types in this module, the original
- * {@link GraphQLNonNull `GraphQLNonNull`} type from the `graphql` package cannot
- * be assigned to a variable of type `GNonNull`. Though `GNonNull` _is_
+ * {@link GraphQLNonNull `GraphQLNonNull`} type from the `graphql` package
+ * cannot be assigned to a variable of type `GNonNull`. Though `GNonNull` _is_
  * assignable to `GraphQLNonNull`.
  *
  * For example, the following code will not compile:
@@ -518,7 +518,8 @@ export class GNonNull<
 }
 
 /**
- * A GraphQL list type. This should generally be constructed with {@link g.list}.
+ * A GraphQL list type. This should generally be constructed with
+ * {@link g.list}.
  *
  * Unlike some other constructors in this module, this constructor functions
  * exactly the same as it's counterpart `g.list` so it is safe to use directly

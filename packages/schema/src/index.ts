@@ -95,7 +95,7 @@
  *
  * @module
  */
-import { gWithContext, type GWithContext } from "./output";
+import { gWithContext, type GWithContext } from "./output.ts";
 export { gWithContext };
 export type { GWithContext };
 
@@ -122,4 +122,4 @@ export {
   type InferValueFromArg,
   type InferValueFromArgs,
   type InferValueFromInputType,
-} from "./types";
+} from "./types.js";

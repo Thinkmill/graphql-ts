@@ -1,5 +1,5 @@
 import { gWithContext } from "@graphql-ts/schema";
-import type { DB } from "./db.js";
+import type { DB } from "./db.ts";
 
 export type Context = {
   db: DB;

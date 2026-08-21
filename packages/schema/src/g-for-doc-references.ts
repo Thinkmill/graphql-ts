@@ -1,3 +1,3 @@
-import { GWithContext } from "./output";
+import type { GWithContext } from "./output.ts";
 
 export declare const g: GWithContext<unknown>;

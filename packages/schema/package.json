@@ -13,11 +13,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "api-without-context",
-    "api-with-context",
-    "types",
-    "src"
+    "dist"
   ],
   "license": "MIT",
   "peerDependencies": {

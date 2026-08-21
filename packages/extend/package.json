@@ -13,8 +13,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "license": "MIT",
   "peerDependencies": {
