@@ -662,6 +662,21 @@ g.fields<{ thing: Promise<string> }>()({
   }),
 });
 
+g.arg<typeof g.String, string>({
+  type: g.String,
+  defaultValue: "legacy",
+});
+
+// @ts-expect-error explicitly selecting a defaultValue type requires defaultValue
+g.arg<typeof g.String, string>({
+  type: g.String,
+});
+
+{
+  const internalAndExternalScalar = undefined! as GScalarType<number, string>;
+  g.arg({ type: internalAndExternalScalar, defaultValue: 1 });
+}
+
 // note it's important that the type annotation is on another variable declaration
 // since the type annotation can influence the return type and we don't want that here
 
@@ -670,6 +685,10 @@ g.fields<{ thing: Promise<string> }>()({
     type: g.String,
   });
 
+  assertCompatible<
+    Invariant<GArg<typeof g.String, false>>,
+    Invariant<typeof arg>
+  >();
   const _assert: GArg<typeof g.String, false> = arg;
   console.log(_assert);
 }
@@ -690,6 +709,10 @@ g.fields<{ thing: Promise<string> }>()({
     defaultValue: "",
   });
 
+  assertCompatible<
+    Invariant<GArg<typeof g.String, true>>,
+    Invariant<typeof arg>
+  >();
   const _assert: GArg<typeof g.String, true> = arg;
   console.log(_assert);
 }
