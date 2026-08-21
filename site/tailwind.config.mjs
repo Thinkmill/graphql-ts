@@ -1,3 +1,4 @@
+// @ts-ignore
 import starlightPlugin from "@astrojs/starlight-tailwind";
 
 // Generated color palettes

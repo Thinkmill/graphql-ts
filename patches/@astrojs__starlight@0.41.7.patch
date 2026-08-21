@@ -1,0 +1,25 @@
+diff --git a/integrations/satteri.ts b/integrations/satteri.ts
+index d93c5f17f1de34c9984bf7a3ab672d6a7a593c84..9a65f76a948a176a654579dd78c2a0c2d4662923 100644
+--- a/integrations/satteri.ts
++++ b/integrations/satteri.ts
+@@ -6,9 +6,7 @@ import { directiveToMarkdown } from 'mdast-util-directive';
+ import { toMarkdown } from 'mdast-util-to-markdown';
+ import type {
+ 	HastPluginDefinition,
+-	HastPluginInput,
+ 	HastVisitorContext,
+-	MdastPluginInput,
+ 	MdastPluginDefinition,
+ } from 'satteri';
+ import { headingLinkIconChildren } from './markdown-icon';
+@@ -20,8 +18,8 @@ import {
+ } from './markdown-processor';
+ 
+ export function starlightSatteriPlugins(options: MarkdownProcessorPluginOptions): {
+-	mdastPlugins: MdastPluginInput[];
+-	hastPlugins: HastPluginInput[];
++	mdastPlugins: MdastPluginDefinition[];
++	hastPlugins: HastPluginDefinition[];
+ } {
+ 	const allowedPaths = getMarkdownProcessorPaths(options);
+ 	return {

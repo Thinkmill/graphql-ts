@@ -7,3 +7,10 @@ allowBuilds:
   better-sqlite3: false
   esbuild: false
   workerd: true
+
+overrides:
+  "@types/hast": "3.0.5"
+  satteri: "0.10.5"
+
+patchedDependencies:
+  "@astrojs/starlight@0.41.7": patches/@astrojs__starlight@0.41.7.patch
