@@ -10,10 +10,17 @@ const graphqlTsSchema = graphqlTsSchemaDefault || _graphqlTsSchema;
 
 // https://astro.build/config
 export default defineConfig({
+  output: "static",
   integrations: [
     starlight({
       title: "graphql-ts",
-      social: { github: "https://github.com/Thinkmill/graphql-ts" },
+      social: [
+        {
+          label: "GitHub",
+          icon: "github",
+          href: "https://github.com/Thinkmill/graphql-ts",
+        },
+      ],
       customCss: ["./src/index.css"],
       components: {
         Hero: "./src/Hero.astro",
@@ -25,11 +32,11 @@ export default defineConfig({
         },
         {
           label: "Types",
-          autogenerate: { directory: "types" },
+          items: [{ autogenerate: { directory: "types" } }],
         },
         {
           label: "Examples",
-          autogenerate: { directory: "examples" },
+          items: [{ autogenerate: { directory: "examples" } }],
         },
         {
           label: "Extra",

@@ -1,5 +1,5 @@
 {
-  "name": "@graphql-ts/site",
+  "name": "@graphql-ts/docs",
   "private": true,
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/site",
   "scripts": {
@@ -9,21 +9,22 @@
     "types": "astro sync && tsc"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.2.0",
-    "@astrojs/starlight": "^0.32.2",
-    "@astrojs/starlight-tailwind": "^3.0.0",
+    "@astrojs/mdx": "^7.0.7",
+    "@astrojs/starlight": "^0.41.7",
+    "@astrojs/starlight-tailwind": "^5.0.0",
     "@graphql-ts/extend": "workspace:^",
     "@graphql-ts/schema": "workspace:^",
-    "@shikijs/twoslash": "^3.2.1",
-    "@tailwindcss/vite": "^4.0.14",
-    "@types/hast": "^3.0.4",
+    "@shikijs/twoslash": "^4.4.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
-    "astro": "^5.5.2",
-    "esbuild": "^0.25.1",
+    "astro": "^7.2.4",
+    "esbuild": "^0.28.2",
     "expressive-code-twoslash": "^0.4.0",
     "graphql": "^16.3.0",
     "mdast-util-mdx-jsx": "^3.2.0",
     "remark-shiki-twoslash": "^3.1.3",
-    "tailwindcss": "^4.0.14"
+    "tailwindcss": "^4.3.3",
+    "wrangler": "^4.124.0"
   }
 }

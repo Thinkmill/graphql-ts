@@ -1,0 +1,33 @@
+name: Deploy site
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Cloudflare Workers
+    runs-on: ubuntu-latest
+    environment: Cloudflare
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 32aa62b85a5ad7da27562b834305de9d
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@main
+
+      - uses: ./.github/actions/setup-deps
+
+      - name: Build static site
+        run: pnpm --dir site build
+
+      - name: Deploy to Cloudflare Workers
+        run: pnpm --dir site exec wrangler deploy

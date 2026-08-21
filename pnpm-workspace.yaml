@@ -3,3 +3,7 @@ packages:
   - "test-project"
   - "site"
   - "examples/*"
+allowBuilds:
+  better-sqlite3: false
+  esbuild: false
+  workerd: true
