@@ -11,6 +11,7 @@
     "site/**",
     "**/node_modules/**",
     "test-project/typescript-6.test-d.ts",
+    "test-project/graphql-17/**",
     "test-project/graphql-16/**"
   ]
 }
