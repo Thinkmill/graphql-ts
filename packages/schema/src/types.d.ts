@@ -6,11 +6,14 @@
  * @module
  */
 import type {
+  GraphQLArgumentConfig,
   GraphQLArgumentExtensions,
   GraphQLEnumType,
   GraphQLEnumTypeConfig,
+  GraphQLFieldConfigMap,
   GraphQLEnumValueConfig,
   GraphQLFieldExtensions,
+  GraphQLFieldMap,
   GraphQLInputField,
   GraphQLInputFieldExtensions,
   GraphQLInputObjectType,
@@ -32,6 +35,17 @@ import type {
 import type { g } from "./g-for-doc-references.ts";
 
 type Maybe<T> = T | null | undefined;
+
+export type GraphQLDefaultInput = GraphQLArgumentConfig["default" &
+  keyof GraphQLArgumentConfig];
+
+export type NativeDefault<
+  Value,
+  IsRequired extends boolean = undefined extends Value ? false : true,
+> = "default" extends keyof GraphQLArgumentConfig
+  ? Pick<GraphQLArgumentConfig, "default" & keyof GraphQLArgumentConfig> &
+      (IsRequired extends true ? { default: Value } : { default?: Value })
+  : {};
 
 export type GNullableOutputType<Context> =
   | GScalarType
@@ -240,6 +254,9 @@ export class GUnionType<Source, Context> extends GraphQLUnionType {
     >
   );
   resolveType: Maybe<GraphQLTypeResolver<Source, Context>>;
+  toConfig(): Omit<ReturnType<GraphQLUnionType["toConfig"]>, "resolveType"> & {
+    resolveType?: Maybe<GraphQLTypeResolver<Source, Context>>;
+  };
 }
 
 export type GUnionTypeConfig<
@@ -287,6 +304,7 @@ export class GInterfaceType<
   Context,
 > extends GraphQLInterfaceType {
   declare resolveType: Maybe<GraphQLTypeResolver<Source, Context>>;
+  getFields(): GraphQLFieldMap<Source, Context>;
   constructor(
     config: Readonly<
       GInterfaceTypeConfig<
@@ -297,8 +315,24 @@ export class GInterfaceType<
       >
     >
   );
-  toConfig(): Omit<ReturnType<GraphQLInterfaceType["toConfig"]>, "fields"> & {
-    fields: Fields;
+  toConfig(): Omit<
+    ReturnType<GraphQLInterfaceType["toConfig"]>,
+    "fields" | "resolveType"
+  > & {
+    fields: {
+      [Key in keyof Fields]: Fields[Key] & {
+        args: {
+          [Arg in keyof NonNullable<Fields[Key]["args"]>]: NativeDefault<
+            GraphQLDefaultInput,
+            true
+          > & {
+            extensions: Readonly<GraphQLArgumentExtensions>;
+          };
+        };
+        extensions: Readonly<GraphQLFieldExtensions<Source, Context>>;
+      };
+    };
+    resolveType?: Maybe<GraphQLTypeResolver<Source, Context>>;
   };
 }
 
@@ -452,7 +486,10 @@ export class GEnumType<
   constructor(config: Readonly<GEnumTypeConfig<Values>>);
   toConfig(): Omit<ReturnType<GraphQLEnumType["toConfig"]>, "values"> & {
     values: {
-      [Name in keyof Values]: Partial<GEnumValueConfig<Values[Name]>>;
+      [Name in keyof Values]: ReturnType<
+        GraphQLEnumType["toConfig"]
+      >["values"][string] &
+        Partial<GEnumValueConfig<Values[Name]>>;
     };
   };
 }
@@ -477,6 +514,16 @@ export class GScalarType<
 type Flatten<T> = {
   [K in keyof T]: T[K];
 } & {};
+
+// this is so that on graphql 16 and below where GraphQLNonNull and GraphQLList are structurally compatible
+// we make them non-compatible with a get [Symbol.toStringTag]() with a string literal
+// but in graphql 17, properties were added to make them incompatible so we don't need to do this anymore
+// this means that on graphql 17 GraphQLNonNull and GNonNull are assignable in both directions
+// and same for GraphQLList and GList
+type GNonNullToStringTag =
+  GraphQLNonNull<any> extends GraphQLList<any> ? "GraphQLNonNull" : string;
+type GListToStringTag =
+  GraphQLNonNull<any> extends GraphQLList<any> ? "GraphQLList" : string;
 
 /**
  * A GraphQL non-null type. This should generally be constructed with
@@ -513,7 +560,7 @@ type Flatten<T> = {
 export class GNonNull<
   Of extends GNullableType<any>,
 > extends GraphQLNonNull<Of> {
-  get [Symbol.toStringTag](): "GraphQLNonNull";
+  get [Symbol.toStringTag](): GNonNullToStringTag;
 }
 
 /**
@@ -547,7 +594,7 @@ export class GNonNull<
  * `GraphQLNonNull` and `GraphQLList` types.
  */
 export class GList<Of extends GType<any>> extends GraphQLList<Of> {
-  get [Symbol.toStringTag](): "GraphQLList";
+  get [Symbol.toStringTag](): GListToStringTag;
 }
 
 export {};
