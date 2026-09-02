@@ -1,6 +1,7 @@
 {
   "name": "@graphql-ts/example-basic-graphql-http",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@graphql-ts/schema": "^1.0.2",
     "graphql": "^16.3.0",
@@ -8,11 +9,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "dev": "tsx --watch index.ts",
+    "dev": "node --watch index.ts",
     "types": "tsc"
   },
   "repository": "https://github.com/Thinkmill/graphql-ts/tree/main/examples/basic-graphql-yoga"

@@ -28,7 +28,7 @@ const Query = g.object()({
       },
       resolve(_root, args, ctx) {
         return ctx.db.query.todo.findFirst({
-          where: eq(dbSchema.todo.id, args.id),
+          where: { id: args.id },
         });
       },
     }),
