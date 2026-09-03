@@ -49,8 +49,8 @@ importers:
         specifier: npm:typescript@5.7.3
         version: typescript@5.7.3
       typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
+        specifier: ^6.0.3
+        version: 6.0.3
 
   examples/basic-graphql-yoga:
     dependencies:
@@ -68,8 +68,8 @@ importers:
         specifier: ^22.13.10
         version: 22.13.10
       typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
+        specifier: ^6.0.3
+        version: 6.0.3
 
   examples/drizzle-graphql-yoga:
     dependencies:
@@ -93,8 +93,8 @@ importers:
         specifier: ^1.0.0-rc.4
         version: 1.0.0-rc.5-ab785fc
       typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/extend:
     devDependencies:
@@ -118,10 +118,10 @@ importers:
         version: 7.0.7(@astrojs/markdown-satteri@0.3.7)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))
       '@astrojs/starlight':
         specifier: ^0.41.7
-        version: 0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@5.8.2)
+        version: 0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@6.0.3)
       '@astrojs/starlight-tailwind':
         specifier: ^5.0.0
-        version: 5.0.0(@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@5.8.2))(tailwindcss@4.3.3)
+        version: 5.0.0(@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@6.0.3))(tailwindcss@4.3.3)
       '@graphql-ts/extend':
         specifier: workspace:^
         version: link:../packages/extend
@@ -130,7 +130,7 @@ importers:
         version: link:../packages/schema
       '@shikijs/twoslash':
         specifier: ^4.4.3
-        version: 4.4.3(typescript@5.8.2)
+        version: 4.4.3(typescript@6.0.3)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))
@@ -148,7 +148,7 @@ importers:
         version: 0.28.2
       expressive-code-twoslash:
         specifier: ^0.4.0
-        version: 0.4.0(@expressive-code/core@0.44.1)(expressive-code@0.44.1)(typescript@5.8.2)
+        version: 0.4.0(@expressive-code/core@0.44.1)(expressive-code@0.44.1)(typescript@6.0.3)
       graphql:
         specifier: ^16.3.0
         version: 16.10.0
@@ -157,7 +157,7 @@ importers:
         version: 3.2.0
       remark-shiki-twoslash:
         specifier: ^3.1.3
-        version: 3.1.3(typescript@5.8.2)
+        version: 3.1.3(typescript@6.0.3)
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -4624,8 +4624,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@5.8.2:
-    resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -5081,12 +5081,12 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight-tailwind@5.0.0(@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@5.8.2))(tailwindcss@4.3.3)':
+  '@astrojs/starlight-tailwind@5.0.0(@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@6.0.3))(tailwindcss@4.3.3)':
     dependencies:
-      '@astrojs/starlight': 0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@5.8.2)
+      '@astrojs/starlight': 0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@6.0.3)
       tailwindcss: 4.3.3
 
-  '@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@5.8.2)':
+  '@astrojs/starlight@0.41.7(patch_hash=d0e5fc9e22c8f659c3712d2a8c077bf1f3505822d44352e2ed7708d816454c9f)(@astrojs/markdown-remark@7.2.4)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))(typescript@6.0.3)':
     dependencies:
       '@astrojs/markdown-satteri': 0.3.7
       '@astrojs/mdx': 7.0.7(@astrojs/markdown-satteri@0.3.7)(astro@7.2.4(@astrojs/markdown-remark@7.2.4)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(jiti@2.7.0)(terser@5.37.0)(tsx@4.19.3)(yaml@2.9.0))
@@ -5102,7 +5102,7 @@ snapshots:
       hast-util-select: 6.0.4
       hast-util-to-string: 3.0.1
       hastscript: 9.0.1
-      i18next: 26.3.6(typescript@5.8.2)
+      i18next: 26.3.6(typescript@6.0.3)
       js-yaml: 4.3.1
       klona: 2.0.6
       magic-string: 0.30.21
@@ -7102,12 +7102,12 @@ snapshots:
     dependencies:
       '@shikijs/types': 4.4.3
 
-  '@shikijs/twoslash@4.4.3(typescript@5.8.2)':
+  '@shikijs/twoslash@4.4.3(typescript@6.0.3)':
     dependencies:
       '@shikijs/core': 4.4.3
       '@shikijs/types': 4.4.3
-      twoslash: 0.3.9(typescript@5.8.2)
-      typescript: 5.8.2
+      twoslash: 0.3.9(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -7269,17 +7269,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript/vfs@1.6.1(typescript@5.8.2)':
+  '@typescript/vfs@1.6.1(typescript@6.0.3)':
     dependencies:
       debug: 4.4.0
-      typescript: 5.8.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript/vfs@1.6.4(typescript@5.8.2)':
+  '@typescript/vfs@1.6.4(typescript@6.0.3)':
     dependencies:
       debug: 4.4.3
-      typescript: 5.8.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -7863,15 +7863,15 @@ snapshots:
 
   eventemitter3@5.0.4: {}
 
-  expressive-code-twoslash@0.4.0(@expressive-code/core@0.44.1)(expressive-code@0.44.1)(typescript@5.8.2):
+  expressive-code-twoslash@0.4.0(@expressive-code/core@0.44.1)(expressive-code@0.44.1)(typescript@6.0.3):
     dependencies:
       '@expressive-code/core': 0.44.1
       expressive-code: 0.44.1
       mdast-util-from-markdown: 2.0.2
       mdast-util-gfm: 3.1.0
       mdast-util-to-hast: 13.2.0
-      twoslash: 0.2.12(typescript@5.8.2)
-      typescript: 5.8.2
+      twoslash: 0.2.12(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -8224,9 +8224,9 @@ snapshots:
 
   human-id@4.2.1: {}
 
-  i18next@26.3.6(typescript@5.8.2):
+  i18next@26.3.6(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.8.2
+      typescript: 6.0.3
 
   ignore-walk@3.0.4:
     dependencies:
@@ -9385,7 +9385,7 @@ snapshots:
       unified: 11.0.5
       vfile: 6.0.3
 
-  remark-shiki-twoslash@3.1.3(typescript@5.8.2):
+  remark-shiki-twoslash@3.1.3(typescript@6.0.3):
     dependencies:
       '@types/unist': 2.0.11
       '@typescript/twoslash': 3.1.0
@@ -9393,9 +9393,9 @@ snapshots:
       fenceparser: 1.1.1
       regenerator-runtime: 0.13.11
       shiki: 0.10.1
-      shiki-twoslash: 3.1.2(typescript@5.8.2)
+      shiki-twoslash: 3.1.2(typescript@6.0.3)
       tslib: 2.1.0
-      typescript: 5.8.2
+      typescript: 6.0.3
       unist-util-visit: 2.0.3
     transitivePeerDependencies:
       - supports-color
@@ -9578,13 +9578,13 @@ snapshots:
 
   shell-quote@1.10.0: {}
 
-  shiki-twoslash@3.1.2(typescript@5.8.2):
+  shiki-twoslash@3.1.2(typescript@6.0.3):
     dependencies:
       '@typescript/twoslash': 3.1.0
       '@typescript/vfs': 1.3.4
       fenceparser: 1.1.1
       shiki: 0.10.1
-      typescript: 5.8.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -9726,25 +9726,25 @@ snapshots:
 
   twoslash-protocol@0.3.9: {}
 
-  twoslash@0.2.12(typescript@5.8.2):
+  twoslash@0.2.12(typescript@6.0.3):
     dependencies:
-      '@typescript/vfs': 1.6.1(typescript@5.8.2)
+      '@typescript/vfs': 1.6.1(typescript@6.0.3)
       twoslash-protocol: 0.2.12
-      typescript: 5.8.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  twoslash@0.3.9(typescript@5.8.2):
+  twoslash@0.3.9(typescript@6.0.3):
     dependencies:
-      '@typescript/vfs': 1.6.4(typescript@5.8.2)
+      '@typescript/vfs': 1.6.4(typescript@6.0.3)
       twoslash-protocol: 0.3.9
-      typescript: 5.8.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
   typescript@5.7.3: {}
 
-  typescript@5.8.2: {}
+  typescript@6.0.3: {}
 
   ufo@1.6.4: {}
 

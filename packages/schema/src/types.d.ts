@@ -394,12 +394,11 @@ export type GInputObjectTypeConfig<
   },
   IsOneOf extends boolean = false,
 > = Flatten<
-  Omit<GraphQLInputObjectTypeConfig, "fields"> & {
+  Omit<GraphQLInputObjectTypeConfig, "fields" | "isOneOf"> & {
     fields: Fields | (() => Fields);
-    isOneOf?: IsOneOf;
   }
 > &
-  (true extends IsOneOf ? { isOneOf: unknown } : unknown);
+  (false extends IsOneOf ? { isOneOf?: IsOneOf } : { isOneOf: IsOneOf });
 
 /**
  * A GraphQL input object type. This should generally be constructed with

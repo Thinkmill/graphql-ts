@@ -14,5 +14,10 @@
     "declaration": true,
     "declarationMap": false
   },
-  "exclude": ["examples/**", "site/**", "**/node_modules/**"]
+  "exclude": [
+    "examples/**",
+    "site/**",
+    "**/node_modules/**",
+    "test-project/typescript-5-7.test-d.ts"
+  ]
 }

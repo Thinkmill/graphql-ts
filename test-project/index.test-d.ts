@@ -953,18 +953,6 @@ g.object<{ thing?: undefined }>()({
 g.object()({
   name: "Thing",
   fields: {
-    // @ts-expect-error
-    thing: g.field({
-      type: g.String,
-      // @ts-expect-error
-      resolve() {},
-    }),
-  },
-});
-
-g.object()({
-  name: "Thing",
-  fields: {
     thing: g.field({
       type: g.String,
       resolve() {
@@ -1059,6 +1047,154 @@ g.object<any>()({
 
 type Invariant<T> = (t: T) => T;
 function assertCompatible<A, _B extends A>() {}
+
+{
+  g.field({
+    type: g.String,
+    args: {
+      something: g.arg({
+        type: g.inputObject({
+          name: "InlineSomething",
+          fields: {
+            value: g.arg({ type: g.String }),
+          },
+        }),
+      }),
+    },
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<
+          { readonly value: string | null | undefined } | null | undefined
+        >,
+        Invariant<typeof something>
+      >();
+      return "";
+    },
+  });
+
+  g.field({
+    type: g.String,
+    args: {
+      something: g.arg({
+        type: g.nonNull(
+          g.inputObject({
+            name: "InlineNonNullSomething",
+            fields: {
+              value: g.arg({ type: g.String }),
+            },
+          })
+        ),
+      }),
+    },
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<{ readonly value: string | null | undefined }>,
+        Invariant<typeof something>
+      >();
+      return "";
+    },
+  });
+
+  g.field({
+    type: g.String,
+    args: {
+      something: g.arg({
+        type: g.nonNull(
+          g.inputObject({
+            name: "InlineOneOfSomething",
+            fields: {
+              a: g.arg({ type: g.String }),
+              b: g.arg({ type: g.String }),
+            },
+            isOneOf: true,
+          })
+        ),
+      }),
+    },
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<
+          | {
+              readonly a: string;
+              readonly b?: undefined;
+            }
+          | {
+              readonly b: string;
+              readonly a?: undefined;
+            }
+        >,
+        Invariant<typeof something>
+      >();
+      return "";
+    },
+  });
+
+  g.field({
+    type: g.String,
+    args: {
+      something: g.arg({
+        type: g.nonNull(
+          g.inputObject({
+            name: "InlineNotOneOfSomething",
+            fields: {
+              a: g.arg({ type: g.String }),
+              b: g.arg({ type: g.String }),
+            },
+            isOneOf: false,
+          })
+        ),
+      }),
+    },
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<{
+          readonly a: string | null | undefined;
+          readonly b: string | null | undefined;
+        }>,
+        Invariant<typeof something>
+      >();
+      return "";
+    },
+  });
+
+  g.field({
+    type: g.String,
+    args: {
+      something: g.arg({
+        type: g.nonNull(
+          g.inputObject({
+            name: "InlineMaybeOneOfSomething",
+            fields: {
+              a: g.arg({ type: g.String }),
+              b: g.arg({ type: g.String }),
+            },
+            isOneOf: Math.random() > 0.5,
+          })
+        ),
+      }),
+    },
+    resolve(_, { something }) {
+      assertCompatible<
+        Invariant<
+          | {
+              readonly a: string | null | undefined;
+              readonly b: string | null | undefined;
+            }
+          | {
+              readonly a: string;
+              readonly b?: undefined;
+            }
+          | {
+              readonly b: string;
+              readonly a?: undefined;
+            }
+        >,
+        Invariant<typeof something>
+      >();
+      return "";
+    },
+  });
+}
 
 {
   g.field({
@@ -1335,13 +1471,10 @@ const someInputFields = {
 }
 
 {
-  g.inputObject<typeof someInputFields, boolean>(
-    // @ts-expect-error
-    {
-      name: "Something",
-      fields: someInputFields,
-    }
-  );
+  g.inputObject<typeof someInputFields, boolean>({
+    name: "Something",
+    fields: someInputFields,
+  });
 }
 
 {
@@ -1400,36 +1533,6 @@ const someInputFields = {
           return parent.something;
         },
       }),
-    },
-  });
-}
-
-{
-  const a = {
-    something: g.field({
-      type: g.String,
-      args: {
-        a: g.arg({ type: g.nonNull(g.String) }),
-      },
-      resolve() {
-        return "something";
-      },
-    }),
-    other: g.field({
-      type: g.String,
-      args: {
-        b: g.arg({ type: g.nonNull(g.String) }),
-      },
-      // @ts-expect-error
-      resolve() {},
-    }),
-  };
-  g.object()({
-    name: "Thing",
-    // TODO: see if we can remove this error (but the error above should still exist)
-    // @ts-expect-error
-    fields: {
-      ...a,
     },
   });
 }
@@ -1522,17 +1625,10 @@ const someInputFields = {
     x: g.arg({ type: g.String }),
   };
   {
-    // this error is somewhat unfortunate but it's not a big deal imo
-    // what's going on is that InputType includes GInputObjectType<any, boolean>
-    // so IsOneOf is inferred as boolean
-    // which makes the isOneOf property required (though it can be false)
-    const a: GInputType = g.inputObject(
-      // @ts-expect-error
-      {
-        name: "Something",
-        fields,
-      }
-    );
+    const a: GInputType = g.inputObject({
+      name: "Something",
+      fields,
+    });
     console.log(a);
   }
   {
@@ -1594,13 +1690,10 @@ const someInputFields = {
     console.log(a);
   }
   {
-    const a: GInputType = g.inputObject<typeof fields, boolean>(
-      // @ts-expect-error
-      {
-        name: "Something",
-        fields,
-      }
-    );
+    const a: GInputType = g.inputObject<typeof fields, boolean>({
+      name: "Something",
+      fields,
+    });
     console.log(a);
   }
   {
