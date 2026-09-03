@@ -5,7 +5,9 @@ import {
   printSchema,
 } from "graphql";
 import { gWithContext } from "@graphql-ts/schema";
-import { extend } from ".";
+import assert from "node:assert/strict";
+import test from "node:test";
+import { extend } from "./index.ts";
 
 const g = gWithContext();
 type g<T> = gWithContext.infer<T>;
@@ -15,14 +17,26 @@ const getGql =
   ([source]: TemplateStringsArray) =>
     graphqlSync({ schema, source });
 
-expect.addSnapshotSerializer({
-  test(arg) {
-    return arg instanceof GraphQLSchema;
-  },
-  serialize(val) {
-    return printSchema(val as GraphQLSchema).trim();
-  },
-});
+function assertSchema(schema: GraphQLSchema, expected: string) {
+  const lines = expected.split("\n");
+  while (lines[0]?.trim() === "") lines.shift();
+  while (lines.at(-1)?.trim() === "") lines.pop();
+  const indentation = Math.min(
+    ...lines.filter(Boolean).map((line) => line.match(/^ */)![0].length)
+  );
+  assert.equal(
+    printSchema(schema).trim(),
+    lines.map((line) => line.slice(indentation)).join("\n")
+  );
+}
+
+function assertGraphQLResult(actual: unknown, expected: unknown) {
+  assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
+}
+
+function assertError(callback: () => unknown, expected: string) {
+  assert.throws(callback, { message: expected });
+}
 
 const onlyQuery = new GraphQLSchema({
   query: g.object()({
@@ -49,26 +63,25 @@ test("basic query", () => {
       }),
     },
   })(onlyQuery);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Query {
       thing: String
       hello: String
     }
-  `);
+  `
+  );
   const gql = getGql(extended);
-  expect(gql`
-    query {
-      hello
-      thing
-    }
-  `).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {
-        "hello": "Hello!",
-        "thing": "Thing",
-      },
-    }
-  `);
+  assertGraphQLResult(
+    gql`
+      query {
+        hello
+        thing
+      }
+    `,
+    { data: { hello: "Hello!", thing: "Thing" } }
+  );
 });
 
 test("basic mutation with no existing mutations", () => {
@@ -82,7 +95,9 @@ test("basic mutation with no existing mutations", () => {
       }),
     },
   })(onlyQuery);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Mutation {
       something: String
     }
@@ -90,19 +105,17 @@ test("basic mutation with no existing mutations", () => {
     type Query {
       thing: String
     }
-  `);
+  `
+  );
   const gql = getGql(extended);
-  expect(gql`
-    mutation {
-      something
-    }
-  `).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {
-        "something": "",
-      },
-    }
-  `);
+  assertGraphQLResult(
+    gql`
+      mutation {
+        something
+      }
+    `,
+    { data: { something: "" } }
+  );
 });
 
 test("basic mutation with existing mutations", () => {
@@ -140,7 +153,9 @@ test("basic mutation with existing mutations", () => {
       }),
     },
   })(queryAndMutation);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Query {
       thing: String
     }
@@ -149,19 +164,17 @@ test("basic mutation with existing mutations", () => {
       thing: String
       something: String
     }
-  `);
+  `
+  );
   const gql = getGql(extended);
-  expect(gql`
-    mutation {
-      something
-    }
-  `).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {
-        "something": "",
-      },
-    }
-  `);
+  assertGraphQLResult(
+    gql`
+      mutation {
+        something
+      }
+    `,
+    { data: { something: "" } }
+  );
 });
 
 test("errors when query type is used elsewhere in schema", () => {
@@ -185,21 +198,22 @@ test("errors when query type is used elsewhere in schema", () => {
   const initial = new GraphQLSchema({
     query: Query,
   });
-  expect(() => {
-    extend({
-      mutation: {
-        something: g.field({
-          type: g.String,
-          resolve() {
-            return "";
-          },
-        }),
-      },
-    })(initial);
-  }).toThrowErrorMatchingInlineSnapshot(`
-    "@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
-    - \\"Query\\" is used at \\"Query.other\\""
-  `);
+  assertError(
+    () => {
+      extend({
+        mutation: {
+          something: g.field({
+            type: g.String,
+            resolve() {
+              return "";
+            },
+          }),
+        },
+      })(initial);
+    },
+    `@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
+- "Query" is used at "Query.other"`
+  );
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
@@ -235,21 +249,22 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
     query: Query,
     mutation: Mutation,
   });
-  expect(() => {
-    extend({
-      mutation: {
-        something: g.field({
-          type: g.String,
-          resolve() {
-            return "";
-          },
-        }),
-      },
-    })(initial);
-  }).toThrowErrorMatchingInlineSnapshot(`
-    "@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
-    - \\"Mutation\\" is used at \\"Mutation.other\\""
-  `);
+  assertError(
+    () => {
+      extend({
+        mutation: {
+          something: g.field({
+            type: g.String,
+            resolve() {
+              return "";
+            },
+          }),
+        },
+      })(initial);
+    },
+    `@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
+- "Mutation" is used at "Mutation.other"`
+  );
 });
 
 test("errors when query and mutation type is used elsewhere in schema", () => {
@@ -297,22 +312,23 @@ test("errors when query and mutation type is used elsewhere in schema", () => {
     query: Query,
     mutation: Mutation,
   });
-  expect(() => {
-    extend({
-      mutation: {
-        something: g.field({
-          type: g.String,
-          resolve() {
-            return "";
-          },
-        }),
-      },
-    })(initial);
-  }).toThrowErrorMatchingInlineSnapshot(`
-    "@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
-    - \\"Query\\" is used at \\"Query.other\\", \\"Query.otherBlah\\"
-    - \\"Mutation\\" is used at \\"Mutation.other\\""
-  `);
+  assertError(
+    () => {
+      extend({
+        mutation: {
+          something: g.field({
+            type: g.String,
+            resolve() {
+              return "";
+            },
+          }),
+        },
+      })(initial);
+    },
+    `@graphql-ts/extend doesn't yet support using the query and mutation types in other types but
+- "Query" is used at "Query.other", "Query.otherBlah"
+- "Mutation" is used at "Mutation.other"`
+  );
 });
 
 test("basic query with args", () => {
@@ -329,26 +345,25 @@ test("basic query with args", () => {
       }),
     },
   })(onlyQuery);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Query {
       thing: String
       hello(thing: String): String
     }
-  `);
+  `
+  );
   const gql = getGql(extended);
-  expect(gql`
-    query {
-      hello(thing: "something")
-      thing
-    }
-  `).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {
-        "hello": "something",
-        "thing": "Thing",
-      },
-    }
-  `);
+  assertGraphQLResult(
+    gql`
+      query {
+        hello(thing: "something")
+        thing
+      }
+    `,
+    { data: { hello: "something", thing: "Thing" } }
+  );
 });
 
 test("using an existing object type", () => {
@@ -385,7 +400,9 @@ test("using an existing object type", () => {
       }),
     },
   }))(initial);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Query {
       something: Something
       hello: Something
@@ -394,33 +411,31 @@ test("using an existing object type", () => {
     type Something {
       something: String
     }
-  `);
+  `
+  );
   const gql = getGql(extended);
-  expect(gql`
-    query {
-      hello {
-        something
+  assertGraphQLResult(
+    gql`
+      query {
+        hello {
+          something
+        }
+        something {
+          something
+        }
       }
-      something {
-        something
-      }
-    }
-  `).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {
-        "hello": Object {
-          "something": "Something",
-        },
-        "something": Object {
-          "something": "Something",
-        },
+    `,
+    {
+      data: {
+        hello: { something: "Something" },
+        something: { something: "Something" },
       },
     }
-  `);
+  );
 });
 
 test("errors when no type ", () => {
-  expect(() => {
+  assertError(() => {
     extend((base) => ({
       query: {
         hello: g.field({
@@ -431,9 +446,7 @@ test("errors when no type ", () => {
         }),
       },
     }))(onlyQuery);
-  }).toThrowErrorMatchingInlineSnapshot(
-    `"No type named \\"Something\\" exists in the schema that is being extended"`
-  );
+  }, `No type named "Something" exists in the schema that is being extended`);
 });
 
 test("errors when the type isn't an object type", () => {
@@ -460,7 +473,7 @@ test("errors when the type isn't an object type", () => {
       },
     }),
   });
-  expect(() => {
+  assertError(() => {
     extend((base) => ({
       query: {
         hello: g.field({
@@ -471,9 +484,7 @@ test("errors when the type isn't an object type", () => {
         }),
       },
     }))(initial);
-  }).toThrowErrorMatchingInlineSnapshot(
-    `"There is a type named \\"Something\\" in the schema being extended but it is not an object type"`
-  );
+  }, `There is a type named "Something" in the schema being extended but it is not an object type`);
 });
 
 test(".scalar throws for built-in scalars", () => {
@@ -490,7 +501,7 @@ test(".scalar throws for built-in scalars", () => {
       },
     }),
   });
-  expect(() => {
+  assertError(() => {
     extend((base) => ({
       query: {
         hello: g.field({
@@ -501,9 +512,7 @@ test(".scalar throws for built-in scalars", () => {
         }),
       },
     }))(initial);
-  }).toThrowErrorMatchingInlineSnapshot(
-    `"The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but String was passed"`
-  );
+  }, `The names of built-in scalars cannot be passed to BaseSchemaInfo.scalar but String was passed`);
 });
 
 test(".scalar works for custom scalars", () => {
@@ -535,14 +544,17 @@ test(".scalar works for custom scalars", () => {
       }),
     },
   }))(initial);
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
     type Query {
       something: Something
       hello: Something
     }
 
     scalar Something
-  `);
+  `
+  );
 });
 
 test("a good error when there is already a field with the same name in the original type", () => {
@@ -559,24 +571,25 @@ test("a good error when there is already a field with the same name in the origi
       },
     }),
   });
-  expect(() => {
-    extend({
-      query: {
-        something: g.field({
-          type: g.Int,
-          resolve() {
-            return 1;
-          },
-        }),
-      },
-    })(initial);
-  }).toThrowErrorMatchingInlineSnapshot(`
-    "The schema extension defines a field \\"something\\" on the \\"Query\\" type but that type already defines a field with that name.
-    The original field:
-    something: String
-    The field added by the extension:
-    something: Int"
-  `);
+  assertError(
+    () => {
+      extend({
+        query: {
+          something: g.field({
+            type: g.Int,
+            resolve() {
+              return 1;
+            },
+          }),
+        },
+      })(initial);
+    },
+    `The schema extension defines a field "something" on the "Query" type but that type already defines a field with that name.
+The original field:
+something: String
+The field added by the extension:
+something: Int`
+  );
 });
 
 test("a good error when multiple extensions add a field with the same name", () => {
@@ -593,29 +606,30 @@ test("a good error when multiple extensions add a field with the same name", () 
       },
     }),
   });
-  expect(() => {
-    extend([
-      {
-        query: {
-          another: g.field({ type: g.Int, resolve: () => 1 }),
+  assertError(
+    () => {
+      extend([
+        {
+          query: {
+            another: g.field({ type: g.Int, resolve: () => 1 }),
+          },
         },
-      },
-      {
-        query: {
-          another: g.field({
-            type: g.Boolean,
-            resolve: () => true,
-          }),
+        {
+          query: {
+            another: g.field({
+              type: g.Boolean,
+              resolve: () => true,
+            }),
+          },
         },
-      },
-    ])(initial);
-  }).toThrowErrorMatchingInlineSnapshot(`
-    "More than one extension defines a field named \\"another\\" on the query type.
-    The first field:
-    another: Boolean
-    The second field:
-    another: Int"
-  `);
+      ])(initial);
+    },
+    `More than one extension defines a field named "another" on the query type.
+The first field:
+another: Boolean
+The second field:
+another: Int`
+  );
 });
 
 test("multiple extensions work", () => {
@@ -648,11 +662,14 @@ test("multiple extensions work", () => {
     },
   ])(initial);
 
-  expect(extended).toMatchInlineSnapshot(`
+  assertSchema(
+    extended,
+    `
 type Query {
   something: String
   another: Int
   alwaysTrue: Boolean
 }
-`);
+`
+  );
 });

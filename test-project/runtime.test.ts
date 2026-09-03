@@ -1,5 +1,7 @@
 import { gWithContext } from "@graphql-ts/schema";
 import { GraphQLSchema, graphql } from "graphql";
+import assert from "node:assert/strict";
+import test from "node:test";
 
 const g = gWithContext();
 type g<T> = gWithContext.infer<T>;
@@ -23,5 +25,7 @@ test("a basic schema works", async () => {
     schema: graphQLSchema,
     source: "query { hello }",
   });
-  expect(result).toEqual({ data: { hello: "something" } });
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), {
+    data: { hello: "something" },
+  });
 });

@@ -17,20 +17,19 @@ import {
   isUnionType,
   getNamedType,
   GraphQLObjectType,
-  GraphQLFieldConfigMap,
+  type GraphQLFieldConfigMap,
   isInputObjectType,
   isEnumType,
   isScalarType,
   specifiedScalarTypes,
   printType,
   parse,
-  ObjectTypeDefinitionNode,
+  type ObjectTypeDefinitionNode,
   print,
 } from "graphql";
 
-import {
+import type {
   GField,
-  GObjectType,
   GArg,
   GEnumType,
   GUnionType,
@@ -39,6 +38,7 @@ import {
   GOutputType,
   GInputObjectType,
 } from "@graphql-ts/schema";
+import { GObjectType } from "@graphql-ts/schema";
 
 const builtinScalars = new Set(specifiedScalarTypes.map((x) => x.name));
 
@@ -433,8 +433,8 @@ export type Extension = {
 export type BaseSchemaMeta = {
   schema: GraphQLSchema;
   /**
-   * Gets an {@link GObjectType object type} from the existing GraphQL schema. If
-   * there is no object type in the existing schema with the name passed, an
+   * Gets an {@link GObjectType object type} from the existing GraphQL schema.
+   * If there is no object type in the existing schema with the name passed, an
    * error will be thrown.
    *
    * ```ts
@@ -454,9 +454,9 @@ export type BaseSchemaMeta = {
    */
   object(name: string): GObjectType<unknown, unknown>;
   /**
-   * Gets an {@link GInputObjectType input object type} from the existing GraphQL
-   * schema. If there is no input object type in the existing schema with the
-   * name passed, an error will be thrown.
+   * Gets an {@link GInputObjectType input object type} from the existing
+   * GraphQL schema. If there is no input object type in the existing schema
+   * with the name passed, an error will be thrown.
    *
    * ```ts
    * const originalSchema = new GraphQLSchema({ ...etc });

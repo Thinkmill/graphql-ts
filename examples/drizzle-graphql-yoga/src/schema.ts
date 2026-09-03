@@ -1,6 +1,6 @@
 import { GraphQLSchema } from "graphql";
-import { g } from "./g.js";
-import * as dbSchema from "./db-schema.js";
+import { g } from "./g.ts";
+import * as dbSchema from "./db-schema.ts";
 import { eq } from "drizzle-orm";
 
 const Todo = g.object<typeof dbSchema.todo.$inferSelect>()({
@@ -28,7 +28,7 @@ const Query = g.object()({
       },
       resolve(_root, args, ctx) {
         return ctx.db.query.todo.findFirst({
-          where: eq(dbSchema.todo.id, args.id),
+          where: { id: args.id },
         });
       },
     }),

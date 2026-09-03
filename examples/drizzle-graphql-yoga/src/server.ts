@@ -1,8 +1,8 @@
 import { createYoga } from "graphql-yoga";
 import { createServer } from "http";
-import { schema } from "./schema.js";
-import type { Context } from "./g.js";
-import { createDb } from "./db.js";
+import { schema } from "./schema.ts";
+import type { Context } from "./g.ts";
+import { createDb } from "./db.ts";
 
 const yoga = createYoga({
   schema,

@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "eslint"],
+  "jsPlugins": ["./eslint-plugin-esm-imports.mjs"],
+  "categories": {
+    "correctness": "off"
+  },
+  "rules": {
+    "import/consistent-type-specifier-style": [
+      "error",
+      "prefer-top-level-if-only-type-imports"
+    ],
+    "typescript/consistent-type-imports": [
+      "error",
+      { "fixStyle": "inline-type-imports", "disallowTypeAnnotations": false }
+    ],
+    "esm-imports/node-esm-imports": "error"
+  },
+  "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": ["dist"]
+}
