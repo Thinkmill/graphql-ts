@@ -4,9 +4,10 @@ packages:
   - "site"
   - "examples/*"
 allowBuilds:
-  better-sqlite3: false
   esbuild: false
   workerd: true
+
+linkWorkspacePackages: true
 
 overrides:
   "@types/hast": "3.0.5"
