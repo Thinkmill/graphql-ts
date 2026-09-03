@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   versioning:
     name: Pull Request
@@ -18,8 +22,6 @@ jobs:
 
       - uses: ./.github/actions/setup-deps
 
-      - uses: changesets/action@v1
+      - uses: changesets/action@v2
         with:
-          version: pnpm run version-packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version-script: pnpm run version-packages
