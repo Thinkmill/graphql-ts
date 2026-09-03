@@ -9,6 +9,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
+    "allowImportingTsExtensions": true,
     "types": ["node"]
   },
   "include": ["**/*"],
