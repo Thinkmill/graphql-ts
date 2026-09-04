@@ -7,6 +7,7 @@ import {
   type GEnumType,
   type GInputObjectType,
   type GInputType,
+  type GInterfaceField,
   type GInterfaceType,
   type GNonNull,
   type GObjectType,
@@ -19,11 +20,15 @@ import {
 import { extend } from "@graphql-ts/extend";
 import type {
   GraphQLEnumType,
+  GraphQLFieldConfigMap,
   GraphQLFieldExtensions,
+  GraphQLFieldMap,
+  GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLScalarType,
+  GraphQLTypeResolver,
   GraphQLUnionType,
 } from "graphql";
 
@@ -1857,6 +1862,40 @@ const someInputFields = {
     Invariant<GraphQLInterfaceType>
   >();
 
+  type InterfaceSource = { id: string };
+  type InterfaceContext = { requestId: string };
+  type InterfaceFields = {
+    id: GInterfaceField<{}, GScalarType<string, string>, InterfaceContext>;
+  };
+  const interfaceType = undefined! as GInterfaceType<
+    InterfaceSource,
+    InterfaceFields,
+    InterfaceContext
+  >;
+  assertCompatible<
+    Invariant<GraphQLFieldMap<InterfaceSource, InterfaceContext>>,
+    Invariant<ReturnType<typeof interfaceType.getFields>>
+  >();
+  const interfaceConfig = interfaceType.toConfig();
+  assertCompatible<
+    GraphQLFieldConfigMap<InterfaceSource, InterfaceContext>,
+    typeof interfaceConfig.fields
+  >();
+  expectType<
+    GraphQLTypeResolver<InterfaceSource, InterfaceContext> | null | undefined
+  >(interfaceConfig.resolveType);
+  assertCompatible<GraphQLInterfaceType, typeof interfaceType>();
+  assertCompatible<
+    typeof interfaceType,
+    // @ts-expect-error precise interface fields are GraphQL-TS-only information
+    GraphQLInterfaceType
+  >();
+
+  const unionType = undefined! as GUnionType<InterfaceSource, InterfaceContext>;
+  expectType<
+    GraphQLTypeResolver<InterfaceSource, InterfaceContext> | null | undefined
+  >(unionType.toConfig().resolveType);
+
   assertCompatible<
     Invariant<GEnumType<Record<string, unknown>>>,
     Invariant<GraphQLEnumType>
@@ -1873,6 +1912,17 @@ const someInputFields = {
     GraphQLEnumType
   >();
   assertCompatible<GraphQLEnumType, GEnumType<{ a: "a"; b: "b" }>>();
+
+  type PreciseInputObject = GInputObjectType<
+    { value: GArg<GScalarType<string, string>> },
+    false
+  >;
+  assertCompatible<GraphQLInputObjectType, PreciseInputObject>();
+  assertCompatible<
+    PreciseInputObject,
+    // @ts-expect-error precise input fields are GraphQL-TS-only information
+    GraphQLInputObjectType
+  >();
 
   const x: GInputObjectType<Record<string, GArg<any>>, boolean> = undefined!;
 
