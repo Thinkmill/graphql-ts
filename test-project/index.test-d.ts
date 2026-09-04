@@ -667,6 +667,25 @@ g.arg<typeof g.String, string>({
   defaultValue: "legacy",
 });
 
+{
+  const input = g.inputObject({
+    name: "ResolvedDefaults",
+    fields: {
+      optional: g.arg({ type: g.String }),
+      defaulted: g.arg({ type: g.String, defaultValue: "legacy" }),
+    },
+  });
+  const fields = input.getFields();
+  assertCompatible<
+    Invariant<string | null | undefined>,
+    Invariant<InferValueFromArg<typeof fields.optional>>
+  >();
+  assertCompatible<
+    Invariant<string | null>,
+    Invariant<InferValueFromArg<typeof fields.defaulted>>
+  >();
+}
+
 // @ts-expect-error explicitly selecting a defaultValue type requires defaultValue
 g.arg<typeof g.String, string>({
   type: g.String,
