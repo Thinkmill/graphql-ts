@@ -10,6 +10,7 @@ export default defineEcConfig({
       twoslashOptions: {
         compilerOptions: {
           lib: undefined,
+          ignoreDeprecations: "6.0",
         },
       },
     }),

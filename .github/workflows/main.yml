@@ -7,16 +7,31 @@ on:
   pull_request:
 
 jobs:
-  typescript:
-    name: TypeScript
+  compatibility:
+    name: Compatibility (GraphQL ${{ matrix.graphql }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        graphql: ["16.0.0", "16.14.2"]
     steps:
       - uses: actions/checkout@main
 
       - uses: ./.github/actions/setup-deps
+        with:
+          graphql-version: ${{ matrix.graphql }}
+
+      - name: Verify GraphQL.js Version
+        run: |
+          actual_version="$(pnpm --filter @graphql-ts/schema exec node -p 'require("graphql").version')"
+          test "$actual_version" = "${{ matrix.graphql }}"
 
       - name: Check Types
         run: pnpm run all:types
+
+      - name: Tests
+        run: pnpm run test
+
   linting:
     name: Linting
     runs-on: ubuntu-latest
@@ -27,13 +42,3 @@ jobs:
 
       - name: Linting
         run: pnpm run lint
-  tests:
-    name: Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-
-      - uses: ./.github/actions/setup-deps
-
-      - name: Tests
-        run: pnpm run test

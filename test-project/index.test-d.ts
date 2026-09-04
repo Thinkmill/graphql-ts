@@ -1914,7 +1914,8 @@ const someInputFields = {
 
   assertCompatible<
     Invariant<GInputObjectType<Record<string, GArg<any>>, boolean>>,
-    Invariant<GraphQLInputObjectType>
+    // Older GraphQL versions lack the isOneOf property refined by GInputObjectType.
+    Invariant<GraphQLInputObjectType & { isOneOf: boolean }>
   >();
 
   assertCompatible<

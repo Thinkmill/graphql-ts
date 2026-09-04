@@ -1,4 +1,8 @@
 name: "Setup Dependencies"
+inputs:
+  graphql-version:
+    description: "GraphQL.js version to force across the workspace"
+    required: false
 runs:
   using: "composite"
   steps:
@@ -16,5 +20,31 @@ runs:
         cache: pnpm
 
     - name: Install Dependencies
+      if: inputs.graphql-version == ''
       run: pnpm install
+      shell: bash
+
+    - name: Install Dependencies with GraphQL Version Override
+      if: inputs.graphql-version != ''
+      env:
+        GRAPHQL_VERSION: ${{ inputs.graphql-version }}
+      run: |
+        node -e '
+          const fs = require("node:fs");
+          const path = "pnpm-workspace.yaml";
+          const source = fs.readFileSync(path, "utf8");
+          const marker = "overrides:\n";
+          if (!source.includes(marker)) {
+            throw new Error(`Could not find ${marker.trim()} in ${path}`);
+          }
+          fs.writeFileSync(
+            path,
+            source.replace(
+              marker,
+              `${marker}  graphql: "${process.env.GRAPHQL_VERSION}"\n`,
+            ),
+          );
+        '
+        # Preserve locked versions for unrelated dependencies and their patches.
+        pnpm install --no-frozen-lockfile
       shell: bash
