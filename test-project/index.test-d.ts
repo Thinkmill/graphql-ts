@@ -1901,6 +1901,12 @@ const someInputFields = {
   >();
   const interfaceConfig = interfaceType.toConfig();
   assertCompatible<
+    Invariant<"id">,
+    Invariant<keyof typeof interfaceConfig.fields>
+  >();
+  // @ts-expect-error unknown interface fields must not be accepted
+  interfaceConfig.fields.typo;
+  assertCompatible<
     GraphQLFieldConfigMap<InterfaceSource, InterfaceContext>,
     typeof interfaceConfig.fields
   >();
@@ -1935,6 +1941,14 @@ const someInputFields = {
     GraphQLEnumType
   >();
   assertCompatible<GraphQLEnumType, GEnumType<{ a: "a"; b: "b" }>>();
+  const enumType = undefined! as GEnumType<{ a: "a"; b: "b" }>;
+  const enumConfig = enumType.toConfig();
+  assertCompatible<
+    Invariant<"a" | "b">,
+    Invariant<keyof typeof enumConfig.values>
+  >();
+  // @ts-expect-error unknown enum values must not be accepted
+  enumConfig.values.typo;
 
   type PreciseInputObject = GInputObjectType<
     { value: GArg<GScalarType<string, string>> },
