@@ -10,6 +10,7 @@
     "examples/**",
     "site/**",
     "**/node_modules/**",
-    "test-project/typescript-6.test-d.ts"
+    "test-project/typescript-6.test-d.ts",
+    "test-project/graphql-16/**"
   ]
 }

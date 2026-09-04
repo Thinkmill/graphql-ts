@@ -29,6 +29,10 @@ jobs:
       - name: Check Types
         run: pnpm run all:types
 
+      - name: Check GraphQL 16 Type Contracts
+        if: startsWith(matrix.graphql, '16.')
+        run: pnpm run graphql16:types
+
       - name: Tests
         run: pnpm run test
 

@@ -8,7 +8,6 @@ import {
   type GInputObjectType,
   type GInputType,
   type GInterfaceType,
-  type GList,
   type GNonNull,
   type GObjectType,
   type GScalarType,
@@ -21,10 +20,7 @@ import { extend } from "@graphql-ts/extend";
 import type {
   GraphQLEnumType,
   GraphQLFieldExtensions,
-  GraphQLInputObjectType,
   GraphQLInterfaceType,
-  GraphQLList,
-  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLScalarType,
@@ -1877,62 +1873,6 @@ const someInputFields = {
     GraphQLEnumType
   >();
   assertCompatible<GraphQLEnumType, GEnumType<{ a: "a"; b: "b" }>>();
-
-  assertCompatible<
-    Invariant<GNonNull<GScalarType<string, string>>>,
-    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
-    // without this, GNonNull would be assignable to GList which is the stricter getter exists
-    // @ts-expect-error
-    Invariant<GraphQLNonNull<GScalarType<string, string>>>
-  >();
-  assertCompatible<
-    GraphQLNonNull<GScalarType<string, string>>,
-    GNonNull<GScalarType<string, string>>
-  >();
-  assertCompatible<
-    GNonNull<GScalarType<string, string>>,
-    // @ts-expect-error
-    GraphQLNonNull<GScalarType<string, string>>
-  >();
-
-  assertCompatible<
-    Invariant<GList<GScalarType<string, string>>>,
-    // this error is expected since GNonNull's Symbol.toStringTag getter is more strict than GraphQLNonNull's
-    // without this, GNonNull would be assignable to GList which is the stricter getter exists
-    // @ts-expect-error
-    Invariant<GraphQLList<GScalarType<string, string>>>
-  >();
-  assertCompatible<
-    GraphQLList<GScalarType<string, string>>,
-    GList<GScalarType<string, string>>
-  >();
-  assertCompatible<
-    GList<GScalarType<string, string>>,
-    // @ts-expect-error
-    GraphQLList<GScalarType<string, string>>
-  >();
-
-  assertCompatible<
-    Invariant<GInputObjectType<Record<string, GArg<any>>, boolean>>,
-    // Older GraphQL versions lack the isOneOf property refined by GInputObjectType.
-    Invariant<GraphQLInputObjectType & { isOneOf: boolean }>
-  >();
-
-  assertCompatible<
-    Invariant<GInputObjectType<Record<string, GArg<GInputType>>, boolean>>,
-    // the error essentially ... makes sense due to the non null/list differences
-    // @ts-expect-error
-    Invariant<GraphQLInputObjectType>
-  >();
-  assertCompatible<
-    GraphQLInputObjectType,
-    GInputObjectType<Record<string, GArg<GInputType>>, boolean>
-  >();
-  assertCompatible<
-    GInputObjectType<Record<string, GArg<GInputType>>, boolean>,
-    // @ts-expect-error
-    GraphQLInputObjectType
-  >();
 
   const x: GInputObjectType<Record<string, GArg<any>>, boolean> = undefined!;
 
