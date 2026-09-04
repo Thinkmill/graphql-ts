@@ -1,5 +1,11 @@
 # @graphql-ts/schema
 
+## 1.0.3
+
+### Patch Changes
+
+- [#68](https://github.com/Thinkmill/graphql-ts/pull/68) [`d51a0b8`](https://github.com/Thinkmill/graphql-ts/commit/d51a0b812907918c3f50b7e67280de8ad80689c9) Thanks [@emmatown](https://github.com/emmatown)! - Fix inference issues with `isOneOf` where `isOneOf` would become required unnecessarily
+
 ## 1.0.2
 
 ### Patch Changes
