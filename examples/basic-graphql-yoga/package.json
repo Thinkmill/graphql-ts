@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@graphql-ts/schema": "^1.0.2",
+    "@graphql-ts/schema": "^1.0.3",
     "graphql": "^16.3.0",
     "graphql-yoga": "^5.22.0"
   },
