@@ -133,7 +133,13 @@ export function extend(
                   )} in the schema being extended but it is not an input object type`
                 );
               }
-              return graphQLType;
+              // GraphQL versions before isOneOf was added do not expose the
+              // property refined by GInputObjectType, but this broad return type
+              // remains the compatibility boundary for existing schema types.
+              return graphQLType as GInputObjectType<
+                Record<string, GArg<any, boolean>>,
+                boolean
+              >;
             },
             enum(name) {
               const graphQLType = getType(name);
