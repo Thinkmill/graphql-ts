@@ -32,6 +32,10 @@ import {
   type InferValueFromOutputType,
   type InferValueFromArgs,
   type InferValueFromInputType,
+  type InferExternalValueFromInputType,
+  type GraphQLDefaultInput,
+  type LegacyDefaultValue,
+  type NativeDefault,
 } from "./types.js";
 import {
   GraphQLBoolean,
@@ -57,6 +61,24 @@ type ImpliedResolver<
     ) => InferValueFromOutputType<Type>);
 
 type Maybe<T> = T | null | undefined;
+
+type RefineGraphQLDefaultInput<Type extends GInputType, Input> = Input extends {
+  value: unknown;
+}
+  ? Input & { value: InferExternalValueFromInputType<Type> }
+  : Input;
+
+type NativeDefaultInput<Type extends GInputType> = RefineGraphQLDefaultInput<
+  Type,
+  GraphQLDefaultInput
+>;
+
+type HasDefaultValue<DefaultValue, DefaultInput> =
+  DefaultValue extends undefined
+    ? DefaultInput extends undefined
+      ? false
+      : true
+    : true;
 
 type FieldFuncArgs<
   Source,
@@ -636,23 +658,31 @@ export type GWithContext<Context> = {
    *   }
    * `;
    * ```
+   *
+   * With GraphQL 17, `default` accepts uncoerced input or a GraphQL literal. On
+   * GraphQL 16, use `defaultValue`, which accepts an already-coerced value.
+   *
+   * Scalar values in `default: { value: ... }` are checked against the scalar's
+   * serialized output type, which may not cover every input it accepts at
+   * runtime. For example, use a string for an `ID` default rather than an
+   * integer. See {@link InferExternalValueFromInputType} for details.
    */
   arg: <
     Type extends GInputType,
     DefaultValue extends InferValueFromInputType<Type> | undefined = undefined,
+    DefaultInput extends NativeDefaultInput<Type> | undefined = undefined,
   >(
     arg: Flatten<
       {
         type: Type;
       } & Omit<
         GraphQLInputFieldConfig & GraphQLArgumentConfig,
-        "type" | "defaultValue"
+        "type" | "defaultValue" | "default"
       >
     > &
-      (undefined extends DefaultValue
-        ? { defaultValue?: DefaultValue }
-        : { defaultValue: DefaultValue })
-  ) => GArg<Type, DefaultValue extends undefined ? false : true>;
+      LegacyDefaultValue<DefaultValue> &
+      NativeDefault<DefaultInput>
+  ) => GArg<Type, HasDefaultValue<DefaultValue, DefaultInput>>;
   /**
    * Creates an {@link GInputObjectType input object type}
    *
