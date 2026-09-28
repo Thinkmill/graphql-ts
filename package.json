@@ -26,6 +26,7 @@
     "types": "tsc",
     "all:types": "pnpm run /^types.*/ && pnpm -r run types",
     "graphql16:types": "tsc -p test-project/graphql-16/tsconfig.json && ./node_modules/ts-5-7/bin/tsc -p test-project/graphql-16/tsconfig.json",
+    "graphql17:types": "tsc -p test-project/graphql-17/tsconfig.json && ./node_modules/ts-5-7/bin/tsc -p test-project/graphql-17/tsconfig.json",
     "lint": "oxlint . && oxfmt --check .",
     "site": "cd site && pnpm dev",
     "build": "preconstruct build",

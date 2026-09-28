@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        graphql: ["16.0.0", "16.14.2"]
+        graphql: ["16.0.0", "16.14.2", "17.0.2"]
     steps:
       - uses: actions/checkout@main
 
@@ -28,6 +28,10 @@ jobs:
 
       - name: Check Types
         run: pnpm run all:types
+
+      - name: Check GraphQL 17 Type Contracts
+        if: matrix.graphql == '17.0.2'
+        run: pnpm run graphql17:types
 
       - name: Check GraphQL 16 Type Contracts
         if: startsWith(matrix.graphql, '16.')
