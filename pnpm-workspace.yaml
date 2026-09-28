@@ -9,6 +9,10 @@ allowBuilds:
 
 linkWorkspacePackages: true
 
+minimumReleaseAgeExclude:
+  - miniflare@5.20260926.0-alpha
+  - wrangler@4.142.0
+
 overrides:
   "@types/hast": "3.0.5"
   satteri: "0.10.5"
