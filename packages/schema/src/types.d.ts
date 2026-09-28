@@ -18,6 +18,7 @@ import type {
   GraphQLInputFieldExtensions,
   GraphQLInputObjectType,
   GraphQLInputObjectTypeConfig,
+  GraphQLInputType,
   GraphQLInterfaceType,
   GraphQLInterfaceTypeConfig,
   GraphQLList,
@@ -38,6 +39,15 @@ type Maybe<T> = T | null | undefined;
 
 export type GraphQLDefaultInput = GraphQLArgumentConfig["default" &
   keyof GraphQLArgumentConfig];
+
+// Preserve GraphQL.js's property metadata, including deprecation annotations.
+export type LegacyDefaultValue<
+  Value,
+  IsRequired extends boolean = undefined extends Value ? false : true,
+> = Pick<GraphQLArgumentConfig, "defaultValue"> &
+  (IsRequired extends true
+    ? { defaultValue: Value }
+    : { defaultValue?: Value });
 
 export type NativeDefault<
   Value,
@@ -136,23 +146,76 @@ type InferValueFromNullableInputType<Type extends GInputType> =
             : Record<string, unknown>
           : never;
 
-type InferValueForOneOf<
-  T extends { [key: string]: { type: GInputType } },
-  Key extends keyof T = keyof T,
-> = Flatten<
+type InferExternalValueFromNullableInputType<Type extends GInputType> =
+  // Broad input types have no known external shape. Expanding them as lists
+  // would recursively infer their elements without reaching a concrete type.
+  GNullableInputType extends Type
+    ? unknown
+    : Type extends GraphQLScalarType<any, infer Value>
+      ? Value
+      : Type extends GraphQLEnumType
+        ? Type extends GEnumType<infer Values>
+          ? keyof Values & string
+          : unknown
+        : Type extends GList<infer Value extends GInputType>
+          ? // A null input represents a null list, not a singleton null element.
+            | Exclude<InferExternalValueFromInputType<Value>, null>
+            | (object & Iterable<InferExternalValueFromInputType<Value>>)
+          : Type extends GraphQLInputObjectType
+            ? Type extends GInputObjectType<infer Fields, infer IsOneOf>
+              ? IsOneOf extends true
+                ? InferExternalValueForOneOf<Fields>
+                : InferExternalValueFromArgs<Fields>
+              : Record<string, unknown>
+            : never;
+
+type OneOf<Values, Key extends keyof Values = keyof Values> = Flatten<
   Key extends unknown
     ? {
-        readonly [K in Key]: InferValueFromNullableInputType<T[K]["type"]>;
+        readonly [K in Key]: Values[K];
       } & {
-        readonly [K in Exclude<keyof T, Key>]?: never;
+        readonly [K in Exclude<keyof Values, Key>]?: never;
       }
     : never
 >;
+
+type InferValueForOneOf<T extends { [key: string]: { type: GInputType } }> =
+  OneOf<{
+    [K in keyof T]: InferValueFromNullableInputType<T[K]["type"]>;
+  }>;
+
+type InferExternalValueForOneOf<
+  T extends { [key: string]: { type: GInputType } },
+> = OneOf<{
+  [K in keyof T]: InferExternalValueFromNullableInputType<T[K]["type"]>;
+}>;
 
 export type InferValueFromArgs<Args extends Record<string, GArg<GInputType>>> =
   {
     readonly [Key in keyof Args]: InferValueFromArg<Args[Key]>;
   } & {};
+
+type RequiredExternalArgKeys<Args extends Record<string, GArg<GInputType>>> = {
+  // Coercion fills defaults and permits omitted nullable fields.
+  [Key in keyof Args]: Args[Key]["type"] extends GNonNull<any>
+    ? Args[Key] extends GArg<any, true>
+      ? never
+      : Key
+    : never;
+}[keyof Args];
+
+type InferExternalValueFromArgs<Args extends Record<string, GArg<GInputType>>> =
+  Flatten<
+    {
+      readonly [
+        Key in RequiredExternalArgKeys<Args>
+      ]: InferExternalValueFromInputType<Args[Key]["type"]>;
+    } & {
+      readonly [Key in Exclude<keyof Args, RequiredExternalArgKeys<Args>>]?:
+        | InferExternalValueFromInputType<Args[Key]["type"]>
+        | undefined;
+    }
+  >;
 
 export type InferValueFromArg<Arg extends GArg<GInputType>> =
   // the distribution technically only needs to be around the AddUndefined
@@ -163,16 +226,39 @@ export type InferValueFromArg<Arg extends GArg<GInputType>> =
   Arg extends unknown
     ?
         | InferValueFromInputType<Arg["type"]>
-        | AddUndefined<Arg["type"], Arg["defaultValue"]>
+        | (Arg extends GArg<Arg["type"], true>
+            ? never
+            : AddUndefined<Arg["type"]>)
     : never;
 
-type AddUndefined<TInputType extends GInputType, DefaultValue> =
-  TInputType extends GNonNull<any> ? never : DefaultValue & undefined;
+type AddUndefined<TInputType extends GInputType> =
+  TInputType extends GNonNull<any> ? never : undefined;
 
 export type InferValueFromInputType<Type extends GInputType> =
   Type extends GNonNull<infer Value extends GNullableInputType>
     ? InferValueFromNullableInputType<Value>
     : InferValueFromNullableInputType<Type> | null;
+
+/**
+ * Infers the externally represented value accepted by input coercion for an
+ * input type.
+ *
+ * This differs from `InferValueFromInputType`, which infers the internal value
+ * passed to resolvers after scalar and enum coercion.
+ *
+ * For scalars, this uses the serialized output type (the second type parameter
+ * of `GraphQLScalarType`) as an approximation of accepted input. GraphQL.js
+ * does not encode accepted input types separately, so some values accepted at
+ * runtime may be excluded. For example, `ID` is typed as `string` even though
+ * it also accepts integer inputs. Custom scalars whose accepted inputs differ
+ * from their serialized outputs have the same limitation.
+ */
+export type InferExternalValueFromInputType<Type extends GInputType> =
+  GInputType extends Type
+    ? unknown
+    : Type extends GNonNull<infer Value extends GNullableInputType>
+      ? InferExternalValueFromNullableInputType<Value>
+      : InferExternalValueFromNullableInputType<Type> | null;
 
 /**
  * A GraphQL output field for an {@link GObjectType object type} which should be
@@ -351,6 +437,17 @@ export type GInterfaceTypeConfig<
   } & Omit<GraphQLInterfaceTypeConfig<Source, Context>, "interfaces" | "fields">
 >;
 
+type GArgDefaults<HasDefaultValue extends boolean> =
+  HasDefaultValue extends true
+    ?
+        | (LegacyDefaultValue<{} | null, true> &
+            NativeDefault<GraphQLDefaultInput, false>)
+        | ("default" extends keyof GraphQLArgumentConfig
+            ? LegacyDefaultValue<undefined, false> &
+                NativeDefault<Exclude<GraphQLDefaultInput, undefined>, true>
+            : never)
+    : LegacyDefaultValue<undefined, false> & NativeDefault<undefined, false>;
+
 /**
  * A GraphQL argument. These should be created with {@link g.arg}
  *
@@ -408,12 +505,8 @@ export type GInterfaceTypeConfig<
 export type GArg<
   Type extends GInputType,
   HasDefaultValue extends boolean = boolean,
-> = {
+> = GArgDefaults<HasDefaultValue> & {
   type: Type;
-  defaultValue: {
-    true: {} | null;
-    false: undefined;
-  }[`${HasDefaultValue}`];
   description?: Maybe<string>;
   deprecationReason?: Maybe<string>;
   extensions?: Maybe<GraphQLInputFieldExtensions & GraphQLArgumentExtensions>;
@@ -434,6 +527,25 @@ export type GInputObjectTypeConfig<
 > &
   (false extends IsOneOf ? { isOneOf?: IsOneOf } : { isOneOf: IsOneOf });
 
+type ResolvedInputFieldDefaults<Arg extends GArg<GInputType>> =
+  // Broad fields must still accept native GraphQLInputField instances.
+  GArg<Arg["type"]> extends Arg
+    ? {}
+    : // Preserve the alternative ways a concrete field can have a default.
+      Arg extends unknown
+      ? Pick<Arg, "defaultValue" | ("default" & keyof Arg)>
+      : never;
+
+// Override the type property instead of intersecting it with GraphQLInputType,
+// which loses scalar inference when a resolved field is reused as an argument.
+interface TypedInputField<
+  Type extends GraphQLInputType,
+  DefaultValue,
+> extends GraphQLInputField {
+  type: Type;
+  defaultValue: DefaultValue;
+}
+
 /**
  * A GraphQL input object type. This should generally be constructed with
  * {@link g.inputObject}.
@@ -453,10 +565,11 @@ export class GInputObjectType<
   isOneOf: IsOneOf;
   constructor(config: Readonly<GInputObjectTypeConfig<Fields, IsOneOf>>);
   getFields(): {
-    [K in keyof Fields]: GraphQLInputField & {
-      type: Fields[K]["type"];
-      defaultValue: Fields[K]["defaultValue"];
-    };
+    [K in keyof Fields]: TypedInputField<
+      Fields[K]["type"],
+      Fields[K]["defaultValue"]
+    > &
+      ResolvedInputFieldDefaults<Fields[K]>;
   };
 }
 
@@ -533,12 +646,13 @@ type GListToStringTag =
  * exactly the same as it's counterpart `g.nonNull` so it is safe to use
  * directly if desired.
  *
- * Also unlike the named types in this module, the original
+ * On GraphQL 17, native and wrapped non-null types are mutually assignable. On
+ * GraphQL 16, unlike the named types in this module, the original
  * {@link GraphQLNonNull `GraphQLNonNull`} type from the `graphql` package
  * cannot be assigned to a variable of type `GNonNull`. Though `GNonNull` _is_
  * assignable to `GraphQLNonNull`.
  *
- * For example, the following code will not compile:
+ * For example, on GraphQL 16 the following code will not compile:
  *
  * ```ts
  * const nonNull: GNonNull<GScalarType<string>> = new GraphQLNonNull(
@@ -571,12 +685,13 @@ export class GNonNull<
  * exactly the same as it's counterpart `g.list` so it is safe to use directly
  * if desired.
  *
- * Also unlike the named types in this module, the original
+ * On GraphQL 17, native and wrapped list types are mutually assignable. On
+ * GraphQL 16, unlike the named types in this module, the original
  * {@link GraphQLList `GraphQLList`} type from the `graphql` package cannot be
  * assigned to a variable of type `GList`. Though `GList` _is_ assignable to
  * `GraphQLList`.
  *
- * For example, the following code will not compile:
+ * For example, on GraphQL 16 the following code will not compile:
  *
  * ```ts
  * const list: GList<GScalarType<string>> = new GraphQLList(GraphQLString);

@@ -122,4 +122,5 @@ export {
   type InferValueFromArg,
   type InferValueFromArgs,
   type InferValueFromInputType,
+  type InferExternalValueFromInputType,
 } from "./types.js";
