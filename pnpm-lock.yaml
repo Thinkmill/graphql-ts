@@ -55,7 +55,7 @@ importers:
   examples/basic-graphql-yoga:
     dependencies:
       '@graphql-ts/schema':
-        specifier: ^1.0.2
+        specifier: ^1.0.3
         version: link:../../packages/schema
       graphql:
         specifier: ^16.3.0
@@ -74,7 +74,7 @@ importers:
   examples/drizzle-graphql-yoga:
     dependencies:
       '@graphql-ts/schema':
-        specifier: ^1.0.2
+        specifier: ^1.0.3
         version: link:../../packages/schema
       drizzle-orm:
         specifier: ^1.0.0-rc.4
